@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة عمليات الميدان | For-U</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandYellow: '#FFB800',
+                        brandDark: '#121212',
+                        brandCard: '#1E1E1E'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-brandDark text-white min-h-screen flex flex-col justify-between">
+
+    <!-- الهيدر -->
+    <header class="p-4 md:p-6 flex justify-between items-center border-b border-gray-800">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <div class="bg-brandYellow text-brandDark font-black text-xl px-3 py-1 rounded-xl">4U</div>
+            <div>
+                <h1 id="panelTitle" class="text-lg font-bold">لوحة العمليات الميدانية</h1>
+                <p id="userRoleSubtitle" class="text-xs text-brandYellow">جارٍ تحديد الصلاحية...</p>
+            </div>
+        </div>
+        <button onclick="logout()" class="text-gray-400 hover:text-red-400 text-sm flex items-center">
+            <i class="fa-solid fa-right-from-bracket ml-1"></i> خروج
+        </button>
+    </header>
+
+    <!-- المحتوى الرئيسي المتغير حسب الصلاحية -->
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- واجهة المندوب (Driver View) -->
+        <div id="driverView" class="space-y-6 hidden">
+            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
+                <h2 class="text-xl font-bold mb-4 flex items-center text-brandYellow">
+                    <i class="fa-solid fa-motorcycle ml-2"></i> الطلبات المسندة إليك للتوصيل
+                </h2>
+                <div class="space-y-4" id="driverOrdersList">
+                    <!-- عنصر نموذج لطلب مسند -->
+                    <div class="bg-brandDark border border-gray-700 p-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <span class="bg-yellow-500/10 text-brandYellow text-xs px-2.5 py-1 rounded-lg border border-yellow-500/20 font-bold">قيد التوصيل</span>
+                            <h3 class="font-bold text-base mt-2">عميل: أحمد محمد</h3>
+                            <p class="text-xs text-gray-400">الوصف: طرد مستندات رسمية (الخرطوم - أمدرمان)</p>
+                            <p class="text-xs text-brandYellow mt-1 font-semibold">المبلغ المطلوب تحصيله: 2,500 جنيه</p>
+                        </div>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <button onclick="updateOrderStatus('delivered')" class="flex-1 md:flex-none bg-green-600 hover:bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-xl transition">
+                                <i class="fa-solid fa-check ml-1"></i> تم التسليم
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- واجهة المسوق (Marketer View) -->
+        <div id="marketerView" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl">
+                    <p class="text-xs text-gray-400">إجمالي العملاء المسجلين برمزك</p>
+                    <h3 class="text-2xl font-black text-brandYellow mt-1">14 عميل</h3>
+                </div>
+                <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl">
+                    <p class="text-xs text-gray-400">العمولات المستحقة</p>
+                    <h3 class="text-2xl font-black text-green-400 mt-1">18,500 جنيه</h3>
+                </div>
+            </div>
+
+            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
+                <h2 class="text-xl font-bold border-b border-gray-700 pb-3 flex items-center text-brandYellow">
+                    <i class="fa-solid fa-user-plus ml-2"></i> تسجیل عميل جديد تحت كود التسويق الخاص بك
+                </h2>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">اسم العميل</label>
+                    <input type="text" id="mClientName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="اسم العميل الكامل">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">رقم الهاتف</label>
+                    <input type="tel" id="mClientPhone" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="09xxxxxxxx">
+                </div>
+                <button onclick="registerMarketerClient()" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg">
+                    حفظ العميل وربطه بحسابك
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- الفوتر -->
+    <footer class="p-4 text-center border-t border-gray-800 text-gray-500 text-sm">
+        جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
+    </footer>
+
+    <!-- سكريبت إدارة واجهة الميدان بناءً على الرابط -->
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const role = urlParams.get('role');
+
+        const driverView = document.getElementById('driverView');
+        const marketerView = document.getElementById('marketerView');
+        const userRoleSubtitle = document.getElementById('userRoleSubtitle');
+
+        if (role === 'driver') {
+            driverView.classList.remove('hidden');
+            userRoleSubtitle.innerText = 'صلاحية: مندوب توصيل ميداني';
+        } else if (role === 'marketer') {
+            marketerView.classList.remove('hidden');
+            userRoleSubtitle.innerText = 'صلاحية: مسوق معتمد';
+        } else {
+            userRoleSubtitle.innerText = 'صلاحية غير متوفرة';
+            alert('صلاحية غير صالحة.');
+            window.location.href = 'index.html';
+        }
+
+        function updateOrderStatus(status) {
+            alert('تم تحديث حالة الطلب بنجاح إلى: ' + status);
+        }
+
+        function registerMarketerClient() {
+            const name = document.getElementById('mClientName').value;
+            const phone = document.getElementById('mClientPhone').value;
+            if(!name || !phone) {
+                alert('الرجاء إدخال بيانات العميل كاملة.');
+                return;
+            }
+            alert('تم تسجيل العميل بنجاح تحت حسابك التسويقي.');
+            document.getElementById('mClientName').value = '';
+            document.getElementById('mClientPhone').value = '';
+        }
+
+        function logout() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
