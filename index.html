@@ -103,7 +103,7 @@
                     <span>التسجيل عبر حساب غوغل</span>
                 </button>
 
-                <!-- 2. طريقة حساب سودان بلاي الموحد -->
+                <!-- 2. طريقة حساب سودان بلاي الموحد (مع تمرير رابط العودة) -->
                 <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-brandDark border border-brandYellow text-brandYellow font-bold py-3 px-4 rounded-xl hover:bg-brandYellow/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-solid fa-store text-brandYellow text-lg ml-2"></i>
                     <span>التسجيل عبر حساب سودان بلاي</span>
@@ -174,7 +174,7 @@
             const userEmailFromRedirect = urlParams.get('email');
 
             if (userEmailFromRedirect) {
-                // حفظ البريد القادم من سودان بلاي محلياً لتثبيت الجلسة في For-U
+                // حفظ البريد القادم من سودان بلاي محلياً لتثبيت الجلسة في For-U[cite: 1]
                 localStorage.setItem('foru_user_email', userEmailFromRedirect);
                 updateUIAfterLogin(userEmailFromRedirect);
                 // تنظيف الرابط من البارامترات
@@ -256,9 +256,9 @@
                 });
         }
 
-        // 2. تسجيل الدخول عبر حساب سودان بلاي (التوجيه مع تمرير رابط العودة)
+        // 2. تسجيل الدخول عبر حساب سودان بلاي (التوجيه مع تمرير رابط العودة)[cite: 1]
         function loginWithSudanPlay() {
-            const sudanPlayAuthUrl = "https://sudan-play.vercel.app/login.html"; // استبدل بصفحة تسجيل الدخول في سودان بلاي إن وجدت
+            const sudanPlayAuthUrl = "https://sudan-play.vercel.app/index.html"; 
             const currentRedirectUrl = window.location.href.split('?')[0];
             window.location.href = `${sudanPlayAuthUrl}?redirect_uri=${encodeURIComponent(currentRedirectUrl)}`;
         }
