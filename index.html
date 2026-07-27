@@ -29,7 +29,7 @@
 </head>
 <body class="bg-brandDark text-white min-h-screen flex flex-col justify-between">
 
-    <!-- الهيدر / الشعار (مع صورة الشعار المربعة) -->
+    <!-- الهيدر / الشعار -->
     <header class="p-6 flex justify-between items-center border-b border-gray-800">
         <div class="flex items-center space-x-3 space-x-reverse">
             <!-- الشعار المربع -->
@@ -39,14 +39,17 @@
                 <p class="text-xs text-gray-400">توصيل طلباتك بسرعة وأمان</p>
             </div>
         </div>
-        <div>
-            <button onclick="openLoginModal()" class="bg-brandCard border border-gray-700 text-brandYellow text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-800 transition shadow-md flex items-center">
+        <div class="flex space-x-2 space-x-reverse">
+            <button onclick="openAuthModal('login')" class="bg-brandCard border border-gray-700 text-brandYellow text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-800 transition shadow-md flex items-center">
                 <i class="fa-solid fa-right-to-bracket ml-2"></i> تسجيل الدخول
+            </button>
+            <button onclick="openAuthModal('register')" class="bg-brandYellow text-brandDark text-sm font-bold px-4 py-2 rounded-xl hover:bg-yellow-400 transition shadow-md hidden sm:flex items-center">
+                <i class="fa-solid fa-user-plus ml-2"></i> إنشاء حساب
             </button>
         </div>
     </header>
 
-    <!-- المحتوى الرئيسي (البطل / Hero Section) -->
+    <!-- المحتوى الرئيسي -->
     <main class="flex-grow flex items-center justify-center px-6 py-12">
         <div class="max-w-4xl mx-auto text-center">
             <span class="bg-brandYellow/10 text-brandYellow text-sm font-semibold px-4 py-1.5 rounded-full border border-brandYellow/20 inline-block mb-6">
@@ -67,35 +70,39 @@
         </div>
     </main>
 
-    <!-- نافذة تسجيل الدخول المنبثقة (Modal) -->
-    <div id="loginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <!-- نافذة المصادقة الموحدة (تسجيل الدخول / إنشاء حساب) -->
+    <div id="authModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-brandCard border border-gray-800 rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
-            <button onclick="closeLoginModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white text-xl">
+            <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white text-xl">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             
             <div class="text-center mb-6">
-                <!-- صورة الشعار داخل نافذة تسجيل الدخول أيضاً -->
                 <img src="image.jpg" alt="For-U Logo" class="w-16 h-16 object-cover mx-auto rounded-2xl mb-3 shadow-lg border border-brandYellow/30">
-                <h3 class="text-2xl font-bold">تسجيل الدخول</h3>
-                <p class="text-xs text-gray-400 mt-1">اختر طريقة الدخول المتاحة</p>
+                <h3 id="modalTitle" class="text-2xl font-bold">تسجيل الدخول</h3>
+                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة الدخول المتاحة</p>
             </div>
 
-            <!-- زر الدخول الموحد عبر حساب سودان بلاي / Google -->
+            <!-- زر الدخول عبر حساب سودان بلاي / Google -->
             <div class="space-y-3 mb-6">
-                <button onclick="loginWithSudanPlay()" class="w-full bg-white text-gray-900 font-bold py-3.5 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
-                    <i class="fa-solid fa-globe text-brandYellow text-lg ml-2"></i>
-                    <span>الدخول عبر حساب Sudan Play (Google)</span>
+                <button onclick="authWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3.5 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
+                    <span>المتابعة عبر حساب Sudan Play (Google)</span>
                 </button>
             </div>
 
             <div class="relative flex py-2 items-center">
                 <div class="flex-grow border-t border-gray-700"></div>
-                <span class="flex-shrink mx-4 text-gray-500 text-xs">أو بالبريد الإلكتروني</span>
+                <span class="flex-shrink mx-4 text-gray-500 text-xs" id="dividerText">أو بالبريد الإلكتروني</span>
                 <div class="flex-grow border-t border-gray-700"></div>
             </div>
 
-            <form id="loginForm" class="space-y-4 mt-4">
+            <!-- نموذج الإدخال (تسجيل دخول أو إنشاء حساب) -->
+            <form id="authForm" class="space-y-4 mt-4" onsubmit="handleAuthSubmit(event)">
+                <div id="nameFieldContainer" class="hidden">
+                    <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
+                    <input type="text" id="fullName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="محمد أحمد">
+                </div>
                 <div>
                     <label class="block text-sm text-gray-300 mb-1">البريد الإلكتروني</label>
                     <input type="email" id="email" required class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="name@foru.com">
@@ -104,10 +111,16 @@
                     <label class="block text-sm text-gray-300 mb-1">كلمة المرور</label>
                     <input type="password" id="password" required class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="••••••••">
                 </div>
-                <button type="submit" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-2">
+                <button type="submit" id="submitBtnText" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-2">
                     دخول بالنظام
                 </button>
             </form>
+
+            <!-- التبديل بين الحالتين -->
+            <div class="text-center mt-6 text-sm text-gray-400">
+                <span id="switchPrompt">ليس لديك حساب؟</span>
+                <button onclick="toggleAuthMode()" id="switchBtnText" class="text-brandYellow font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
+            </div>
         </div>
     </div>
 
@@ -116,18 +129,67 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- سكريبت التحكم بالـ Modal والدخول -->
+    <!-- السكريبت للتحكم بالواجهة -->
     <script>
-        function openLoginModal() {
-            document.getElementById('loginModal').classList.remove('hidden');
-            document.getElementById('loginModal').classList.add('flex');
+        let currentMode = 'login'; // 'login' or 'register'
+
+        function openAuthModal(mode) {
+            currentMode = mode;
+            updateModalUI();
+            document.getElementById('authModal').classList.remove('hidden');
+            document.getElementById('authModal').classList.add('flex');
         }
-        function closeLoginModal() {
-            document.getElementById('loginModal').classList.remove('flex');
-            document.getElementById('loginModal').classList.add('hidden');
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('flex');
+            document.getElementById('authModal').classList.add('hidden');
         }
-        function loginWithSudanPlay() {
+
+        function toggleAuthMode() {
+            currentMode = currentMode === 'login' ? 'register' : 'login';
+            updateModalUI();
+        }
+
+        function updateModalUI() {
+            const title = document.getElementById('modalTitle');
+            const subtitle = document.getElementById('modalSubtitle');
+            const nameField = document.getElementById('nameFieldContainer');
+            const submitBtn = document.getElementById('submitBtnText');
+            const switchPrompt = document.getElementById('switchPrompt');
+            const switchBtn = document.getElementById('switchBtnText');
+
+            if (currentMode === 'register') {
+                title.innerText = 'إنشاء حساب جديد';
+                subtitle.innerText = 'أنشئ حسابك وابدأ استخدام المنصة';
+                nameField.classList.remove('hidden');
+                submitBtn.innerText = 'تسجيل الحساب';
+                switchPrompt.innerText = 'لديك حساب بالفعل؟';
+                switchBtn.innerText = 'تسجيل الدخول';
+            } else {
+                title.innerText = 'تسجيل الدخول';
+                subtitle.innerText = 'اختر طريقة الدخول المتاحة';
+                nameField.classList.add('hidden');
+                submitBtn.innerText = 'دخول بالنظام';
+                switchPrompt.innerText = 'ليس لديك حساب؟';
+                switchBtn.innerText = 'إنشاء حساب جديد';
+            }
+        }
+
+        function authWithGoogle() {
             alert('جاري توجيهك للمصادقة الآمنة عبر حساب Sudan Play (Google)...');
+        }
+
+        function handleAuthSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (currentMode === 'register') {
+                const name = document.getElementById('fullName').value;
+                alert(`جاري إنشاء حساب جديد للبريد: ${email} عبر نظام Firebase Auth...`);
+            } else {
+                alert(`جاري تسجيل الدخول بالبريد: ${email}...`);
+            }
         }
     </script>
 </body>
