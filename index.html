@@ -26,6 +26,9 @@
     <style>
         body { font-family: 'Cairo', sans-serif; }
     </style>
+    <!-- Firebase SDKs (Compat v8) -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
 </head>
 <body class="bg-brandDark text-white min-h-screen flex flex-col justify-between">
 
@@ -39,13 +42,22 @@
                 <p class="text-xs text-gray-400">توصيل طلباتك بسرعة وأمان</p>
             </div>
         </div>
-        <div class="flex space-x-2 space-x-reverse">
-            <button onclick="openAuthModal('login')" class="bg-brandCard border border-gray-700 text-brandYellow text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-800 transition shadow-md flex items-center">
-                <i class="fa-solid fa-right-to-bracket ml-2"></i> تسجيل الدخول
-            </button>
-            <button onclick="openAuthModal('register')" class="bg-brandYellow text-brandDark text-sm font-bold px-4 py-2 rounded-xl hover:bg-yellow-400 transition shadow-md hidden sm:flex items-center">
-                <i class="fa-solid fa-user-plus ml-2"></i> إنشاء حساب
-            </button>
+        <div class="flex space-x-2 space-x-reverse items-center">
+            <!-- حالة المستخدم بعد تسجيل الدخول -->
+            <div id="userProfileDisplay" class="hidden items-center space-x-2 space-x-reverse">
+                <span id="userEmailSpan" class="text-xs text-brandYellow font-semibold"></span>
+                <button onclick="logoutUser()" class="bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-red-500/30 transition">
+                    خروج
+                </button>
+            </div>
+            <div id="authButtonsContainer" class="flex space-x-2 space-x-reverse">
+                <button onclick="openAuthModal('login')" class="bg-brandCard border border-gray-700 text-brandYellow text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-800 transition shadow-md flex items-center">
+                    <i class="fa-solid fa-right-to-bracket ml-2"></i> تسجيل الدخول
+                </button>
+                <button onclick="openAuthModal('register')" class="bg-brandYellow text-brandDark text-sm font-bold px-4 py-2 rounded-xl hover:bg-yellow-400 transition shadow-md hidden sm:flex items-center">
+                    <i class="fa-solid fa-user-plus ml-2"></i> إنشاء حساب
+                </button>
+            </div>
         </div>
     </header>
 
@@ -86,13 +98,13 @@
             <!-- خيارات التسجيل السريع (غوغل + سودان بلاي) -->
             <div class="space-y-3 mb-4">
                 <!-- 1. طريقة حساب غوغل -->
-                <button onclick="loginWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
+                <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
                     <span>التسجيل عبر حساب غوغل</span>
                 </button>
 
-                <!-- 2. طريقة حساب سودان بلاي (كطريقة تسجيل دخول أساسية) -->
-                <button onclick="loginWithSudanPlay()" class="w-full bg-brandDark border border-brandYellow text-brandYellow font-bold py-3 px-4 rounded-xl hover:bg-brandYellow/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
+                <!-- 2. طريقة حساب سودان بلاي (التوجيه لمتجر سودان بلاي للربط الموحد) -->
+                <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-brandDark border border-brandYellow text-brandYellow font-bold py-3 px-4 rounded-xl hover:bg-brandYellow/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-solid fa-store text-brandYellow text-lg ml-2"></i>
                     <span>التسجيل عبر حساب سودان بلاي</span>
                 </button>
@@ -126,7 +138,7 @@
             <!-- التبديل بين الدخول وإنشاء الحساب للبريد -->
             <div class="text-center mt-5 text-sm text-gray-400">
                 <span id="switchPrompt">ليس لديك حساب؟</span>
-                <button onclick="toggleAuthMode()" id="switchBtnText" class="text-brandYellow font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
+                <button type="button" onclick="toggleAuthMode()" id="switchBtnText" class="text-brandYellow font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
             </div>
         </div>
     </div>
@@ -136,9 +148,53 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- سكريبت التحكم -->
+    <!-- سكريبت التحكم والربط مع Firebase و Sudan Play -->
     <script>
         let currentMode = 'login';
+
+        // إعدادات Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJE_Ee-Dyh83iny45eH8lVtTSrIVqTzOI",
+            authDomain: "sudan-play.firebaseapp.com",
+            projectId: "sudan-play",
+            storageBucket: "sudan-play.appspot.com",
+            messagingSenderId: "981764948623",
+            appId: "1:981764948623:web:00e5c9268198f70e39a6fa"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+
+        // معالجة بيانات الـ Redirect القادمة من سودان بلاي في حال تم تسجيل الدخول هناك
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userEmail = urlParams.get('email');
+            if (userEmail) {
+                // حفظ الجلسة محلياً لتطبيق For-U
+                localStorage.setItem('foru_user_email', userEmail);
+                updateUIAfterLogin(userEmail);
+            } else {
+                // التحقق من حالة Firebase العادية أو التخزين المحلي
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        updateUIAfterLogin(user.email);
+                    } else {
+                        const savedEmail = localStorage.getItem('foru_user_email');
+                        if (savedEmail) updateUIAfterLogin(savedEmail);
+                    }
+                });
+            }
+        });
+
+        function updateUIAfterLogin(email) {
+            document.getElementById('authButtonsContainer').classList.add('hidden');
+            const profileDisplay = document.getElementById('userProfileDisplay');
+            profileDisplay.classList.remove('hidden');
+            profileDisplay.classList.add('flex');
+            document.getElementById('userEmailSpan').innerText = email;
+        }
 
         function openAuthModal(mode) {
             currentMode = mode;
@@ -179,26 +235,71 @@
             }
         }
 
-        // تسجيل الدخول عبر غوغل
+        // 1. تسجيل الدخول عبر غوغل (Popup)
         function loginWithGoogle() {
-            alert('جاري تسجيل الدخول عبر حساب غوغل...');
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    const user = result.user;
+                    localStorage.setItem('foru_user_email', user.email);
+                    updateUIAfterLogin(user.email);
+                    closeAuthModal();
+                    alert('✅ تم تسجيل الدخول عبر غوغل بنجاح!');
+                })
+                .catch((error) => {
+                    alert('❌ خطأ في المصادقة: ' + error.message);
+                });
         }
 
-        // تسجيل الدخول عبر حساب سودان بلاي (كطريقة مستقلة)
+        // 2. تسجيل الدخول عبر حساب سودان بلاي (التوجيه مع الـ Redirect العكسي)
         function loginWithSudanPlay() {
-            alert('جاري التحقق وتسجيل الدخول عبر حساب سودان بلاي...');
-            // يمكنك هنا توجيه المستخدم لصفحة تسجيل الدخول الخاصة بمتجرك سودان بلاي
+            const currentUrl = window.location.href.split('?')[0];
+            // استبدال رابط ملف الـ HTML الحالي برابط متجر سودان بلاي الخاص بك مع تمرير عنوان العودة
+            window.location.href = `index.html?redirect=${encodeURIComponent(currentUrl)}`;
         }
 
-        // تسجيل الدخول أو إنشاء حساب بالبريد الإلكتروني
+        // 3. تسجيل الدخول أو إنشاء حساب بالبريد الإلكتروني وكلمة المرور عبر Firebase
         function handleEmailAuth(event) {
             event.preventDefault();
             const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
             if (currentMode === 'register') {
-                alert(`جاري إنشاء حساب جديد بالبريد: ${email}`);
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        localStorage.setItem('foru_user_email', user.email);
+                        updateUIAfterLogin(user.email);
+                        closeAuthModal();
+                        alert('✅ تم إنشاء الحساب وتسجيل الدخول بنجاح!');
+                    })
+                    .catch((error) => {
+                        alert('❌ خطأ في إنشاء الحساب: ' + error.message);
+                    });
             } else {
-                alert(`جاري تسجيل الدخول بالبريد: ${email}`);
+                auth.signInWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        localStorage.setItem('foru_user_email', user.email);
+                        updateUIAfterLogin(user.email);
+                        closeAuthModal();
+                        alert('✅ تم تسجيل الدخول بنجاح!');
+                    })
+                    .catch((error) => {
+                        alert('❌ خطأ في البريد أو كلمة المرور: ' + error.message);
+                    });
             }
+        }
+
+        // تسجيل الخروج
+        function logoutUser() {
+            auth.signOut().then(() => {
+                localStorage.removeItem('foru_user_email');
+                document.getElementById('userProfileDisplay').classList.remove('flex');
+                document.getElementById('userProfileDisplay').classList.add('hidden');
+                document.getElementById('authButtonsContainer').classList.remove('hidden');
+                alert('👋 تم تسجيل الخروج بنجاح');
+            });
         }
     </script>
 </body>
