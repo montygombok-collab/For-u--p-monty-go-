@@ -70,7 +70,7 @@
         </div>
     </main>
 
-    <!-- نافذة المصادقة الموحدة -->
+    <!-- نافذة المصادقة -->
     <div id="authModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-brandCard border border-gray-800 rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
             <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white text-xl">
@@ -80,33 +80,32 @@
             <div class="text-center mb-6">
                 <img src="image.jpg" alt="For-U Logo" class="w-16 h-16 object-cover mx-auto rounded-2xl mb-3 shadow-lg border border-brandYellow/30">
                 <h3 id="modalTitle" class="text-2xl font-bold">تسجيل الدخول</h3>
-                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة الدخول المتاحة</p>
+                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة تسجيل الدخول المناسبة</p>
             </div>
 
-            <!-- 1. طريقة حساب جوجل (Google Auth) -->
-            <div class="space-y-3 mb-3">
-                <button onclick="loginWithGoogleMethod()" class="w-full bg-white text-gray-900 font-bold py-3.5 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
+            <!-- خيارات التسجيل السريع (غوغل + سودان بلاي) -->
+            <div class="space-y-3 mb-4">
+                <!-- 1. طريقة حساب غوغل -->
+                <button onclick="loginWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
-                    <span>الدخول عبر حساب جوجل (Google Direct)</span>
+                    <span>التسجيل عبر حساب غوغل</span>
                 </button>
-            </div>
 
-            <!-- 2. طريقة حساب سودان بلاي (Sudan Play Protocol) -->
-            <div class="space-y-3 mb-6">
-                <button onclick="loginWithSudanPlayMethod()" class="w-full bg-brandDark border border-brandYellow text-brandYellow font-bold py-3.5 px-4 rounded-xl hover:bg-brandYellow/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
-                    <i class="fa-solid fa-globe text-brandYellow text-lg ml-2"></i>
-                    <span>المصادقة عبر بروتوكول Sudan Play</span>
+                <!-- 2. طريقة حساب سودان بلاي (كطريقة تسجيل دخول أساسية) -->
+                <button onclick="loginWithSudanPlay()" class="w-full bg-brandDark border border-brandYellow text-brandYellow font-bold py-3 px-4 rounded-xl hover:bg-brandYellow/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fa-solid fa-store text-brandYellow text-lg ml-2"></i>
+                    <span>التسجيل عبر حساب سودان بلاي</span>
                 </button>
             </div>
 
             <div class="relative flex py-2 items-center">
                 <div class="flex-grow border-t border-gray-700"></div>
-                <span class="flex-shrink mx-4 text-gray-500 text-xs">أو بالبريد الإلكتروني وكلمة المرور</span>
+                <span class="flex-shrink mx-4 text-gray-500 text-xs">أو بالبريد الإلكتروني</span>
                 <div class="flex-grow border-t border-gray-700"></div>
             </div>
 
-            <!-- 3. الطريقة التقليدية (البريد الإلكتروني) -->
-            <form id="authForm" class="space-y-4 mt-4" onsubmit="handleEmailAuth(event)">
+            <!-- 3. الطريقة التقليدية (البريد الإلكتروني وكلمة المرور) -->
+            <form id="authForm" class="space-y-4 mt-3" onsubmit="handleEmailAuth(event)">
                 <div id="nameFieldContainer" class="hidden">
                     <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
                     <input type="text" id="fullName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="محمد أحمد">
@@ -124,8 +123,8 @@
                 </button>
             </form>
 
-            <!-- التبديل بين تسجيل الدخول وإنشاء حساب -->
-            <div class="text-center mt-6 text-sm text-gray-400">
+            <!-- التبديل بين الدخول وإنشاء الحساب للبريد -->
+            <div class="text-center mt-5 text-sm text-gray-400">
                 <span id="switchPrompt">ليس لديك حساب؟</span>
                 <button onclick="toggleAuthMode()" id="switchBtnText" class="text-brandYellow font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
             </div>
@@ -137,9 +136,9 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- سكربت التحكم والربط -->
+    <!-- سكريبت التحكم -->
     <script>
-        let currentMode = 'login'; // 'login' or 'register'
+        let currentMode = 'login';
 
         function openAuthModal(mode) {
             currentMode = mode;
@@ -160,22 +159,19 @@
 
         function updateModalUI() {
             const title = document.getElementById('modalTitle');
-            const subtitle = document.getElementById('modalSubtitle');
             const nameField = document.getElementById('nameFieldContainer');
             const submitBtn = document.getElementById('submitBtnText');
             const switchPrompt = document.getElementById('switchPrompt');
             const switchBtn = document.getElementById('switchBtnText');
 
             if (currentMode === 'register') {
-                title.innerText = 'إنشاء حساب جديد';
-                subtitle.innerText = 'أنشئ حسابك بالبريد الإلكتروني في المنصة';
+                title.innerText = 'إنشاء حساب بالبريد';
                 nameField.classList.remove('hidden');
                 submitBtn.innerText = 'تسجيل الحساب';
                 switchPrompt.innerText = 'لديك حساب بالفعل؟';
                 switchBtn.innerText = 'تسجيل الدخول';
             } else {
                 title.innerText = 'تسجيل الدخول';
-                subtitle.innerText = 'اختر طريقة الدخول المتاحة';
                 nameField.classList.add('hidden');
                 submitBtn.innerText = 'دخول بالنظام';
                 switchPrompt.innerText = 'ليس لديك حساب؟';
@@ -183,30 +179,25 @@
             }
         }
 
-        // 1. تفعيل زر جوجل الحقيقي (يمكنك ربطه بـ Firebase Auth لاحقاً)
-        function loginWithGoogleMethod() {
-            // استبدل هذا التنبيه بكود Firebase للـ Google Provider Popup
-            alert('جاري فتح نافذة المصادقة عبر Google Provider...');
+        // تسجيل الدخول عبر غوغل
+        function loginWithGoogle() {
+            alert('جاري تسجيل الدخول عبر حساب غوغل...');
         }
 
-        // 2. تفعيل بروتوكول سودان بلاي
-        function loginWithSudanPlayMethod() {
-            // توجيه المستخدم لنظام تسجيل الدخول الموحد الخاص بمنصة سودان بلاي
-            const redirectUri = encodeURIComponent(window.location.origin + "/customer.html");
-            window.location.href = `https://sudanplay.com/login?redirect=${redirectUri}`;
+        // تسجيل الدخول عبر حساب سودان بلاي (كطريقة مستقلة)
+        function loginWithSudanPlay() {
+            alert('جاري التحقق وتسجيل الدخول عبر حساب سودان بلاي...');
+            // يمكنك هنا توجيه المستخدم لصفحة تسجيل الدخول الخاصة بمتجرك سودان بلاي
         }
 
-        // 3. معالجة البريد الإلكتروني (تسجيل الدخول أو إنشاء حساب)
+        // تسجيل الدخول أو إنشاء حساب بالبريد الإلكتروني
         function handleEmailAuth(event) {
             event.preventDefault();
             const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
             if (currentMode === 'register') {
-                const name = document.getElementById('fullName').value;
-                alert(`جاري إنشاء حساب جديد بالبريد: ${email} والاسم: ${name} عبر Firebase Auth...`);
+                alert(`جاري إنشاء حساب جديد بالبريد: ${email}`);
             } else {
-                alert(`جاري تسجيل الدخول بالبريد الإلكتروني: ${email}...`);
+                alert(`جاري تسجيل الدخول بالبريد: ${email}`);
             }
         }
     </script>
