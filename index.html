@@ -97,13 +97,13 @@
 
             <!-- خيارات التسجيل السريع (غوغل + سودان بلاي) -->
             <div class="space-y-3 mb-4">
-                <!-- 1. طريقة حساب غوغل -->
+                <!-- 1. طريقة حساب غوغل (تستخدم مفاتيح ai-sales الجديدة) -->
                 <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
                     <span>التسجيل عبر حساب غوغل</span>
                 </button>
 
-                <!-- 2. طريقة حساب سودان بلاي (التوجيه لمتجر سودان بلاي للربط الموحد) -->
+                <!-- 2. طريقة حساب سودان بلاي (توجه المستخدم مباشرة لموقع سودان بلاي) -->
                 <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-brandDark border border-brandYellow text-brandYellow font-bold py-3 px-4 rounded-xl hover:bg-brandYellow/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-solid fa-store text-brandYellow text-lg ml-2"></i>
                     <span>التسجيل عبر حساب سودان بلاي</span>
@@ -116,7 +116,7 @@
                 <div class="flex-grow border-t border-gray-700"></div>
             </div>
 
-            <!-- 3. الطريقة التقليدية (البريد الإلكتروني وكلمة المرور) -->
+            <!-- 3. الطريقة التقليدية (البريد الإلكتروني وكلمة المرور عبر Firebase) -->
             <form id="authForm" class="space-y-4 mt-3" onsubmit="handleEmailAuth(event)">
                 <div id="nameFieldContainer" class="hidden">
                     <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
@@ -148,18 +148,19 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- سكريبت التحكم والربط مع Firebase و Sudan Play -->
+    <!-- سكريبت التحكم والربط مع المفاتيح الجديدة -->
     <script>
         let currentMode = 'login';
 
-        // إعدادات Firebase
+        // إعدادات Firebase الجديدة (المفاتيح التي أرسلتها الخاصة بـ ai-sales)
         const firebaseConfig = {
-            apiKey: "AIzaSyBJE_Ee-Dyh83iny45eH8lVtTSrIVqTzOI",
-            authDomain: "sudan-play.firebaseapp.com",
-            projectId: "sudan-play",
-            storageBucket: "sudan-play.appspot.com",
-            messagingSenderId: "981764948623",
-            appId: "1:981764948623:web:00e5c9268198f70e39a6fa"
+            apiKey: "AIzaSyACLchq_aV7AT4wqznXIOv395Nbkeemc_c",
+            authDomain: "ai-sales-a92b9.firebaseapp.com",
+            projectId: "ai-sales-a92b9",
+            storageBucket: "ai-sales-a92b9.firebasestorage.app",
+            messagingSenderId: "100700395015",
+            appId: "1:100700395015:web:79760bc1425b693d3a3ca2",
+            measurementId: "G-KN8CS68W7Q"
         };
 
         if (!firebase.apps.length) {
@@ -167,22 +168,15 @@
         }
         const auth = firebase.auth();
 
-        // معالجة بيانات الـ Redirect القادمة من سودان بلاي في حال تم تسجيل الدخول هناك
+        // التحقق من الجلسة المخزنة محلياً
         window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const userEmail = urlParams.get('email');
-            if (userEmail) {
-                // حفظ الجلسة محلياً لتطبيق For-U
-                localStorage.setItem('foru_user_email', userEmail);
-                updateUIAfterLogin(userEmail);
+            const savedEmail = localStorage.getItem('foru_user_email');
+            if (savedEmail) {
+                updateUIAfterLogin(savedEmail);
             } else {
-                // التحقق من حالة Firebase العادية أو التخزين المحلي
                 auth.onAuthStateChanged(user => {
                     if (user) {
                         updateUIAfterLogin(user.email);
-                    } else {
-                        const savedEmail = localStorage.getItem('foru_user_email');
-                        if (savedEmail) updateUIAfterLogin(savedEmail);
                     }
                 });
             }
@@ -235,7 +229,7 @@
             }
         }
 
-        // 1. تسجيل الدخول عبر غوغل (Popup)
+        // 1. تسجيل الدخول عبر غوغل (يعمل الآن مباشرة باستخدام مفاتيح ai-sales)
         function loginWithGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
@@ -251,14 +245,13 @@
                 });
         }
 
-        // 2. تسجيل الدخول عبر حساب سودان بلاي (التوجيه مع الـ Redirect العكسي)
+        // 2. التوجيه المباشر إلى منصة سودان بلاي عند الضغط على زر سودان بلاي
         function loginWithSudanPlay() {
-            const currentUrl = window.location.href.split('?')[0];
-            // استبدال رابط ملف الـ HTML الحالي برابط متجر سودان بلاي الخاص بك مع تمرير عنوان العودة
-            window.location.href = `index.html?redirect=${encodeURIComponent(currentUrl)}`;
+            // استبدل رابط موقع سودان بلاي أدناه بالرابط الحقيقي الخاص بموقع سودان بلاي عندما ترسله أو ترفعه
+            window.location.href = "https://sudan-play.vercel.app"; 
         }
 
-        // 3. تسجيل الدخول أو إنشاء حساب بالبريد الإلكتروني وكلمة المرور عبر Firebase
+        // 3. تسجيل الدخول أو إنشاء حساب بالبريد الإلكتروني وكلمة المرور
         function handleEmailAuth(event) {
             event.preventDefault();
             const email = document.getElementById('email').value;
