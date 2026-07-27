@@ -70,7 +70,7 @@
         </div>
     </main>
 
-    <!-- نافذة المصادقة الموحدة (تسجيل الدخول / إنشاء حساب) -->
+    <!-- نافذة المصادقة -->
     <div id="authModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-brandCard border border-gray-800 rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
             <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white text-xl">
@@ -83,22 +83,30 @@
                 <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة الدخول المتاحة</p>
             </div>
 
-            <!-- زر الدخول عبر حساب سودان بلاي / Google -->
-            <div class="space-y-3 mb-6">
-                <button onclick="authWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3.5 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
+            <!-- 1. طريقة حساب جوجل (منفصلة ومباشرة) -->
+            <div class="space-y-3 mb-4">
+                <button onclick="loginWithGoogleMethod()" class="w-full bg-white text-gray-900 font-bold py-3.5 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
-                    <span>المتابعة عبر حساب Sudan Play (Google)</span>
+                    <span>الدخول عبر حساب جوجل (Google Direct)</span>
+                </button>
+            </div>
+
+            <!-- 2. طريقة حساب سودان بلاي (منفصلة أو بروتوكول مختلف) -->
+            <div class="space-y-3 mb-6">
+                <button onclick="loginWithSudanPlayMethod()" class="w-full bg-brandDark border border-brandYellow text-brandYellow font-bold py-3.5 px-4 rounded-xl hover:bg-brandYellow/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fa-solid fa-globe text-brandYellow text-lg ml-2"></i>
+                    <span>المصادقة عبر بروتوكول Sudan Play</span>
                 </button>
             </div>
 
             <div class="relative flex py-2 items-center">
                 <div class="flex-grow border-t border-gray-700"></div>
-                <span class="flex-shrink mx-4 text-gray-500 text-xs" id="dividerText">أو بالبريد الإلكتروني</span>
+                <span class="flex-shrink mx-4 text-gray-500 text-xs">أو بالطريقة التقليدية (البريد وكلمة المرور)</span>
                 <div class="flex-grow border-t border-gray-700"></div>
             </div>
 
-            <!-- نموذج الإدخال (تسجيل دخول أو إنشاء حساب) -->
-            <form id="authForm" class="space-y-4 mt-4" onsubmit="handleAuthSubmit(event)">
+            <!-- 3. الطريقة التقليدية (بريد إلكتروني / إنشاء حساب أو تسجيل دخول) -->
+            <form id="authForm" class="space-y-4 mt-4" onsubmit="handleEmailAuth(event)">
                 <div id="nameFieldContainer" class="hidden">
                     <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
                     <input type="text" id="fullName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="محمد أحمد">
@@ -116,7 +124,7 @@
                 </button>
             </form>
 
-            <!-- التبديل بين الحالتين -->
+            <!-- التبديل بين وضع الدخول أو إنشاء حساب تقليدي -->
             <div class="text-center mt-6 text-sm text-gray-400">
                 <span id="switchPrompt">ليس لديك حساب؟</span>
                 <button onclick="toggleAuthMode()" id="switchBtnText" class="text-brandYellow font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
@@ -129,9 +137,9 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- السكريبت للتحكم بالواجهة -->
+    <!-- سكريبت إدارة الطرق المختلفة -->
     <script>
-        let currentMode = 'login'; // 'login' or 'register'
+        let currentMode = 'login';
 
         function openAuthModal(mode) {
             currentMode = mode;
@@ -152,22 +160,19 @@
 
         function updateModalUI() {
             const title = document.getElementById('modalTitle');
-            const subtitle = document.getElementById('modalSubtitle');
             const nameField = document.getElementById('nameFieldContainer');
             const submitBtn = document.getElementById('submitBtnText');
             const switchPrompt = document.getElementById('switchPrompt');
             const switchBtn = document.getElementById('switchBtnText');
 
             if (currentMode === 'register') {
-                title.innerText = 'إنشاء حساب جديد';
-                subtitle.innerText = 'أنشئ حسابك وابدأ استخدام المنصة';
+                title.innerText = 'إنشاء حساب جديد (بالبريد)';
                 nameField.classList.remove('hidden');
                 submitBtn.innerText = 'تسجيل الحساب';
                 switchPrompt.innerText = 'لديك حساب بالفعل؟';
                 switchBtn.innerText = 'تسجيل الدخول';
             } else {
                 title.innerText = 'تسجيل الدخول';
-                subtitle.innerText = 'اختر طريقة الدخول المتاحة';
                 nameField.classList.add('hidden');
                 submitBtn.innerText = 'دخول بالنظام';
                 switchPrompt.innerText = 'ليس لديك حساب؟';
@@ -175,20 +180,30 @@
             }
         }
 
-        function authWithGoogle() {
-            alert('جاري توجيهك للمصادقة الآمنة عبر حساب Sudan Play (Google)...');
+        // مسار مستقل لتسجيل الدخول عبر جوجل
+        function loginWithGoogleMethod() {
+            alert('جاري تنفيذ طريقة المصادقة عبر Google Provider (Popup)...');
+            // مثال في فايربيس: 
+            // auth.signInWithPopup(googleProvider)...
         }
 
-        function handleAuthSubmit(event) {
+        // مسار مستقل لتسجيل الدخول عبر سودان بلاي
+        function loginWithSudanPlayMethod() {
+            alert('جاري الاتصال بخوادم Sudan Play للمصادقة الموحدة...');
+            // رابط التوجيه الخاص بـ Sudan Play Ecosystem
+        }
+
+        // مسار البريد الإلكتروني (سواء دخول أو إنشاء حساب)
+        function handleEmailAuth(event) {
             event.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            
+
             if (currentMode === 'register') {
                 const name = document.getElementById('fullName').value;
-                alert(`جاري إنشاء حساب جديد للبريد: ${email} عبر نظام Firebase Auth...`);
+                alert(`جاري إنشاء حساب جديد بالبريد: ${email} والاسم: ${name}`);
             } else {
-                alert(`جاري تسجيل الدخول بالبريد: ${email}...`);
+                alert(`جاري تسجيل الدخول بالبريد الإلكتروني: ${email}`);
             }
         }
     </script>
