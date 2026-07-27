@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم الإدارية | For-U</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandYellow: '#FFB800',
+                        brandDark: '#121212',
+                        brandCard: '#1E1E1E'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-brandDark text-white min-h-screen flex flex-col justify-between">
+
+    <!-- الهيدر الإداري -->
+    <header class="p-4 md:p-6 flex justify-between items-center border-b border-gray-800">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <div class="bg-brandYellow text-brandDark font-black text-xl px-3 py-1 rounded-xl">4U</div>
+            <div>
+                <h1 class="text-lg font-bold">لوحة تحكم الإدارة العليا</h1>
+                <p class="text-xs text-brandYellow">إدارة النظام اللوجستعي بالكامل</p>
+            </div>
+        </div>
+        <button onclick="logout()" class="text-gray-400 hover:text-red-400 text-sm flex items-center">
+            <i class="fa-solid fa-right-from-bracket ml-1"></i> خروج
+        </button>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl space-y-8">
+        
+        <!-- إحصائيات سريعة (KPIs) -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
+                <p class="text-xs text-gray-400">إجمالي الطلبات اليوم</p>
+                <h3 class="text-2xl font-black text-brandYellow mt-1">48 طلب</h3>
+            </div>
+            <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
+                <p class="text-xs text-gray-400">الطلبات قيد التوصيل</p>
+                <h3 class="text-2xl font-black text-blue-400 mt-1">12 طلب</h3>
+            </div>
+            <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
+                <p class="text-xs text-gray-400">عدد المناديب النشطين</p>
+                <h3 class="text-2xl font-black text-green-400 mt-1">8 مناديب</h3>
+            </div>
+            <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
+                <p class="text-xs text-gray-400">إجمالي الإيرادات</p>
+                <h3 class="text-2xl font-black text-brandYellow mt-1">324,000 جنيه</h3>
+            </div>
+        </div>
+
+        <!-- إدارة إعدادات النظام وتحديد سعر الكيلو -->
+        <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
+            <h2 class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
+                <i class="fa-solid fa-sliders ml-2"></i> إعدادات التسعير والمسافات
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">سعر الكيلو متر الواحد (جنيه)</label>
+                    <input type="number" id="pricePerKmInput" value="500" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none">
+                </div>
+                <div>
+                    <button onclick="updatePricing()" class="w-full bg-brandYellow text-brandDark font-bold py-2.5 rounded-xl hover:bg-yellow-400 transition shadow-lg">
+                        حفظ وتحديث التسعيرة الفورية
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- جدول متابعة الطلبات وإسنادها للمناديب -->
+        <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
+            <h2 class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
+                <i class="fa-solid fa-list-check ml-2"></i> إدارة وإسناد الطلبات الواردة
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-sm">
+                    <thead class="bg-brandDark text-gray-400 border-b border-gray-700">
+                        <tr>
+                            <th class="p-3">رقم الطلب</th>
+                            <th class="p-3">العميل</th>
+                            <th class="p-3">الوصف</th>
+                            <th class="p-3">التكلفة</th>
+                            <th class="p-3">الحالة</th>
+                            <th class="p-3">إسناد إلى مندوب</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-800">
+                        <tr>
+                            <td class="p-3 font-bold text-brandYellow">#4U-1092</td>
+                            <td class="p-3">محمد أحمد</td>
+                            <td class="p-3">توصيل طرد إلكترونيات</td>
+                            <td class="p-3">4,500 جنيه</td>
+                            <td class="p-3"><span class="bg-yellow-500/10 text-brandYellow px-2.5 py-1 rounded-lg text-xs border border-yellow-500/20">جديد</span></td>
+                            <td class="p-3">
+                                <select class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
+                                    <option>اختر المندوب...</option>
+                                    <option>محمود حسن</option>
+                                    <option>عمر إبراهيم</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- الفوتر -->
+    <footer class="p-4 text-center border-t border-gray-800 text-gray-500 text-sm">
+        جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
+    </footer>
+
+    <!-- سكريبت لوحة التحكم -->
+    <script>
+        function updatePricing() {
+            const newPrice = document.getElementById('pricePerKmInput').value;
+            alert('تم تحديث سعر الكيلو بنجاح إلى: ' + newPrice + ' جنيه');
+        }
+
+        function logout() {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
