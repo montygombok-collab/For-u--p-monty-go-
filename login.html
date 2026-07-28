@@ -8,6 +8,7 @@
     <!-- استيراد مكتبة Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -21,7 +22,7 @@
             --secondary: #ff5e7d;
             --dark: #0f111a;
             --light: #f0f3f9;
-            --glass-card: rgba(255, 255, 255, 0.85);
+            --glass-card: rgba(255, 255, 255, 0.88);
             --glass-border: rgba(255, 255, 255, 0.75);
             --radius: 16px;
         }
@@ -43,7 +44,7 @@
             border-radius: var(--radius);
             padding: 30px;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
             border: 1px solid var(--glass-border);
         }
@@ -59,12 +60,12 @@
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             font-weight: 600;
             font-size: 0.9em;
         }
@@ -82,51 +83,73 @@
             border-color: var(--primary);
         }
 
-        .btn-login {
+        .btn-action {
             width: 100%;
             padding: 12px;
-            background: var(--primary);
-            color: white;
             border: none;
             border-radius: 8px;
             font-size: 1em;
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
-            margin-bottom: 10px;
+            margin-top: 5px;
         }
 
-        .btn-login:hover {
+        .btn-primary-custom {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary-custom:hover {
             background: #3b5bdb;
         }
 
         .btn-sudan-play {
-            width: 100%;
-            padding: 12px;
-            background: #db4437;
+            background: #2ec4b6;
             color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .btn-sudan-play:hover {
-            background: #c23321;
+            background: #259e93;
         }
 
         .divider {
             text-align: center;
-            margin: 15px 0;
+            margin: 20px 0;
             color: #64748b;
             font-size: 0.85em;
-            position: relative;
+            border-bottom: 1px solid #cbd5e1;
+            line-height: 0.1em;
+        }
+
+        .divider span {
+            background: #f4f6f9;
+            padding: 0 10px;
+        }
+
+        .section-box {
+            display: none;
+        }
+
+        .section-box.active {
+            display: block;
+        }
+
+        .toggle-section {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: var(--primary);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .toggle-section:hover {
+            text-decoration: underline;
         }
 
         .back-home {
@@ -135,13 +158,13 @@
         }
 
         .back-home a {
-            color: var(--primary);
+            color: #64748b;
             text-decoration: none;
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
 
         .back-home a:hover {
-            text-decoration: underline;
+            color: var(--dark);
         }
     </style>
 </head>
@@ -150,26 +173,53 @@
     <div class="login-card">
         <div class="login-header">
             <h2>تسجيل الدخول</h2>
-            <p>مرحباً بك مجدداً في Sudan Play</p>
+            <p id="sub-title">اختر طريقة الدخول لموقع Sudan Play</p>
         </div>
 
-        <div class="form-group">
-            <label for="email">البريد الإلكتروني</label>
-            <input type="email" id="email" placeholder="أدخل بريدك الإلكتروني">
+        <!-- القسم الأول: خيارات الدخول الرئيسية -->
+        <div id="main-options" class="section-box active">
+            <button type="button" class="btn-action btn-sudan-play" onclick="showSudanPlayForm()">
+                <i class="fas fa-id-badge"></i> تسجيل الدخول برقم تعريف Sudan Play
+            </button>
+            
+            <div class="divider"><span>أو</span></div>
+
+            <button type="button" class="btn-action btn-primary-custom" onclick="showEmailForm()">
+                <i class="fas fa-envelope"></i> الدخول بالإيميل وكلمة المرور
+            </button>
         </div>
 
-        <div class="form-group">
-            <label for="password">كلمة المرور</label>
-            <input type="password" id="password" placeholder="أدخل كلمة المرور">
+        <!-- القسم الثاني: نموذج الرقم التعريفي الخاص بسودان بلاي -->
+        <div id="sudan-play-form" class="section-box">
+            <div class="form-group">
+                <label for="sp-id">الرقم التعريفي (Sudan Play ID)</label>
+                <input type="text" id="sp-id" placeholder="أدخل رقمك التعريفي الخاص">
+            </div>
+
+            <div class="form-group">
+                <label for="sp-pass">كلمة المرور</label>
+                <input type="password" id="sp-pass" placeholder="أدخل كلمة المرور الخاصة بحسابك">
+            </div>
+
+            <button type="button" class="btn-action btn-sudan-play" onclick="loginWithSudanPlayId()">تأكيد ودخول</button>
+            <div class="toggle-section" onclick="showMainOptions()"><i class="fas fa-arrow-right"></i> رجوع للخيار الرئيسي</div>
         </div>
 
-        <button type="button" class="btn-login" onclick="executeFirebaseLogin()">دخول بالبريد الإلكتروني</button>
-        
-        <div class="divider">أو عبر حساب المنصة</div>
+        <!-- القسم الثالث: نموذج البريد الإلكتروني التقليدي -->
+        <div id="email-form" class="section-box">
+            <div class="form-group">
+                <label for="email">البريد الإلكتروني</label>
+                <input type="email" id="email" placeholder="أدخل بريدك الإلكتروني">
+            </div>
 
-        <button type="button" class="btn-sudan-play" onclick="loginWithSudanPlayAccount()">
-            <i class="fab fa-google"></i> تسجيل الدخول عبر حساب سودان بلاي
-        </button>
+            <div class="form-group">
+                <label for="password">كلمة المرور</label>
+                <input type="password" id="password" placeholder="أدخل كلمة المرور">
+            </div>
+
+            <button type="button" class="btn-action btn-primary-custom" onclick="executeFirebaseLogin()">دخول بالإيميل</button>
+            <div class="toggle-section" onclick="showMainOptions()"><i class="fas fa-arrow-right"></i> رجوع للخيار الرئيسي</div>
+        </div>
 
         <div class="back-home">
             <a href="index.html"><i class="fas fa-store"></i> العودة إلى المتجر الرئيسي</a>
@@ -177,10 +227,11 @@
     </div>
 
     <script>
-        // إعدادات Firebase الخاصة بمشروعك (استبدلها بالبيانات الفعلية إذا لم تكن مضبوطة)
+        // إعدادات Firebase الخاصة بمشروعك (قم بتعديلها ببياناتك الفعلية)
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
             authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
             projectId: "YOUR_PROJECT_ID",
             storageBucket: "YOUR_STORAGE_BUCKET",
             messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
@@ -191,11 +242,32 @@
             firebase.initializeApp(firebaseConfig);
         }
 
-        // دالة التوجيه الذكي بعد النجاح
-        function handleSuccessfulLogin(user) {
-            localStorage.setItem('sudanPlayAdmin', user.uid);
+        // دوال التنقل بين واجهات النماذج داخل نفس الصفحة
+        function showSudanPlayForm() {
+            document.getElementById('main-options').classList.remove('active');
+            document.getElementById('sudan-play-form').classList.add('active');
+            document.getElementById('email-form').classList.remove('active');
+            document.getElementById('sub-title').innerText = 'أدخل بيانات حساب Sudan Play الخاص بك';
+        }
+
+        function showEmailForm() {
+            document.getElementById('main-options').classList.remove('active');
+            document.getElementById('sudan-play-form').classList.remove('active');
+            document.getElementById('email-form').classList.add('active');
+            document.getElementById('sub-title').innerText = 'تسجيل الدخول عبر البريد الإلكتروني';
+        }
+
+        function showMainOptions() {
+            document.getElementById('main-options').classList.add('active');
+            document.getElementById('sudan-play-form').classList.remove('active');
+            document.getElementById('email-form').classList.remove('active');
+            document.getElementById('sub-title').innerText = 'اختر طريقة الدخول لموقع Sudan Play';
+        }
+
+        // دالة التوجيه الذكي بعد النجاح (ترجع المستخدم للصفحة المقصودة مثل فور يو)
+        function handleSuccessfulLogin(identifier) {
+            localStorage.setItem('sudanPlayAdmin', identifier);
             
-            // التحقق مما إذا كان هناك صفحة مقصودة مخزنة (مثل for-you.html)
             const targetPage = localStorage.getItem('redirectAfterLogin');
             
             if (targetPage) {
@@ -206,10 +278,44 @@
             }
         }
 
-        // تسجيل الدخول بالبريد وكلمة المرور
+        // 1. التحقق والدخول عبر الرقم التعريفي الخاص بسودان بلاي من قاعدة البيانات (Realtime Database)
+        function loginWithSudanPlayId() {
+            const spId = document.getElementById('sp-id').value.trim();
+            const spPass = document.getElementById('sp-pass').value.trim();
+
+            if (!spId || !spPass) {
+                alert("الرجاء إدخال الرقم التعريفي وكلمة المرور.");
+                return;
+            }
+
+            // الاتصال بقاعدة بيانات سودان بلاي والبحث عن الحساب بناءً على الرقم التعريفي
+            const dbRef = firebase.database().ref('sudanPlayUsers/' + spId);
+            dbRef.once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        
+                        // مطابقة كلمة المرور المخزنة مسبقاً
+                        if (userData.password === spPass) {
+                            alert("تم تسجيل الدخول بنجاح عبر حساب سودان بلاي!");
+                            handleSuccessfulLogin(spId);
+                        } else {
+                            alert("كلمة المرور غير صحيحة.");
+                        }
+                    } else {
+                        alert("الرقم التعريفي غير موجود في قاعدة بيانات سودان بلاي.");
+                    }
+                })
+                .catch((error) => {
+                    console.error(error);
+                    alert("حدث خطأ أثناء الاتصال بقاعدة البيانات: " + error.message);
+                });
+        }
+
+        // 2. الدخول التقليدي عبر البريد الإلكتروني وكلمة المرور (Firebase Auth)
         function executeFirebaseLogin() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
 
             if (!email || !password) {
                 alert("الرجاء إدخال البريد الإلكتروني وكلمة المرور.");
@@ -218,29 +324,10 @@
 
             firebase.auth().signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    handleSuccessfulLogin(userCredential.user);
+                    handleSuccessfulLogin(userCredential.user.uid);
                 })
                 .catch((error) => {
                     alert('خطأ في تسجيل الدخول: ' + error.message);
-                });
-        }
-
-        // تسجيل الدخول عبر حساب سودان بلاي (اختر الحساب بنفسك)
-        function loginWithSudanPlayAccount() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            
-            // إجبار النظام على فتح نافذة اختيار الحسابات
-            provider.setCustomParameters({
-                prompt: 'select_account'
-            });
-
-            firebase.auth().signInWithPopup(provider)
-                .then((result) => {
-                    handleSuccessfulLogin(result.user);
-                })
-                .catch((error) => {
-                    console.error("خطأ في تسجيل الدخول:", error);
-                    alert('فشل تسجيل الدخول عبر حساب سودان بلاي: ' + error.message);
                 });
         }
     </script>
