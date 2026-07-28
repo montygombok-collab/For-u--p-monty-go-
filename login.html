@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sudan Play - تسجيل الدخول</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- استيراد مكتبة Firebase (تأكد من مطابقة الإصدار مع بقية ملفات مشروعك) -->
+    <!-- استيراد مكتبة Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <style>
@@ -93,10 +93,40 @@
             font-weight: bold;
             cursor: pointer;
             transition: background 0.2s;
+            margin-bottom: 10px;
         }
 
         .btn-login:hover {
             background: #3b5bdb;
+        }
+
+        .btn-sudan-play {
+            width: 100%;
+            padding: 12px;
+            background: #db4437;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-sudan-play:hover {
+            background: #c23321;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 15px 0;
+            color: #64748b;
+            font-size: 0.85em;
+            position: relative;
         }
 
         .back-home {
@@ -133,7 +163,13 @@
             <input type="password" id="password" placeholder="أدخل كلمة المرور">
         </div>
 
-        <button type="button" class="btn-login" onclick="executeFirebaseLogin()">دخول</button>
+        <button type="button" class="btn-login" onclick="executeFirebaseLogin()">دخول بالبريد الإلكتروني</button>
+        
+        <div class="divider">أو عبر حساب المنصة</div>
+
+        <button type="button" class="btn-sudan-play" onclick="loginWithSudanPlayAccount()">
+            <i class="fab fa-google"></i> تسجيل الدخول عبر حساب سودان بلاي
+        </button>
 
         <div class="back-home">
             <a href="index.html"><i class="fas fa-store"></i> العودة إلى المتجر الرئيسي</a>
@@ -141,7 +177,7 @@
     </div>
 
     <script>
-        // إعدادات Firebase الخاصة بمشروعك (قم بتعديلها ببيانات مشروعك الفعلية إن لم تكن مربوطة مسبقاً)
+        // إعدادات Firebase الخاصة بمشروعك (استبدلها بالبيانات الفعلية إذا لم تكن مضبوطة)
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
             authDomain: "YOUR_AUTH_DOMAIN",
@@ -151,12 +187,26 @@
             appId: "YOUR_APP_ID"
         };
         
-        // منع التكرار في تهيئة فايربيس
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
 
-        // دالة تنفيذ تسجيل الدخول والتوجيه الذكي
+        // دالة التوجيه الذكي بعد النجاح
+        function handleSuccessfulLogin(user) {
+            localStorage.setItem('sudanPlayAdmin', user.uid);
+            
+            // التحقق مما إذا كان هناك صفحة مقصودة مخزنة (مثل for-you.html)
+            const targetPage = localStorage.getItem('redirectAfterLogin');
+            
+            if (targetPage) {
+                localStorage.removeItem('redirectAfterLogin');
+                window.location.href = targetPage;
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        }
+
+        // تسجيل الدخول بالبريد وكلمة المرور
         function executeFirebaseLogin() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -168,24 +218,29 @@
 
             firebase.auth().signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    const user = userCredential.user;
-                    // حفظ الجلسة
-                    localStorage.setItem('sudanPlayAdmin', user.uid);
-                    
-                    // التحقق مما إذا كانت هناك صفحة مقصودة مخزنة (مثل for-you.html)
-                    const targetPage = localStorage.getItem('redirectAfterLogin');
-                    
-                    if (targetPage) {
-                        // مسح الوجهة من الذاكرة لكي لا تتعارض لاحقاً والانتقال إليها مباشرة
-                        localStorage.removeItem('redirectAfterLogin');
-                        window.location.href = targetPage;
-                    } else {
-                        // الوجهة الافتراضية في حال عدم وجود صفحة سابقة
-                        window.location.href = 'dashboard.html';
-                    }
+                    handleSuccessfulLogin(userCredential.user);
                 })
                 .catch((error) => {
                     alert('خطأ في تسجيل الدخول: ' + error.message);
+                });
+        }
+
+        // تسجيل الدخول عبر حساب سودان بلاي (اختر الحساب بنفسك)
+        function loginWithSudanPlayAccount() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            
+            // إجبار النظام على فتح نافذة اختيار الحسابات
+            provider.setCustomParameters({
+                prompt: 'select_account'
+            });
+
+            firebase.auth().signInWithPopup(provider)
+                .then((result) => {
+                    handleSuccessfulLogin(result.user);
+                })
+                .catch((error) => {
+                    console.error("خطأ في تسجيل الدخول:", error);
+                    alert('فشل تسجيل الدخول عبر حساب سودان بلاي: ' + error.message);
                 });
         }
     </script>
