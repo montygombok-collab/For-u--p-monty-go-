@@ -103,10 +103,10 @@
                     <span>التسجيل عبر حساب غوغل</span>
                 </button>
 
-                <!-- 2. طريقة حساب سودان بلاي الموحد (مع تمرير رابط العودة) -->
+                <!-- 2. التوجيه المباشر لصفحة تسجيل الدخول المخصصة لـ Sudan Play مع تمرير رابط العودة -->
                 <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-brandDark border border-brandYellow text-brandYellow font-bold py-3 px-4 rounded-xl hover:bg-brandYellow/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-solid fa-store text-brandYellow text-lg ml-2"></i>
-                    <span>التسجيل عبر حساب سودان بلاي</span>
+                    <span>تسجيل الدخول برقم تعريف سودان بلاي</span>
                 </button>
             </div>
 
@@ -168,16 +168,16 @@
         }
         const auth = firebase.auth();
 
-        // فحص بيانات العودة (Redirect) من سودان بلاي أو التحقق من الجلسة المخزنة
+        // فحص بيانات العودة (Redirect) بعد تسجيل الدخول الناجح أو التحقق من الجلسة المخزنة
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            const userEmailFromRedirect = urlParams.get('email');
+            const userEmailFromRedirect = urlParams.get('email') || urlParams.get('sudan_play_id');
 
             if (userEmailFromRedirect) {
-                // حفظ البريد القادم من سودان بلاي محلياً لتثبيت الجلسة في For-U[cite: 1]
+                // حفظ البيانات محلياً لتثبيت الجلسة في فور يو[cite: 1]
                 localStorage.setItem('foru_user_email', userEmailFromRedirect);
                 updateUIAfterLogin(userEmailFromRedirect);
-                // تنظيف الرابط من البارامترات
+                // تنظيف البارامترات من رابط الصفحة
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else {
                 const savedEmail = localStorage.getItem('foru_user_email');
@@ -193,12 +193,12 @@
             }
         });
 
-        function updateUIAfterLogin(email) {
+        function updateUIAfterLogin(identifier) {
             document.getElementById('authButtonsContainer').classList.add('hidden');
             const profileDisplay = document.getElementById('userProfileDisplay');
             profileDisplay.classList.remove('hidden');
             profileDisplay.classList.add('flex');
-            document.getElementById('userEmailSpan').innerText = email;
+            document.getElementById('userEmailSpan').innerText = identifier;
         }
 
         function openAuthModal(mode) {
@@ -256,11 +256,14 @@
                 });
         }
 
-        // 2. تسجيل الدخول عبر حساب سودان بلاي (التوجيه مع تمرير رابط العودة)[cite: 1]
+        // 2. التوجيه لصفحة تسجيل الدخول الخاصة بسودان بلاي مع حفظ رابط صفحة "فور يو" الحالية للعودة إليها لاحقاً
         function loginWithSudanPlay() {
-            const sudanPlayAuthUrl = "https://sudan-play.vercel.app/index.html"; 
-            const currentRedirectUrl = window.location.href.split('?')[0];
-            window.location.href = `${sudanPlayAuthUrl}?redirect_uri=${encodeURIComponent(currentRedirectUrl)}`;
+            // حفظ الرابط الحالي في الذاكرة ليتم العودة إليه
+            const currentUrl = window.location.href.split('?')[0];
+            localStorage.setItem('redirectAfterLogin', currentUrl);
+            
+            // الانتقال لملف تسجيل الدخول الخاص بـ سودان بلاي (login.html)
+            window.location.href = 'login.html';
         }
 
         // 3. تسجيل الدخول أو إنشاء حساب بالبريد الإلكتروني وكلمة المرور
