@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sudan Play - فور يو</title>
+    <title>Sudan Play - تسجيل الدخول</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- استيراد مكتبة Firebase (تأكد من مطابقة الإصدار مع بقية ملفات مشروعك) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -16,12 +19,10 @@
         :root {
             --primary: #4a6bff;
             --secondary: #ff5e7d;
-            --accent: #2ec4b6;
             --dark: #0f111a;
             --light: #f0f3f9;
             --glass-card: rgba(255, 255, 255, 0.85);
             --glass-border: rgba(255, 255, 255, 0.75);
-            --glass-shadow: 0 4px 15px 0 rgba(31, 38, 135, 0.05);
             --radius: 16px;
         }
 
@@ -31,161 +32,162 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            justify-content: center;
+            align-items: center;
             color: #1e293b;
-            overflow-x: hidden;
         }
 
-        header {
-            background: rgba(15, 17, 26, 0.88);
-            backdrop-filter: blur(15px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--light);
-            padding: 12px 15px;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            font-size: 1.2em;
-            font-weight: bold;
-            text-decoration: none;
-            gap: 8px;
-            color: #fff;
-        }
-        
-        .logo img {
-            height: 35px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(74, 107, 255, 0.4);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 15px;
-        }
-
-        .nav-links a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 0.9em;
-            transition: color 0.2s;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-
-        main {
-            flex: 1;
-            max-width: 1200px;
-            margin: 20px auto;
-            width: 95%;
-            padding: 20px;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 30px;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(12px);
-            padding: 30px;
-            border-radius: var(--radius);
-            border: 1px solid var(--glass-border);
-            box-shadow: var(--glass-shadow);
-        }
-
-        .section-header h2 {
-            font-size: 2em;
-            color: var(--dark);
-            margin-bottom: 10px;
-        }
-
-        .section-header p {
-            color: #475569;
-            font-size: 0.95em;
-        }
-
-        .content-card {
+        .login-card {
             background: var(--glass-card);
             backdrop-filter: blur(12px);
             border-radius: var(--radius);
-            padding: 25px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
             border: 1px solid var(--glass-border);
-            box-shadow: var(--glass-shadow);
-            text-align: center;
         }
 
-        footer {
-            background: rgba(15, 17, 26, 0.88);
-            backdrop-filter: blur(15px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            color: #94a3b8;
-            padding: 15px;
+        .login-header {
             text-align: center;
-            font-size: 0.75em;
-            margin-top: auto;
+            margin-bottom: 25px;
+        }
+
+        .login-header h2 {
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-login:hover {
+            background: #3b5bdb;
+        }
+
+        .back-home {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .back-home a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .back-home a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <nav>
-            <a href="index.html" class="logo">
-                <img src="https://www.appcreator24.com/srv/imgs/gen/3834410_splash.png" alt="Sudan Play Logo">
-                <span>Sudan Play</span>
-            </a>
-            <div class="nav-links">
-                <a href="index.html"><i class="fas fa-store"></i> المتجر</a>
-            </div>
-        </nav>
-    </header>
-
-    <main>
-        <div class="section-header">
-            <h2>قسم فور يو (For You)</h2>
-            <p>التوصيات المخصصة لك بناءً على اهتماماتك وتفضيلاتك البرمجية.</p>
+    <div class="login-card">
+        <div class="login-header">
+            <h2>تسجيل الدخول</h2>
+            <p>مرحباً بك مجدداً في Sudan Play</p>
         </div>
 
-        <div class="content-card">
-            <h3 style="color: var(--primary); margin-bottom: 15px;"><i class="fas fa-user-shield"></i> مرحباً بك في لوحة المحتوى الخاص</h3>
-            <p style="color: #334155; line-height: 1.6;">تم التحقق من هويتك بنجاح وانتقالك لهذه الصفحة يثبت نجاح نظام التوجيه المرن بدون العودة الإجبارية لواجهة المتجر فقط!</p>
+        <div class="form-group">
+            <label for="email">البريد الإلكتروني</label>
+            <input type="email" id="email" placeholder="أدخل بريدك الإلكتروني">
         </div>
-    </main>
 
-    <footer>
-        <p>&copy; 2026 Sudan Play - جميع الحقوق محفوظة</p>
-    </footer>
+        <div class="form-group">
+            <label for="password">كلمة المرور</label>
+            <input type="password" id="password" placeholder="أدخل كلمة المرور">
+        </div>
+
+        <button type="button" class="btn-login" onclick="executeFirebaseLogin()">دخول</button>
+
+        <div class="back-home">
+            <a href="index.html"><i class="fas fa-store"></i> العودة إلى المتجر الرئيسي</a>
+        </div>
+    </div>
 
     <script>
-        // التحقق عند الدخول لصفحة "فور يو" إذا كان المستخدم مسجلاً للدخول أم لا
-        function checkAuthAndRedirect() {
-            const session = localStorage.getItem('sudanPlayAdmin');
-            
-            // إذا لم يكن مسجل دخول، قم بحفظ رابط هذه الصفحة وتوجيهه لصفحة الدخول
-            if (!session) {
-                // حفظ اسم الملف الحالي (for-you.html) ليعود إليه بعد تسجيل الدخول
-                localStorage.setItem('redirectAfterLogin', 'for-you.html');
-                window.location.href = 'login.html';
-            }
+        // إعدادات Firebase الخاصة بمشروعك (قم بتعديلها ببيانات مشروعك الفعلية إن لم تكن مربوطة مسبقاً)
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // منع التكرار في تهيئة فايربيس
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
 
-        // تنفيذ التحقق فور تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuthAndRedirect();
-        });
+        // دالة تنفيذ تسجيل الدخول والتوجيه الذكي
+        function executeFirebaseLogin() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                alert("الرجاء إدخال البريد الإلكتروني وكلمة المرور.");
+                return;
+            }
+
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    // حفظ الجلسة
+                    localStorage.setItem('sudanPlayAdmin', user.uid);
+                    
+                    // التحقق مما إذا كانت هناك صفحة مقصودة مخزنة (مثل for-you.html)
+                    const targetPage = localStorage.getItem('redirectAfterLogin');
+                    
+                    if (targetPage) {
+                        // مسح الوجهة من الذاكرة لكي لا تتعارض لاحقاً والانتقال إليها مباشرة
+                        localStorage.removeItem('redirectAfterLogin');
+                        window.location.href = targetPage;
+                    } else {
+                        // الوجهة الافتراضية في حال عدم وجود صفحة سابقة
+                        window.location.href = 'dashboard.html';
+                    }
+                })
+                .catch((error) => {
+                    alert('خطأ في تسجيل الدخول: ' + error.message);
+                });
+        }
     </script>
 </body>
 </html>
