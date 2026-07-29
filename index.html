@@ -139,7 +139,7 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs (تم تحديث النسخة إلى 10.8.0 لتتوافق مع بقية النظام وتخزين المستخدمين تلقائياً في Firestore) -->
+    <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
@@ -175,7 +175,7 @@
 
         let currentMode = 'login';
 
-        // دالة مساعدة لحفظ أو تحديث بيانات المستخدم تلقائياً في مجموعة users بقاعدة البيانات Firestore
+        // دالة حفظ المستخدم في قاعدة البيانات بصلاحية "عميل عادي" افتراضياً
         async function saveUserToFirestore(user, customName = '') {
             try {
                 const userRef = doc(db, "users", user.uid);
@@ -184,17 +184,15 @@
                 const displayName = customName || user.displayName || user.email.split('@')[0];
 
                 if (!userSnap.exists()) {
-                    // إذا لم يكن المستخدم موجوداً مسبقاً، يتم إنشاؤه مع الصلاحية الافتراضية
                     await setDoc(userRef, {
                         uid: user.uid,
                         name: displayName,
                         email: user.email,
                         phone: user.phoneNumber || 'غير مسجل',
-                        role: 'مندوب توصيل', // الصلاحية الافتراضية القابلة للتعديل من لوحة التحكم
+                        role: 'عميل عادي', // تعيين الصلاحية الافتراضية كعميل عادي لجميع المسجلين الجدد
                         createdAt: new Date().toISOString()
                     });
                 } else {
-                    // تحديث بيانات الدخول الأخيرة إذا لزم الأمر
                     await setDoc(userRef, {
                         email: user.email,
                         name: userSnap.data().name || displayName
@@ -333,13 +331,12 @@
                     const user = result.user;
                     const displayName = user.displayName || user.email.split('@')[0];
                     
-                    // حفظ المستخدم تلقائياً في مجموعة users بقاعدة البيانات ليظهر في لوحة التحكم
                     await saveUserToFirestore(user, displayName);
 
                     localStorage.setItem('foru_user_name', displayName);
                     localStorage.setItem('foru_user_email', user.email);
                     updateUIAfterLogin(displayName);
-                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
+                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً كعميل عادي بنجاح!');
                 })
                 .catch((error) => {
                     showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
@@ -358,13 +355,12 @@
                         const user = userCredential.user;
                         const displayName = customNameInput.trim() !== '' ? customNameInput : email.split('@')[0];
                         
-                        // حفظ المستخدم في قاعدة البيانات ضمن مجموعة users
                         await saveUserToFirestore(user, displayName);
 
                         localStorage.setItem('foru_user_name', displayName);
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(displayName);
-                        showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب الجديد وتسجيل الدخول بنجاح!');
+                        showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب كعميل عادي وتسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
                         showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.message, true);
@@ -375,7 +371,6 @@
                         const user = userCredential.user;
                         const displayName = user.displayName || email.split('@')[0];
                         
-                        // التأكد من وجود المستخدم في قاعدة البيانات عند تسجيل الدخول العادي
                         await saveUserToFirestore(user, displayName);
 
                         localStorage.setItem('foru_user_name', displayName);
