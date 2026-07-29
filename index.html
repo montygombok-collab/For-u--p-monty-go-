@@ -77,17 +77,15 @@
         </div>
     </main>
 
-    <!-- نافذة المصادقة -->
+    <!-- نافذة المصادقة (تظهر تلقائياً عند الدخول إذا لم يكن المستخدم مسجلاً) -->
     <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-md w-full relative shadow-2xl">
-            <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white text-xl">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <!-- ملاحظة: تم إزالة زر الإغلاق (X) الإجباري هنا لضمان إتمام تسجيل الدخول أولاً -->
             
             <div class="text-center mb-5">
                 <img src="image.jpg" alt="For-U Logo" class="w-14 h-14 object-cover mx-auto rounded-xl mb-2 shadow-lg border border-[#FFB800]/30">
                 <h3 id="modalTitle" class="text-xl font-bold">تسجيل الدخول / إنشاء حساب</h3>
-                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة الدخول وسيتم إنشاء حسابك تلقائياً</p>
+                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">يرجى تسجيل الدخول والمضي قدماً لمتابعة استخدام النظام</p>
             </div>
 
             <div class="space-y-3 mb-3">
@@ -212,6 +210,12 @@
         };
 
         window.closeAuthModal = function() {
+            // مغلقة لمنع التخطي إذا لم يكن المستخدم مسجلاً
+            const savedEmail = localStorage.getItem('foru_user_email');
+            if(!savedEmail) {
+                showCustomAlert('تنبيه مطلوب', '⚠️ يجب تسجيل الدخول أو إنشاء حساب أولاً للمضي قدماً في النظام.', true);
+                return;
+            }
             const modal = document.getElementById('authModal');
             modal.classList.remove('flex');
             modal.classList.add('hidden');
@@ -254,6 +258,9 @@
             const savedEmail = localStorage.getItem('foru_user_email');
             if (savedEmail) {
                 updateUIAfterLogin(savedName || savedEmail);
+            } else {
+                // إظهار نافذة تسجيل الدخول فوراً تلقائياً عند فتح الصفحة لأول مرة
+                openAuthModal('login');
             }
         });
 
@@ -275,6 +282,11 @@
             profileDisplay.classList.remove('hidden');
             profileDisplay.classList.add('flex');
             document.getElementById('userNameSpan').innerText = displayName;
+
+            // إغلاق نافذة المصادقة تلقائياً بعد نجاح الدخول
+            const modal = document.getElementById('authModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
 
             // استبدال زر "ابدأ الآن / تسجيل الدخول" في المنتصف
             const centerContainer = document.getElementById('centerActionContainer');
@@ -300,7 +312,6 @@
                     localStorage.setItem('foru_user_name', displayName);
                     localStorage.setItem('foru_user_email', user.email);
                     updateUIAfterLogin(displayName);
-                    closeAuthModal();
                     showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
                 })
                 .catch((error) => {
@@ -328,7 +339,6 @@
                         localStorage.setItem('foru_user_name', displayName);
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(displayName);
-                        closeAuthModal();
                         showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب الجديد وتسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
@@ -342,7 +352,6 @@
                         localStorage.setItem('foru_user_name', displayName);
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(displayName);
-                        closeAuthModal();
                         showCustomAlert('نجاح الدخول', '✅ تم تسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
@@ -374,6 +383,8 @@
                 `;
 
                 showCustomAlert('تسجيل الخروج', '👋 تم تسجيل الخروج بنجاح');
+                // إعادة فتح نافذة الدخول إجبارياً بعد تسجيل الخروج
+                openAuthModal('login');
             });
         };
     </script>
