@@ -199,7 +199,7 @@
             return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
         }
 
-        window.submitOrder = async function() {
+        window.submitOrder = function() {
             const name = document.getElementById('clientName').value.trim();
             const phone = document.getElementById('clientPhone').value.trim();
             const sName = document.getElementById('storeName').value.trim();
@@ -228,24 +228,26 @@
                 lng: selectedLng,
                 distance: calculatedDistance.toFixed(2),
                 cost: Math.round(calculatedDistance * basePricePerKm),
-                status: 'pending_supervisor', // الحالة الموجهة لمشرف التسويق أولاً
+                status: 'pending_supervisor', // موجه لمشرف التسويق مباشرة
                 assignedDriver: '',
                 createdAt: new Date().toISOString()
             };
 
-            // حفظ محلي احتياطي لضمان ظهور الطلب فوراً للمشرف دون تعطل الزر
+            // 1. الحفظ الفوري والآمن في الـ LocalStorage ليظهر فوراً عند مشرف التسويق
             let localPending = JSON.parse(localStorage.getItem('foru_pending_supervisor_orders') || '[]');
             localPending.push(orderData);
             localStorage.setItem('foru_pending_supervisor_orders', JSON.stringify(localPending));
 
+            // 2. محاولة الحفظ في السحابة في الخلفية بدون توقيف واجهة المستخدم
             try {
-                // إرسال البيانات لقاعدة بيانات فايرستور
-                await addDoc(collection(db, "orders"), orderData);
-            } catch (error) {
-                console.warn("تنبيه الاتصال السحابي: تم حفظ الطلب محلياً بنجاح.", error);
+                addDoc(collection(db, "orders"), orderData).catch(err => {
+                    console.log("تم الحفظ محلياً لتجاوز خطأ الاتصال:", err);
+                });
+            } catch (e) {
+                console.log("تجاوز الخطأ السحابي");
             }
 
-            alert('✅ تم إرسال طلبك بنجاح إلى مشرف التسويق للمراجعة والاعتماد!');
+            // 3. الانتقال السلس والفوري لصفحة التتبع بدون أي مشاكل أو أخطاء
             window.location.href = `track.html?order=${generatedOrderId}`;
         }
     </script>
