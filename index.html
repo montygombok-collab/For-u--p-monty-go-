@@ -236,7 +236,7 @@
             }
         }
 
-        // فحص الذاكرة المحلية فوراً عند فتح الصفحة لضمان ظهور البريد مباشرة
+        // 1. الفحص الفوري للذاكرة المحلية عند بداية تحميل الصفحة
         window.addEventListener('DOMContentLoaded', () => {
             const savedEmail = localStorage.getItem('foru_user_email');
             if (savedEmail) {
@@ -244,7 +244,36 @@
             }
         });
 
-        // دالة تسجيل الدخول عبر Google وتحديث الواجهة فوراً
+        // 2. معالجة نتيجة العودة (Redirect Result) للموبايل بشكل دقيق وفوري
+        getRedirectResult(auth)
+            .then((result) => {
+                if (result && result.user) {
+                    const user = result.user;
+                    localStorage.setItem('foru_user_email', user.email);
+                    updateUIAfterLogin(user.email);
+                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
+                }
+            }).catch((error) => {
+                console.error("Redirect error:", error);
+            });
+
+        // 3. مراقبة حالة فايربيس للتأكد من المزامنة المستمرة
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                localStorage.setItem('foru_user_email', user.email);
+                updateUIAfterLogin(user.email);
+            }
+        });
+
+        function updateUIAfterLogin(email) {
+            document.getElementById('authButtonsContainer').classList.add('hidden');
+            const profileDisplay = document.getElementById('userProfileDisplay');
+            profileDisplay.classList.remove('hidden');
+            profileDisplay.classList.add('flex');
+            document.getElementById('userEmailSpan').innerText = email;
+        }
+
+        // دالة تسجيل الدخول عبر Google
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -267,35 +296,6 @@
                     });
             }
         };
-
-        // معالجة نتيجة العودة للموبايل
-        getRedirectResult(auth)
-            .then((result) => {
-                if (result && result.user) {
-                    const user = result.user;
-                    localStorage.setItem('foru_user_email', user.email);
-                    updateUIAfterLogin(user.email);
-                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
-                }
-            }).catch((error) => {
-                console.error("Redirect error:", error);
-            });
-
-        // مراقبة حالة المصادقة من فايربيس
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                localStorage.setItem('foru_user_email', user.email);
-                updateUIAfterLogin(user.email);
-            }
-        });
-
-        function updateUIAfterLogin(email) {
-            document.getElementById('authButtonsContainer').classList.add('hidden');
-            const profileDisplay = document.getElementById('userProfileDisplay');
-            profileDisplay.classList.remove('hidden');
-            profileDisplay.classList.add('flex');
-            document.getElementById('userEmailSpan').innerText = email;
-        }
 
         window.loginWithSudanPlay = function() {
             const sudanPlayAuthUrl = "https://sudan-play.vercel.app/index.html"; 
