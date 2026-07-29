@@ -145,8 +145,6 @@
             onAuthStateChanged, 
             GoogleAuthProvider,
             signInWithPopup,
-            signInWithRedirect,
-            getRedirectResult,
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
             signOut,
@@ -236,7 +234,7 @@
             }
         }
 
-        // 1. الفحص الفوري للذاكرة المحلية عند بداية تحميل الصفحة
+        // فحص الذاكرة المحلية فور فتح الصفحة
         window.addEventListener('DOMContentLoaded', () => {
             const savedEmail = localStorage.getItem('foru_user_email');
             if (savedEmail) {
@@ -244,20 +242,7 @@
             }
         });
 
-        // 2. معالجة نتيجة العودة (Redirect Result) للموبايل بشكل دقيق وفوري
-        getRedirectResult(auth)
-            .then((result) => {
-                if (result && result.user) {
-                    const user = result.user;
-                    localStorage.setItem('foru_user_email', user.email);
-                    updateUIAfterLogin(user.email);
-                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
-                }
-            }).catch((error) => {
-                console.error("Redirect error:", error);
-            });
-
-        // 3. مراقبة حالة فايربيس للتأكد من المزامنة المستمرة
+        // مراقبة حالة فايربيس بشكل دائم
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 localStorage.setItem('foru_user_email', user.email);
@@ -273,28 +258,20 @@
             document.getElementById('userEmailSpan').innerText = email;
         }
 
-        // دالة تسجيل الدخول عبر Google
+        // استخدام النافذة المنبثقة مباشرة لضمان عدم إعادة تحميل الصفحة وضياع الحالة
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            
-            if (isMobile) {
-                signInWithRedirect(auth, provider).catch((error) => {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    localStorage.setItem('foru_user_email', user.email);
+                    updateUIAfterLogin(user.email);
+                    closeAuthModal();
+                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
+                })
+                .catch((error) => {
                     showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
                 });
-            } else {
-                signInWithPopup(auth, provider)
-                    .then((result) => {
-                        const user = result.user;
-                        localStorage.setItem('foru_user_email', user.email);
-                        updateUIAfterLogin(user.email);
-                        closeAuthModal();
-                        showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
-                    })
-                    .catch((error) => {
-                        showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
-                    });
-            }
         };
 
         window.loginWithSudanPlay = function() {
