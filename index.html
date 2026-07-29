@@ -10,7 +10,7 @@
     <style>
         body { 
             font-family: 'Cairo', sans-serif; 
-            overflow: hidden; /* منع السحب نهائياً وتثبيت الصفحة */
+            overflow: hidden; 
             height: 100vh;
         }
     </style>
@@ -28,8 +28,8 @@
                 <p class="text-xs text-gray-400">توصيل طلباتك بسرعة وأمان</p>
             </div>
 
-            <!-- قسم عرض البريد وحالة تسجيل الدخول (يظهر عند تسجيل الدخول) -->
-            <div id="userProfileDisplay" class="hidden w-full flex-col items-center space-y-3 bg-[#1E1E1E] border border-gray-800 p-4 rounded-2xl shadow-xl mb-4">
+            <!-- قسم عرض البريد وحالة تسجيل الدخول -->
+            <div id="userProfileDisplay" class="hidden w-full flex-col items-center space-y-3 bg-[#1E1E1E] border border-gray-800 p-4 rounded-2xl shadow-xl mb-4 transition-all duration-300">
                 <div class="flex items-center space-x-2 space-x-reverse">
                     <i class="fa-solid fa-circle-user text-[#FFB800] text-2xl"></i>
                     <span id="userEmailSpan" class="text-sm text-white font-semibold"></span>
@@ -44,7 +44,7 @@
                 </div>
             </div>
 
-            <!-- أزرار الدخول وإنشاء الحساب (تظهر في الوضع الطبيعي) -->
+            <!-- أزرار الدخول وإنشاء الحساب -->
             <div id="authButtonsContainer" class="flex flex-col space-y-3 w-full">
                 <button onclick="openAuthModal('login')" class="w-full bg-[#1E1E1E] border border-gray-700 text-[#FFB800] font-bold py-3.5 px-6 rounded-2xl hover:bg-gray-800 transition shadow-lg flex items-center justify-center text-base">
                     <i class="fa-solid fa-right-to-bracket ml-2"></i> تسجيل الدخول
@@ -226,6 +226,7 @@
             }
         }
 
+        // الفحص المباشر عند التحميل
         window.addEventListener('DOMContentLoaded', () => {
             const savedEmail = localStorage.getItem('foru_user_email');
             if (savedEmail) {
@@ -233,13 +234,14 @@
             }
         });
 
+        // التقاط نتيجة إعادة التوجيه وتحديث الواجهة فوراً وعرض رسالة نجاح واضحة
         getRedirectResult(auth)
             .then((result) => {
                 if (result && result.user) {
                     const user = result.user;
                     localStorage.setItem('foru_user_email', user.email);
                     updateUIAfterLogin(user.email);
-                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
+                    closeAuthModal();
                 }
             }).catch((error) => {
                 console.error("Redirect error:", error);
@@ -264,6 +266,7 @@
             const provider = new GoogleAuthProvider();
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+            // إظهار تنبيه بسيط للمستخدم بأن الصفحة جاري تحويلها لغوغل لتجنب شعور التوقف
             if (isMobile) {
                 signInWithRedirect(auth, provider).catch((error) => {
                     showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
