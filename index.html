@@ -148,7 +148,8 @@
         import { 
             getAuth, 
             onAuthStateChanged, 
-            signInWithPopup, 
+            signInWithRedirect,
+            getRedirectResult,
             GoogleAuthProvider, 
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
@@ -241,7 +242,23 @@
             }
         }
 
+        // التعامل مع نتيجة العودة من إعادة التوجيه لغوغل
         window.addEventListener('DOMContentLoaded', () => {
+            getRedirectResult(auth)
+                .then((result) => {
+                    if (result && result.user) {
+                        const user = result.user;
+                        localStorage.setItem('foru_user_email', user.email);
+                        updateUIAfterLogin(user.email);
+                        showCustomAlert('نجاح العملية', '✅ تم تسجيل الدخول عبر حساب غوغل بنجاح!');
+                    }
+                })
+                .catch((error) => {
+                    if (error.code !== 'auth/popup-closed-by-user') {
+                        showCustomAlert('خطأ في المصادقة', '❌ خطأ: ' + error.message, true);
+                    }
+                });
+
             const urlParams = new URLSearchParams(window.location.search);
             const userEmailFromRedirect = urlParams.get('email');
 
@@ -272,26 +289,13 @@
             document.getElementById('userEmailSpan').innerText = email;
         }
 
-        // إعداد مزود غوغل مع إضافة معاملات لغة وتجاوز قيود الجلسة على الموبايل
+        // استخدام signInWithRedirect حصرياً لمنع ظهور مشاكل النوافذ المنبثقة على الهواتف
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
             provider.setCustomParameters({
                 prompt: 'select_account'
             });
-            
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    const user = result.user;
-                    localStorage.setItem('foru_user_email', user.email);
-                    updateUIAfterLogin(user.email);
-                    closeAuthModal();
-                    showCustomAlert('نجاح العملية', '✅ تم تسجيل الدخول عبر حساب غوغل بنجاح!');
-                })
-                .catch((error) => {
-                    if (error.code !== 'auth/popup-closed-by-user') {
-                        showCustomAlert('خطأ في المصادقة', '❌ خطأ: ' + error.message, true);
-                    }
-                });
+            signInWithRedirect(auth, provider);
         };
 
         window.loginWithSudanPlay = function() {
