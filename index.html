@@ -19,106 +19,135 @@
 </head>
 <body class="bg-[#121212] text-white min-h-screen flex flex-col justify-between">
 
-    <!-- الهيدر / الشعار في الوسط -->
-    <header class="p-6 flex justify-center items-center border-b border-gray-800">
-        <div class="flex flex-col items-center space-y-2">
-            <img src="image.jpg" alt="For-U Logo" class="w-16 h-16 object-cover rounded-2xl shadow-lg border border-[#FFB800]/30">
-            <div class="text-center">
+    <!-- الهيدر / الشعار -->
+    <header class="p-6 flex justify-between items-center border-b border-gray-800">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <!-- الشعار المربع -->
+            <img src="image.jpg" alt="For-U Logo" class="w-12 h-12 object-cover rounded-xl shadow-lg border border-[#FFB800]/30">
+            <div>
                 <h1 class="text-xl font-bold tracking-wider">فور يو <span class="text-[#FFB800] text-sm">For-U</span></h1>
                 <p class="text-xs text-gray-400">توصيل طلباتك بسرعة وأمان</p>
+            </div>
+        </div>
+        <div class="flex space-x-2 space-x-reverse items-center">
+            <!-- حالة المستخدم بعد تسجيل الدخول -->
+            <div id="userProfileDisplay" class="hidden items-center space-x-2 space-x-reverse">
+                <span id="userEmailSpan" class="text-xs text-[#FFB800] font-semibold"></span>
+                <button onclick="logoutUser()" class="bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-red-500/30 transition">
+                    خروج
+                </button>
+            </div>
+            <div id="authButtonsContainer" class="flex space-x-2 space-x-reverse">
+                <button onclick="openAuthModal('login')" class="bg-[#1E1E1E] border border-gray-700 text-[#FFB800] text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-800 transition shadow-md flex items-center">
+                    <i class="fa-solid fa-right-to-bracket ml-2"></i> تسجيل الدخول
+                </button>
+                <button onclick="openAuthModal('register')" class="bg-[#FFB800] text-[#121212] text-sm font-bold px-4 py-2 rounded-xl hover:bg-yellow-400 transition shadow-md hidden sm:flex items-center">
+                    <i class="fa-solid fa-user-plus ml-2"></i> إنشاء حساب
+                </button>
             </div>
         </div>
     </header>
 
     <!-- المحتوى الرئيسي -->
     <main class="flex-grow flex items-center justify-center px-6 py-12">
-        <div class="max-w-md w-full">
-            
-            <!-- نافذة تسجيل الدخول / حساب المستخدم في المنتصف -->
-            <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-8 shadow-2xl relative">
-                
-                <div class="text-center mb-6">
-                    <h3 id="modalTitle" class="text-2xl font-bold">تسجيل الدخول</h3>
-                    <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة تسجيل الدخول المناسبة</p>
-                </div>
+        <div class="max-w-4xl mx-auto text-center">
+            <span class="bg-[#FFB800]/10 text-[#FFB800] text-sm font-semibold px-4 py-1.5 rounded-full border border-[#FFB800]/20 inline-block mb-6">
+                🚀 النظام اللوجستعي الذكي والمتكامل
+            </span>
+            <h2 class="text-4xl md:text-6xl font-black mb-6 leading-tight">
+                أسرع طريقة لإدارة وتوصيل <span class="text-[#FFB800]">طلباتك بكل أمان</span>
+            </h2>
+            <p class="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">
+                منصة متكاملة تربط العملاء، المسوقين، والمناديب، مع نظام تتبع جغرافي ذكي وإدارة دقيقة للمخازن والماليات.
+            </p>
 
-                <!-- حاوية تسجيل الدخول (تختفي فور تسجيل الدخول) -->
-                <div id="loginSection">
-                    <!-- خيارات التسجيل السريع (غوغل) -->
-                    <div class="space-y-3 mb-4">
-                        <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
-                            <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
-                            <span>التسجيل عبر حساب غوغل</span>
-                        </button>
-                    </div>
-
-                    <div class="relative flex py-2 items-center">
-                        <div class="flex-grow border-t border-gray-700"></div>
-                        <span class="flex-shrink mx-4 text-gray-500 text-xs">أو بالبريد الإلكتروني</span>
-                        <div class="flex-grow border-t border-gray-700"></div>
-                    </div>
-
-                    <!-- الطريقة التقليدية (البريد الإلكتروني وكلمة المرور) -->
-                    <form id="authForm" class="space-y-4 mt-3" onsubmit="handleEmailAuth(event)" autocomplete="off">
-                        <input type="text" style="display:none" name="fakeusernameremembered">
-                        <input type="password" style="display:none" name="fakepasswordremembered">
-
-                        <div id="nameFieldContainer" class="hidden">
-                            <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
-                            <input type="text" id="fullName" autocomplete="off" spellcheck="false" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#FFB800] outline-none transition" placeholder="محمد أحمد">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-300 mb-1">البريد الإلكتروني</label>
-                            <input type="email" id="email" required autocomplete="off" spellcheck="false" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#FFB800] outline-none transition" placeholder="name@foru.com">
-                        </div>
-                        <div>
-                            <label class="block text-sm text-gray-300 mb-1">كلمة المرور</label>
-                            <input type="password" id="password" required autocomplete="new-password" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#FFB800] outline-none transition" placeholder="••••••••">
-                        </div>
-                        <button type="submit" id="submitBtnText" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-2">
-                            دخول بالنظام
-                        </button>
-                    </form>
-
-                    <!-- التبديل بين الدخول وإنشاء الحساب للبريد -->
-                    <div class="text-center mt-5 text-sm text-gray-400">
-                        <span id="switchPrompt">ليس لديك حساب؟</span>
-                        <button type="button" onclick="toggleAuthMode()" id="switchBtnText" class="text-[#FFB800] font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
-                    </div>
-                </div>
-
-                <!-- حالة المستخدم بعد تسجيل الدخول (تظهر فقط بعد الدخول) -->
-                <div id="userProfileDisplay" class="hidden flex-col items-center space-y-4 py-2">
-                    <div class="w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center text-[#FFB800] text-2xl font-bold">
-                        <i class="fa-solid fa-user-check"></i>
-                    </div>
-                    <span id="userEmailSpan" class="text-sm text-[#FFB800] font-semibold text-center break-all"></span>
-                    <button onclick="logoutUser()" class="w-full bg-red-500/20 border border-red-500/50 text-red-400 text-sm font-bold py-3 rounded-xl hover:bg-red-500/30 transition shadow">
-                        تسجيل الخروج
-                    </button>
-                </div>
-
+            <div class="flex justify-center">
+                <a href="customer.html" class="bg-[#FFB800] text-[#121212] font-bold text-lg px-10 py-4 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center">
+                    <i class="fa-solid fa-box-open ml-2"></i> اطلب توصيل طلبك الآن
+                </a>
             </div>
-
         </div>
     </main>
 
-    <!-- الفوتر فارغ -->
-    <footer></footer>
+    <!-- نافذة المصادقة -->
+    <div id="authModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
+            <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="text-center mb-6">
+                <img src="image.jpg" alt="For-U Logo" class="w-16 h-16 object-cover mx-auto rounded-2xl mb-3 shadow-lg border border-[#FFB800]/30">
+                <h3 id="modalTitle" class="text-2xl font-bold">تسجيل الدخول</h3>
+                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة تسجيل الدخول المناسبة</p>
+            </div>
+
+            <!-- خيارات التسجيل السريع (غوغل + سودان بلاي) -->
+            <div class="space-y-3 mb-4">
+                <!-- 1. طريقة حساب غوغل -->
+                <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
+                    <span>التسجيل عبر حساب غوغل</span>
+                </button>
+
+                <!-- 2. طريقة حساب سودان بلاي الموحد (مع تمرير رابط العودة) -->
+                <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-[#121212] border border-[#FFB800] text-[#FFB800] font-bold py-3 px-4 rounded-xl hover:bg-[#FFB800]/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
+                    <i class="fa-solid fa-store text-[#FFB800] text-lg ml-2"></i>
+                    <span>التسجيل عبر حساب سودان بلاي</span>
+                </button>
+            </div>
+
+            <div class="relative flex py-2 items-center">
+                <div class="flex-grow border-t border-gray-700"></div>
+                <span class="flex-shrink mx-4 text-gray-500 text-xs">أو بالبريد الإلكتروني</span>
+                <div class="flex-grow border-t border-gray-700"></div>
+            </div>
+
+            <!-- 3. الطريقة التقليدية (البريد الإلكتروني وكلمة المرور) -->
+            <form id="authForm" class="space-y-4 mt-3" onsubmit="handleEmailAuth(event)">
+                <div id="nameFieldContainer" class="hidden">
+                    <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
+                    <input type="text" id="fullName" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#FFB800] outline-none transition" placeholder="محمد أحمد">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">البريد الإلكتروني</label>
+                    <input type="email" id="email" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#FFB800] outline-none transition" placeholder="name@foru.com">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">كلمة المرور</label>
+                    <input type="password" id="password" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#FFB800] outline-none transition" placeholder="••••••••">
+                </div>
+                <button type="submit" id="submitBtnText" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-2">
+                    دخول بالنظام
+                </button>
+            </form>
+
+            <!-- التبديل بين الدخول وإنشاء الحساب للبريد -->
+            <div class="text-center mt-5 text-sm text-gray-400">
+                <span id="switchPrompt">ليس لديك حساب؟</span>
+                <button type="button" onclick="toggleAuthMode()" id="switchBtnText" class="text-[#FFB800] font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- الفوتر -->
+    <footer class="p-6 text-center border-t border-gray-800 text-gray-500 text-sm">
+        جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
+    </footer>
 
     <!-- سكريبت التحكم والربط -->
     <script>
         let currentMode = 'login';
 
-        // إعدادات Firebase الخاصة بالمشروع الحالي
+        // إعدادات Firebase المحدثة الخاصة بالمشروع الجديد
         const firebaseConfig = {
-            apiKey: "AIzaSyACLchq_aV7AT4wqznXIOv395Nbkeemc_c",
-            authDomain: "ai-sales-a92b9.firebaseapp.com",
-            projectId: "ai-sales-a92b9",
-            storageBucket: "ai-sales-a92b9.firebasestorage.app",
-            messagingSenderId: "100700395015",
-            appId: "1:100700395015:web:79760bc1425b693d3a3ca2",
-            measurementId: "G-KN8CS68W7Q"
+            apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
+            authDomain: "for-u-56f3f.firebaseapp.com",
+            projectId: "for-u-56f3f",
+            storageBucket: "for-u-56f3f.firebasestorage.app",
+            messagingSenderId: "519930793199",
+            appId: "1:519930793199:web:0c876d149832cd0a8d5f1a",
+            measurementId: "G-2ZV3NGRYZG"
         };
 
         if (!firebase.apps.length) {
@@ -126,57 +155,50 @@
         }
         const auth = firebase.auth();
 
-        // مراقبة حالة المستخدم بشكل مباشر من فايربيس
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                updateUIAfterLogin(user.email);
-            } else {
-                showLoginUI();
-            }
-        });
-
-        // التحقق من نتيجة العودة بعد تسجيل الدخول عبر غوغل (Redirect)
+        // فحص بيانات العودة (Redirect) من سودان بلاي أو التحقق من الجلسة المخزنة
         window.addEventListener('DOMContentLoaded', () => {
-            auth.getRedirectResult()
-                .then((result) => {
-                    if (result.user) {
-                        updateUIAfterLogin(result.user.email);
-                    }
-                })
-                .catch((error) => {
-                    console.error('Google Redirect Error:', error);
-                });
+            const urlParams = new URLSearchParams(window.location.search);
+            const userEmailFromRedirect = urlParams.get('email');
+
+            if (userEmailFromRedirect) {
+                // حفظ البريد القادم من سودان بلاي محلياً لتثبيت الجلسة في For-U[cite: 1]
+                localStorage.setItem('foru_user_email', userEmailFromRedirect);
+                updateUIAfterLogin(userEmailFromRedirect);
+                // تنظيف الرابط من البارامترات
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                const savedEmail = localStorage.getItem('foru_user_email');
+                if (savedEmail) {
+                    updateUIAfterLogin(savedEmail);
+                } else {
+                    auth.onAuthStateChanged(user => {
+                        if (user) {
+                            localStorage.setItem('foru_user_email', user.email);
+                            updateUIAfterLogin(user.email);
+                        }
+                    });
+                }
+            }
         });
 
         function updateUIAfterLogin(email) {
-            const loginSection = document.getElementById('loginSection');
-            if (loginSection) loginSection.style.display = 'none';
-            
-            document.getElementById('modalTitle').innerText = 'حسابي';
-            document.getElementById('modalSubtitle').innerText = 'تم تسجيل الدخول بنجاح';
-
+            document.getElementById('authButtonsContainer').classList.add('hidden');
             const profileDisplay = document.getElementById('userProfileDisplay');
-            if (profileDisplay) {
-                profileDisplay.classList.remove('hidden');
-                profileDisplay.classList.add('flex');
-            }
-            
-            const emailSpan = document.getElementById('userEmailSpan');
-            if (emailSpan) emailSpan.innerText = email;
+            profileDisplay.classList.remove('hidden');
+            profileDisplay.classList.add('flex');
+            document.getElementById('userEmailSpan').innerText = email;
         }
 
-        function showLoginUI() {
-            const loginSection = document.getElementById('loginSection');
-            if (loginSection) loginSection.style.display = 'block';
+        function openAuthModal(mode) {
+            currentMode = mode;
+            updateModalUI();
+            document.getElementById('authModal').classList.remove('hidden');
+            document.getElementById('authModal').classList.add('flex');
+        }
 
-            const profileDisplay = document.getElementById('userProfileDisplay');
-            if (profileDisplay) {
-                profileDisplay.classList.remove('flex');
-                profileDisplay.classList.add('hidden');
-            }
-            
-            document.getElementById('modalTitle').innerText = 'تسجيل الدخول';
-            document.getElementById('modalSubtitle').innerText = 'اختر طريقة تسجيل الدخول المناسبة';
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('flex');
+            document.getElementById('authModal').classList.add('hidden');
         }
 
         function toggleAuthMode() {
@@ -206,11 +228,30 @@
             }
         }
 
+        // 1. تسجيل الدخول عبر غوغل
         function loginWithGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithRedirect(provider);
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    const user = result.user;
+                    localStorage.setItem('foru_user_email', user.email);
+                    updateUIAfterLogin(user.email);
+                    closeAuthModal();
+                    alert('✅ تم تسجيل الدخول عبر غوغل بنجاح!');
+                })
+                .catch((error) => {
+                    alert('❌ خطأ في المصادقة: ' + error.message);
+                });
         }
 
+        // 2. تسجيل الدخول عبر حساب سودان بلاي (التوجيه مع تمرير رابط العودة)[cite: 1]
+        function loginWithSudanPlay() {
+            const sudanPlayAuthUrl = "https://sudan-play.vercel.app/index.html"; 
+            const currentRedirectUrl = window.location.href.split('?')[0];
+            window.location.href = `${sudanPlayAuthUrl}?redirect_uri=${encodeURIComponent(currentRedirectUrl)}`;
+        }
+
+        // 3. تسجيل الدخول أو إنشاء حساب بالبريد الإلكتروني وكلمة المرور
         function handleEmailAuth(event) {
             event.preventDefault();
             const email = document.getElementById('email').value;
@@ -219,7 +260,11 @@
             if (currentMode === 'register') {
                 auth.createUserWithEmailAndPassword(email, password)
                     .then((userCredential) => {
-                        updateUIAfterLogin(userCredential.user.email);
+                        const user = userCredential.user;
+                        localStorage.setItem('foru_user_email', user.email);
+                        updateUIAfterLogin(user.email);
+                        closeAuthModal();
+                        alert('✅ تم إنشاء الحساب وتسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
                         alert('❌ خطأ في إنشاء الحساب: ' + error.message);
@@ -227,7 +272,11 @@
             } else {
                 auth.signInWithEmailAndPassword(email, password)
                     .then((userCredential) => {
-                        updateUIAfterLogin(userCredential.user.email);
+                        const user = userCredential.user;
+                        localStorage.setItem('foru_user_email', user.email);
+                        updateUIAfterLogin(user.email);
+                        closeAuthModal();
+                        alert('✅ تم تسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
                         alert('❌ خطأ في البريد أو كلمة المرور: ' + error.message);
@@ -235,9 +284,14 @@
             }
         }
 
+        // تسجيل الخروج
         function logoutUser() {
             auth.signOut().then(() => {
-                showLoginUI();
+                localStorage.removeItem('foru_user_email');
+                document.getElementById('userProfileDisplay').classList.remove('flex');
+                document.getElementById('userProfileDisplay').classList.add('hidden');
+                document.getElementById('authButtonsContainer').classList.remove('hidden');
+                alert('👋 تم تسجيل الخروج بنجاح');
             });
         }
     </script>
