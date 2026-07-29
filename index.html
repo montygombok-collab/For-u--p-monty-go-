@@ -4,21 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>For-U | فور يو - توصيل طلباتك بسرعة وأمان</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brandYellow: '#FFB800',
-                        brandDark: '#121212',
-                        brandCard: '#1E1E1E'
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- استبدل هذا الملف بملف الـ CSS الناتج بعد بناء Tailwind CLI في بيئة الإنتاج -->
+    <link href="./output.css" rel="stylesheet">
     <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Cairo -->
@@ -30,14 +17,14 @@
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
 </head>
-<body class="bg-brandDark text-white min-h-screen flex flex-col justify-between">
+<body class="bg-[#121212] text-white min-h-screen flex flex-col justify-between">
 
     <!-- الهيدر / الشعار في الوسط -->
     <header class="p-6 flex justify-center items-center border-b border-gray-800">
         <div class="flex flex-col items-center space-y-2">
-            <img src="image.jpg" alt="For-U Logo" class="w-16 h-16 object-cover rounded-2xl shadow-lg border border-brandYellow/30">
+            <img src="image.jpg" alt="For-U Logo" class="w-16 h-16 object-cover rounded-2xl shadow-lg border border-[#FFB800]/30">
             <div class="text-center">
-                <h1 class="text-xl font-bold tracking-wider">فور يو <span class="text-brandYellow text-sm">For-U</span></h1>
+                <h1 class="text-xl font-bold tracking-wider">فور يو <span class="text-[#FFB800] text-sm">For-U</span></h1>
                 <p class="text-xs text-gray-400">توصيل طلباتك بسرعة وأمان</p>
             </div>
         </div>
@@ -48,7 +35,7 @@
         <div class="max-w-md w-full">
             
             <!-- نافذة تسجيل الدخول / حساب المستخدم في المنتصف -->
-            <div class="bg-brandCard border border-gray-800 rounded-3xl p-8 shadow-2xl relative">
+            <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-8 shadow-2xl relative">
                 
                 <div class="text-center mb-6">
                     <h3 id="modalTitle" class="text-2xl font-bold">تسجيل الدخول</h3>
@@ -78,17 +65,17 @@
 
                         <div id="nameFieldContainer" class="hidden">
                             <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
-                            <input type="text" id="fullName" autocomplete="off" spellcheck="false" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="محمد أحمد">
+                            <input type="text" id="fullName" autocomplete="off" spellcheck="false" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#FFB800] outline-none transition" placeholder="محمد أحمد">
                         </div>
                         <div>
                             <label class="block text-sm text-gray-300 mb-1">البريد الإلكتروني</label>
-                            <input type="email" id="email" required autocomplete="off" spellcheck="false" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="name@foru.com">
+                            <input type="email" id="email" required autocomplete="off" spellcheck="false" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#FFB800] outline-none transition" placeholder="name@foru.com">
                         </div>
                         <div>
                             <label class="block text-sm text-gray-300 mb-1">كلمة المرور</label>
-                            <input type="password" id="password" required autocomplete="new-password" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="••••••••">
+                            <input type="password" id="password" required autocomplete="new-password" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#FFB800] outline-none transition" placeholder="••••••••">
                         </div>
-                        <button type="submit" id="submitBtnText" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-2">
+                        <button type="submit" id="submitBtnText" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-2">
                             دخول بالنظام
                         </button>
                     </form>
@@ -96,16 +83,16 @@
                     <!-- التبديل بين الدخول وإنشاء الحساب للبريد -->
                     <div class="text-center mt-5 text-sm text-gray-400">
                         <span id="switchPrompt">ليس لديك حساب؟</span>
-                        <button type="button" onclick="toggleAuthMode()" id="switchBtnText" class="text-brandYellow font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
+                        <button type="button" onclick="toggleAuthMode()" id="switchBtnText" class="text-[#FFB800] font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
                     </div>
                 </div>
 
                 <!-- حالة المستخدم بعد تسجيل الدخول (تظهر فقط بعد الدخول) -->
                 <div id="userProfileDisplay" class="hidden flex-col items-center space-y-4 py-2">
-                    <div class="w-16 h-16 bg-brandYellow/10 border border-brandYellow/30 rounded-2xl flex items-center justify-center text-brandYellow text-2xl font-bold">
+                    <div class="w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center text-[#FFB800] text-2xl font-bold">
                         <i class="fa-solid fa-user-check"></i>
                     </div>
-                    <span id="userEmailSpan" class="text-sm text-brandYellow font-semibold text-center break-all"></span>
+                    <span id="userEmailSpan" class="text-sm text-[#FFB800] font-semibold text-center break-all"></span>
                     <button onclick="logoutUser()" class="w-full bg-red-500/20 border border-red-500/50 text-red-400 text-sm font-bold py-3 rounded-xl hover:bg-red-500/30 transition shadow">
                         تسجيل الخروج
                     </button>
@@ -142,10 +129,8 @@
         // مراقبة حالة المستخدم بشكل مباشر من فايربيس
         auth.onAuthStateChanged((user) => {
             if (user) {
-                // إذا كان المستخدم مسجل دخول بالفعل، قم بإخفاء نموذج الدخول وإظهار الملف الشخصي مباشرة
                 updateUIAfterLogin(user.email);
             } else {
-                // إذا لم يكن مسجل دخول، أظهر نموذج الدخول
                 showLoginUI();
             }
         });
@@ -164,15 +149,12 @@
         });
 
         function updateUIAfterLogin(email) {
-            // إخفاء حقول تسجيل الدخول بالكامل فوراً
             const loginSection = document.getElementById('loginSection');
             if (loginSection) loginSection.style.display = 'none';
             
-            // تغيير عنوان البطاقة
             document.getElementById('modalTitle').innerText = 'حسابي';
             document.getElementById('modalSubtitle').innerText = 'تم تسجيل الدخول بنجاح';
 
-            // إظهار بطاقة معلومات المستخدم وزر الخروج
             const profileDisplay = document.getElementById('userProfileDisplay');
             if (profileDisplay) {
                 profileDisplay.classList.remove('hidden');
@@ -224,13 +206,11 @@
             }
         }
 
-        // 1. تسجيل الدخول عبر غوغل
         function loginWithGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithRedirect(provider);
         }
 
-        // 2. تسجيل الدخول أو إنشاء حساب بالبريد الإلكتروني وكلمة المرور
         function handleEmailAuth(event) {
             event.preventDefault();
             const email = document.getElementById('email').value;
@@ -255,7 +235,6 @@
             }
         }
 
-        // تسجيل الخروج
         function logoutUser() {
             auth.signOut().then(() => {
                 showLoginUI();
