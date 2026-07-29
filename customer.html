@@ -66,17 +66,29 @@
             <!-- 2. نموذج إدخال بيانات الطلب في الأسفل -->
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
                 <h2 class="text-xl font-bold border-b border-gray-700 pb-3 flex items-center">
-                    <i class="fa-solid fa-box-open text-brandYellow ml-2"></i> تفاصيل الطلب
+                    <i class="fa-solid fa-box-open text-brandYellow ml-2"></i> تفاصيل الطلب والمتجر
                 </h2>
                 
-                <div>
-                    <label class="block text-sm text-gray-300 mb-1">اسم العميل</label>
-                    <input type="text" id="clientName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="الاسم الكامل">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">اسم العميل</label>
+                        <input type="text" id="clientName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="الاسم الكامل">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">رقم هاتف العميل</label>
+                        <input type="tel" id="clientPhone" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="09xxxxxxxx">
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-sm text-gray-300 mb-1">رقم الهاتف</label>
-                    <input type="tel" id="clientPhone" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="09xxxxxxxx">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">اسم المتجر (المرسل)</label>
+                        <input type="text" id="storeName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: متجر شاهين الإلكتروني">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">رقم هاتف المتجر</label>
+                        <input type="tel" id="storePhone" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="09xxxxxxxx">
+                    </div>
                 </div>
 
                 <div>
@@ -141,7 +153,6 @@
         const companyLat = 15.5007;
         const companyLng = 32.5599;
 
-        // دالة تحديث الحسابات والموقع
         function updateLocationData(lat, lng) {
             selectedLat = lat;
             selectedLng = lng;
@@ -164,14 +175,11 @@
             updateLocationData(e.latlng.lat, e.latlng.lng);
         });
 
-        // زر تحديد الموقع الحالي للعميل عبر GPS
         window.locateUser = function() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        updateLocationData(lat, lng);
+                        updateLocationData(position.coords.latitude, position.coords.longitude);
                     },
                     (error) => {
                         alert('تعسّر تحديد موقعك تلقائياً. تأكد من تفعيل خدمة الموقع (GPS) في متصفحك.');
@@ -194,10 +202,12 @@
         window.submitOrder = async function() {
             const name = document.getElementById('clientName').value.trim();
             const phone = document.getElementById('clientPhone').value.trim();
+            const sName = document.getElementById('storeName').value.trim();
+            const sPhone = document.getElementById('storePhone').value.trim();
             const desc = document.getElementById('orderDesc').value.trim();
 
-            if(!name || !phone || !marker) {
-                alert('الرجاء إدخال اسم العميل، رقم الهاتف، وتحديد الموقع على الخريطة.');
+            if(!name || !phone || !sName || !sPhone || !marker) {
+                alert('الرجاء إكمال كافة حقول العميل والمتجر، وتحديد الموقع على الخريطة.');
                 return;
             }
 
@@ -212,6 +222,8 @@
                     orderId: generatedOrderId,
                     clientName: name,
                     clientPhone: phone,
+                    storeName: sName,
+                    storePhone: sPhone,
                     description: desc,
                     lat: selectedLat,
                     lng: selectedLng,
