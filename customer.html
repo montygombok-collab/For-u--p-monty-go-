@@ -79,21 +79,19 @@
                     </div>
                 </div>
 
-                <button onclick="submitOrder()" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg">
-                    تأكيد وإرسال الطلب
+                <button onclick="submitOrder()" id="submitBtn" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg">
+                    تأكيد وإرسال الطلب عبر السحابة
                 </button>
             </div>
 
-            <!-- الخريطة المجانية (OpenStreetMap) -->
+            <!-- الخريطة -->
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl flex flex-col justify-between space-y-4">
                 <div>
                     <h2 class="text-xl font-bold mb-2 flex items-center">
                         <i class="fa-solid fa-map-location-dot text-brandYellow ml-2"></i> تحديد موقع الاستلام والوصول
                     </h2>
-                    <p class="text-xs text-gray-400 mb-4">انقر على الخريطة لتحديد نقطة التسليم (سيتم حساب المسافة والسعر تلقائياً).</p>
+                    <p class="text-xs text-gray-400 mb-4">انقر على الخريطة لتحديد نقطة التسليم.</p>
                 </div>
-                
-                <!-- عنصر الخريطة -->
                 <div id="map"></div>
             </div>
 
@@ -102,8 +100,8 @@
 
     <!-- نافذة التنبيه المخصصة -->
     <div id="customAlertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
-            <div id="alertIconContainer" class="w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl">
+        <div class="bg-brandCard border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
+            <div id="alertIconContainer" class="w-16 h-16 bg-[#FFB800]/15 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl">
                 <i class="fa-solid fa-circle-check"></i>
             </div>
             <h4 id="alertTitle" class="text-xl font-bold mb-2">تنبيه النظام</h4>
@@ -119,24 +117,36 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- Leaflet JS للخرائط -->
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- السكريبت الخاص بالخريطة والمنطق -->
-    <script>
-        const map = L.map('map').setView([15.5007, 32.5599], 13);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+    <!-- Firebase SDKs (Compat أو Modular عبر CDN) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // إعدادات فايربيس الخاصة بك
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
+            authDomain: "for-u-56f3f.firebaseapp.com",
+            projectId: "for-u-56f3f",
+            storageBucket: "for-u-56f3f.firebasestorage.app",
+            messagingSenderId: "519930793199",
+            appId: "1:519930793199:web:0c876d149832cd0a8d5f1a",
+            measurementId: "G-2ZV3NGRYZG"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const map = L.map('map').setView([15.5007, 32.5599], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
 
         let marker = null;
         let selectedLat = null;
         let selectedLng = null;
         const basePricePerKm = 500; 
         let calculatedDistance = 0;
-        let generatedOrderId = '';
 
         map.on('click', function(e) {
             selectedLat = e.latlng.lat;
@@ -150,7 +160,6 @@
 
             const companyLat = 15.5007;
             const companyLng = 32.5599;
-            
             calculatedDistance = calculateDistance(companyLat, companyLng, selectedLat, selectedLng);
             const totalCost = Math.round(calculatedDistance * basePricePerKm);
 
@@ -160,89 +169,51 @@
 
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371; 
-            const dLat = deg2rad(lat2 - lat1);
-            const dLon = deg2rad(lon2 - lon1);
-            const a = 
-                Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
+            const dLat = (lat2 - lat1) * (Math.PI/180);
+            const dLon = (lon2 - lon1) * (Math.PI/180);
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * (Math.PI/180)) * Math.cos(lat2 * (Math.PI/180)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
         }
 
-        function deg2rad(deg) {
-            return deg * (Math.PI/180);
-        }
-
-        function showCustomAlert(title, message, isError = false, actionCallback = null) {
-            document.getElementById('alertTitle').innerText = title;
-            document.getElementById('alertMessage').innerText = message;
-            const iconContainer = document.getElementById('alertIconContainer');
-            const btn = document.getElementById('alertActionBtn');
-            
-            if (isError) {
-                iconContainer.className = "w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-red-400 text-2xl";
-                iconContainer.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-            } else {
-                iconContainer.className = "w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl";
-                iconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-            }
-
-            if(actionCallback) {
-                btn.onclick = actionCallback;
-                btn.innerText = "الانتقال إلى تتبع الطلب الآن 🛵";
-            } else {
-                btn.onclick = closeCustomAlert;
-                btn.innerText = "حسنًا";
-            }
-
-            const alertModal = document.getElementById('customAlertModal');
-            alertModal.classList.remove('hidden');
-            alertModal.classList.add('flex');
-        }
-
-        function closeCustomAlert() {
-            const alertModal = document.getElementById('customAlertModal');
-            alertModal.classList.remove('flex');
-            alertModal.classList.add('hidden');
-        }
-
-        function submitOrder() {
+        window.submitOrder = async function() {
             const name = document.getElementById('clientName').value.trim();
             const phone = document.getElementById('clientPhone').value.trim();
             const desc = document.getElementById('orderDesc').value.trim();
 
             if(!name || !phone || !marker) {
-                showCustomAlert('تنبيه ناقص', 'الرجاء إدخال اسم العميل، رقم الهاتف، وتحديد الموقع على الخريطة.', true);
+                alert('الرجاء إدخال اسم العميل، رقم الهاتف، وتحديد الموقع على الخريطة.');
                 return;
             }
 
-            // توليد رقم طلب فريد
-            generatedOrderId = 'FOR-' + Math.floor(1000 + Math.random() * 9000);
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "جاري إرسال الطلب للسحابة...";
+            btn.disabled = true;
 
-            // حفظ بيانات الطلب في localStorage (أو ربطه بقاعدة البيانات لاحقاً)
-            const orderData = {
-                orderId: generatedOrderId,
-                clientName: name,
-                clientPhone: phone,
-                description: desc,
-                lat: selectedLat,
-                lng: selectedLng,
-                distance: calculatedDistance.toFixed(2),
-                cost: Math.round(calculatedDistance * basePricePerKm),
-                status: 'قيد المعالجة'
-            };
-            localStorage.setItem('latest_order', JSON.stringify(orderData));
+            const generatedOrderId = 'FOR-' + Math.floor(1000 + Math.random() * 9000);
 
-            // إظهار رسالة النجاح مع زر الانتقال المباشر لصفحة التتبع والخريطة
-            showCustomAlert(
-                'تم إرسال الطلب بنجاح!', 
-                `رقم طلبك هو (${generatedOrderId}). تم حفظ موقعك بنجاح وجاري تجهيز المندوب.`, 
-                false, 
-                () => {
-                    window.location.href = `track.html?order=${generatedOrderId}`;
-                }
-            );
+            try {
+                // حفظ الطلب في مجموعة 'orders' في Firestore
+                await addDoc(collection(db, "orders"), {
+                    orderId: generatedOrderId,
+                    clientName: name,
+                    clientPhone: phone,
+                    description: desc,
+                    lat: selectedLat,
+                    lng: selectedLng,
+                    distance: calculatedDistance.toFixed(2),
+                    cost: Math.round(calculatedDistance * basePricePerKm),
+                    status: 'جديد',
+                    assignedDriver: '',
+                    createdAt: new Date()
+                });
+
+                window.location.href = `track.html?order=${generatedOrderId}`;
+            } catch (error) {
+                console.error("خطأ في الإرسال:", error);
+                alert('حدث خطأ أثناء الاتصال بقاعدة البيانات.');
+                btn.innerText = "تأكيد وإرسال الطلب عبر السحابة";
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
