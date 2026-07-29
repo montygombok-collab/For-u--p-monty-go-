@@ -20,7 +20,6 @@
     <!-- الهيدر العلوي -->
     <header class="p-4 sm:p-6 flex justify-between items-center border-b border-gray-800/60">
         <div class="flex items-center space-x-2 space-x-reverse">
-            <!-- قسم عرض اسم المستخدم وحالة تسجيل الدخول (يظهر بعد الدخول) -->
             <div id="userProfileDisplay" class="hidden items-center space-x-2 space-x-reverse bg-[#1E1E1E] border border-gray-800 px-3 py-1.5 rounded-xl shadow-lg">
                 <i class="fa-solid fa-circle-user text-[#FFB800] text-lg"></i>
                 <span id="userNameSpan" class="text-xs text-white font-semibold"></span>
@@ -31,7 +30,6 @@
         </div>
 
         <div class="flex space-x-2 space-x-reverse items-center">
-            <!-- أزرار الدخول العادية في الهيدر (تظهر قبل الدخول) -->
             <div id="authButtonsContainer" class="flex space-x-2 space-x-reverse">
                 <button onclick="openAuthModal('login')" class="bg-[#1E1E1E] border border-gray-700 text-[#FFB800] text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-800 transition shadow-md flex items-center">
                     <i class="fa-solid fa-right-to-bracket ml-2"></i> تسجيل الدخول
@@ -43,7 +41,7 @@
         </div>
     </header>
 
-    <!-- المحتوى الرئيسي في منتصف الشاشة تماماً -->
+    <!-- المحتوى الرئيسي -->
     <main class="flex-grow flex items-center justify-center px-6">
         <div class="max-w-md w-full text-center flex flex-col items-center">
             
@@ -51,7 +49,6 @@
                 🚀 نصلك قبل ما تطلب 
             </span>
 
-            <!-- الشعار والعنوان في المنتصف -->
             <div class="mb-4 flex flex-col items-center">
                 <img src="image.jpg" alt="For-U Logo" class="w-20 h-20 object-cover rounded-2xl shadow-2xl border-2 border-[#FFB800]/40 mb-3 animate-pulse">
                 <h1 class="text-3xl font-black tracking-wider mb-1">فور يو <span class="text-[#FFB800] text-base">FOR-U</span></h1>
@@ -62,7 +59,6 @@
                 اطلب توصيل لطلباتك واعرض بضاعتك ومنتجاتك  
             </p>
 
-            <!-- زر البدء أو اطلب الآن في المنتصف -->
             <div class="w-full flex flex-col space-y-3">
                 <div id="centerActionContainer" class="flex flex-col space-y-3">
                     <button id="centerActionBtn" onclick="openAuthModal('login')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
@@ -139,7 +135,7 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs ومنطق التوجيه -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
@@ -175,31 +171,43 @@
 
         let currentMode = 'login';
 
-        // دالة حفظ المستخدم في قاعدة البيانات بصلاحية "عميل" افتراضياً
-        async function saveUserToFirestore(user, customName = '') {
+        // دالة التحقق من الصلاحية وتوجيه المستخدم تلقائياً
+        async function redirectUserByRole(user, customName = '') {
             try {
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
                 
-                const displayName = customName || user.displayName || user.email.split('@')[0];
+                let role = 'عميل';
+                let userName = customName || user.displayName || user.email.split('@')[0];
 
-                if (!userSnap.exists()) {
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    role = userData.role || 'عميل';
+                    userName = userData.name || userName;
+                } else {
+                    // إذا كان المستخدم جديداً، يتم تسجيله افتراضياً كـ "عميل"
                     await setDoc(userRef, {
                         uid: user.uid,
-                        name: displayName,
+                        name: userName,
                         email: user.email,
-                        phone: user.phoneNumber || 'غير مسجل',
-                        role: 'عميل', // تعيين الصلاحية الافتراضية كـ "عميل" فور تسجيل المستخدم
+                        phone: 'غير مسجل',
+                        role: 'عميل',
                         createdAt: new Date().toISOString()
                     });
+                }
+
+                localStorage.setItem('foru_user_name', userName);
+                localStorage.setItem('foru_user_email', user.email);
+                localStorage.setItem('foru_user_role', role);
+
+                // التوجيه التلقائي لوحة التحكم الخاصة بالمشرف، المدير، أو المندوب
+                if (role === 'مدير النظام' || role === 'مشرف طلبات' || role === 'مندوب توصيل' || role === 'admin' || role === 'supervisor' || role === 'driver') {
+                    window.location.href = 'dashboard.html';
                 } else {
-                    await setDoc(userRef, {
-                        email: user.email,
-                        name: userSnap.data().name || displayName
-                    }, { merge: true });
+                    updateUIAfterLogin(userName);
                 }
             } catch (error) {
-                console.error("خطأ في حفظ بيانات المستخدم في السحابة:", error);
+                console.error("خطأ في توجيه المستخدم:", error);
             }
         }
 
@@ -220,28 +228,15 @@
         };
 
         window.closeCustomAlert = function() {
-            const alertModal = document.getElementById('customAlertModal');
-            alertModal.classList.remove('flex');
-            alertModal.classList.add('hidden');
+            document.getElementById('customAlertModal').classList.remove('flex');
+            document.getElementById('customAlertModal').classList.add('hidden');
         };
 
         window.openAuthModal = function(mode) {
             currentMode = mode;
             updateModalUI();
-            const modal = document.getElementById('authModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        };
-
-        window.closeAuthModal = function() {
-            const savedEmail = localStorage.getItem('foru_user_email');
-            if(!savedEmail) {
-                showCustomAlert('تنبيه مطلوب', '⚠️ يجب تسجيل الدخول أو إنشاء حساب أولاً للمضي قدماً في النظام.', true);
-                return;
-            }
-            const modal = document.getElementById('authModal');
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
+            document.getElementById('authModal').classList.remove('hidden');
+            document.getElementById('authModal').classList.add('flex');
         };
 
         window.toggleAuthMode = function() {
@@ -276,22 +271,9 @@
             window.location.href = 'store-dashboard.html';
         };
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedName = localStorage.getItem('foru_user_name');
-            const savedEmail = localStorage.getItem('foru_user_email');
-            if (savedEmail) {
-                updateUIAfterLogin(savedName || savedEmail);
-            } else {
-                openAuthModal('login');
-            }
-        });
-
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const displayName = user.displayName || user.email.split('@')[0];
-                localStorage.setItem('foru_user_name', displayName);
-                localStorage.setItem('foru_user_email', user.email);
-                updateUIAfterLogin(displayName);
+                await redirectUserByRole(user);
             }
         });
 
@@ -303,9 +285,8 @@
             profileDisplay.classList.add('flex');
             document.getElementById('userNameSpan').innerText = displayName;
 
-            const modal = document.getElementById('authModal');
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
+            document.getElementById('authModal').classList.remove('flex');
+            document.getElementById('authModal').classList.add('hidden');
 
             const centerContainer = document.getElementById('centerActionContainer');
             centerContainer.innerHTML = `
@@ -318,9 +299,6 @@
                 <a href="track.html" class="w-full bg-[#1E1E1E] border border-[#FFB800] text-[#FFB800] font-bold py-3.5 px-6 rounded-2xl hover:bg-[#FFB800]/10 transition shadow-lg flex items-center justify-center text-sm">
                     <i class="fa-solid fa-location-crosshairs ml-2"></i> تتبع طلب
                 </a>
-                <button onclick="registerAsStore()" class="w-full bg-[#1E1E1E] border border-gray-700 text-gray-300 font-bold py-3.5 px-6 rounded-2xl hover:bg-gray-800 transition shadow-lg flex items-center justify-center text-sm">
-                    <i class="fa-solid fa-gear ml-2"></i> لوحة تحكم المتجر (إضافة منتجات)
-                </button>
             `;
         }
 
@@ -328,15 +306,7 @@
             const provider = new GoogleAuthProvider();
             signInWithPopup(auth, provider)
                 .then(async (result) => {
-                    const user = result.user;
-                    const displayName = user.displayName || user.email.split('@')[0];
-                    
-                    await saveUserToFirestore(user, displayName);
-
-                    localStorage.setItem('foru_user_name', displayName);
-                    localStorage.setItem('foru_user_email', user.email);
-                    updateUIAfterLogin(displayName);
-                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً كـ (عميل) بنجاح!');
+                    await redirectUserByRole(result.user);
                 })
                 .catch((error) => {
                     showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
@@ -352,15 +322,7 @@
             if (currentMode === 'register') {
                 createUserWithEmailAndPassword(auth, email, password)
                     .then(async (userCredential) => {
-                        const user = userCredential.user;
-                        const displayName = customNameInput.trim() !== '' ? customNameInput : email.split('@')[0];
-                        
-                        await saveUserToFirestore(user, displayName);
-
-                        localStorage.setItem('foru_user_name', displayName);
-                        localStorage.setItem('foru_user_email', user.email);
-                        updateUIAfterLogin(displayName);
-                        showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب كـ (عميل) وتسجيل الدخول بنجاح!');
+                        await redirectUserByRole(userCredential.user, customNameInput);
                     })
                     .catch((error) => {
                         showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.message, true);
@@ -368,44 +330,18 @@
             } else {
                 signInWithEmailAndPassword(auth, email, password)
                     .then(async (userCredential) => {
-                        const user = userCredential.user;
-                        const displayName = user.displayName || email.split('@')[0];
-                        
-                        await saveUserToFirestore(user, displayName);
-
-                        localStorage.setItem('foru_user_name', displayName);
-                        localStorage.setItem('foru_user_email', user.email);
-                        updateUIAfterLogin(displayName);
-                        showCustomAlert('نجاح الدخول', '✅ تم تسجيل الدخول بنجاح!');
+                        await redirectUserByRole(userCredential.user);
                     })
                     .catch((error) => {
-                        showCustomAlert('خطأ في الدخول', '❌ البريد غير مسجل أو كلمة المرور خاطئة، يرجى إنشاء حساب.', true);
+                        showCustomAlert('خطأ في الدخول', '❌ البريد غير مسجل أو كلمة المرور خاطئة.', true);
                     });
             }
         };
 
         window.logoutUser = function() {
             signOut(auth).then(() => {
-                localStorage.removeItem('foru_user_name');
-                localStorage.removeItem('foru_user_email');
-                
-                const profileDisplay = document.getElementById('userProfileDisplay');
-                profileDisplay.classList.remove('flex');
-                profileDisplay.classList.add('hidden');
-                document.getElementById('authButtonsContainer').classList.remove('hidden');
-
-                const centerContainer = document.getElementById('centerActionContainer');
-                centerContainer.innerHTML = `
-                    <button id="centerActionBtn" onclick="openAuthModal('login')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
-                        <i class="fa-solid fa-box-open ml-2"></i> ابدأ الآن / تسجيل الدخول
-                    </button>
-                    <button onclick="registerAsStore()" class="w-full bg-[#1E1E1E] border border-[#FFB800] text-[#FFB800] font-bold py-3.5 px-6 rounded-2xl hover:bg-[#FFB800]/10 transition shadow-lg flex items-center justify-center text-sm sm:hidden">
-                        <i class="fa-solid fa-store ml-2"></i> التسجيل كمتجر
-                    </button>
-                `;
-
-                showCustomAlert('تسجيل الخروج', '👋 تم تسجيل الخروج بنجاح');
-                openAuthModal('login');
+                localStorage.clear();
+                window.location.reload();
             });
         };
     </script>
