@@ -108,7 +108,7 @@
                 </div>
 
                 <button onclick="submitOrder()" id="submitBtn" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg">
-                    تأكيد وإرسال الطلب عبر السحابة
+                    تأكيد وإرسال الطلب إلى مشرف التسويق
                 </button>
             </div>
 
@@ -212,12 +212,13 @@
             }
 
             const btn = document.getElementById('submitBtn');
-            btn.innerText = "جاري إرسال الطلب للسحابة...";
+            btn.innerText = "جاري إرسال الطلب إلى مشرف التسويق...";
             btn.disabled = true;
 
             const generatedOrderId = 'FOR-' + Math.floor(1000 + Math.random() * 9000);
 
             try {
+                // حفظ الطلب في قاعدة البيانات بحالة بانتظار مشرف التسويق
                 await addDoc(collection(db, "orders"), {
                     orderId: generatedOrderId,
                     clientName: name,
@@ -229,16 +230,17 @@
                     lng: selectedLng,
                     distance: calculatedDistance.toFixed(2),
                     cost: Math.round(calculatedDistance * basePricePerKm),
-                    status: 'جديد',
+                    status: 'pending_supervisor', // الحالة الموجهة لمشرف التسويق أولاً
                     assignedDriver: '',
                     createdAt: new Date()
                 });
 
+                alert('✅ تم إرسال طلبك بنجاح إلى مشرف التسويق للمراجعة والاعتماد!');
                 window.location.href = `track.html?order=${generatedOrderId}`;
             } catch (error) {
                 console.error("خطأ في الإرسال:", error);
                 alert('حدث خطأ أثناء الاتصال بقاعدة البيانات.');
-                btn.innerText = "تأكيد وإرسال الطلب عبر السحابة";
+                btn.innerText = "تأكيد وإرسال الطلب إلى مشرف التسويق";
                 btn.disabled = false;
             }
         }
