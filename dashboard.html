@@ -34,7 +34,6 @@
             </div>
         </div>
         <div class="flex items-center space-x-3 space-x-reverse">
-            <!-- محاكي تبديل الصلاحيات -->
             <select id="roleSelector" onchange="switchRole(this.value)" class="bg-brandCard border border-gray-700 text-xs text-white rounded-xl px-3 py-2 outline-none focus:border-brandYellow">
                 <option value="admin">صلاحية: المدير (إدارة المستخدمين والطلبات)</option>
                 <option value="supervisor">صلاحية: مشرف الطلبات</option>
@@ -70,11 +69,11 @@
                 </div>
             </div>
 
-            <!-- قسم إدارة المستخدمين والصلاحيات -->
+            <!-- قسم إدارة المستخدمين والحقيقيين من قاعدة البيانات -->
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-gray-700 pb-3">
                     <h2 class="text-xl font-bold flex items-center text-brandYellow">
-                        <i class="fa-solid fa-users-gear ml-2"></i> إدارة المستخدمين وتعديل الصلاحيات
+                        <i class="fa-solid fa-users-gear ml-2"></i> إدارة المستخدمين الحقيقيين وتعديل الصلاحيات
                     </h2>
                     <span id="usersCounterBadge" class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-lg text-xs font-bold">عدد المستخدمين: 0</span>
                 </div>
@@ -89,7 +88,7 @@
                             </tr>
                         </thead>
                         <tbody id="firestoreUsersTable" class="divide-y divide-gray-800">
-                            <tr><td colspan="4" class="p-4 text-center text-gray-500">جاري تحميل المستخدمين من السحابة...</td></tr>
+                            <tr><td colspan="4" class="p-4 text-center text-gray-500">جاري جلب المستخدمين الحقيقيين من قاعدة البيانات...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -152,7 +151,7 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- ربط Firebase المدمج وسكريبت المنطق -->
+    <!-- ربط Firebase وجلب المستخدمين الحقيقيين من قاعدة البيانات -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
@@ -168,7 +167,6 @@
             measurementId: "G-2ZV3NGRYZG"
         };
 
-        // تهيئة Firebase وتفعيل الـ Analytics
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
         const db = getFirestore(app);
@@ -202,7 +200,7 @@
 
             if (role === 'admin') {
                 headerTitle.innerText = 'لوحة تحكم المدير العام';
-                roleBadge.innerText = 'صلاحية كاملة (إدارة المستخدمين والسحابة)';
+                roleBadge.innerText = 'صلاحية كاملة (إدارة المستخدمين الحقيقيين والسحابة)';
                 document.getElementById('adminSection').classList.remove('hidden');
                 document.getElementById('supervisorSection').classList.remove('hidden');
             } else if (role === 'supervisor') {
@@ -219,6 +217,7 @@
 
         async function fetchCloudData() {
             try {
+                // 1. جلب الطلبات من مجموعة orders
                 const ordersSnapshot = await getDocs(collection(db, "orders"));
                 allOrders = [];
                 ordersSnapshot.forEach((docSnap) => {
@@ -226,30 +225,31 @@
                 });
                 document.getElementById('totalOrdersCount').innerText = allOrders.length;
 
+                // 2. جلب المستخدمين الحقيقيين من مجموعة "users" في قاعدة البيانات (Firestore)
                 const usersSnapshot = await getDocs(collection(db, "users"));
                 allUsers = [];
                 usersSnapshot.forEach((docSnap) => {
-                    allUsers.push({ id: docSnap.id, ...docSnap.data() });
+                    const data = docSnap.data();
+                    allUsers.push({ 
+                        id: docSnap.id, 
+                        name: data.name || data.fullName || data.username || 'مستخدم سحابي',
+                        email: data.email || data.userEmail || 'بدون بريد',
+                        phone: data.phone || data.phoneNumber || 'غير مسجل',
+                        role: data.role || 'مندوب توصيل'
+                    });
                 });
 
-                if (allUsers.length === 0) {
-                    allUsers = [
-                        { id: 'u1', name: 'محمود حسن', email: 'mahmoud@foru.com', phone: '0912345678', role: 'مندوب توصيل' },
-                        { id: 'u2', name: 'عمر إبراهيم', email: 'omar@foru.com', phone: '0923456789', role: 'مندوب توصيل' },
-                        { id: 'u3', name: 'أحمد المدير', email: 'admin@foru.com', phone: '0999999999', role: 'مدير النظام' },
-                        { id: 'u4', name: 'سارة المشرفة', email: 'supervisor@foru.com', phone: '0988888888', role: 'مشرف طلبات' }
-                    ];
-                }
-
+                // تحديث عدادات الواجهة بالأرقام والبيانات الحقيقية المسترجعة
                 document.getElementById('totalUsersCount').innerText = allUsers.length;
-                document.getElementById('usersCounterBadge').innerText = `عدد المستخدمين: ${allUsers.length}`;
+                document.getElementById('usersCounterBadge').innerText = `عدد المستخدمين الحقيقيين: ${allUsers.length}`;
                 
                 const driversCount = allUsers.filter(u => u.role === 'مندوب توصيل' || u.role === 'driver').length;
                 document.getElementById('totalDriversCount').innerText = driversCount;
 
                 renderViews();
             } catch (error) {
-                console.error("خطأ في جلب بيانات السحابة:", error);
+                console.error("خطأ في جلب البيانات من السحابة:", error);
+                showCustomAlert("خطأ في الاتصال", "تعذر جلب البيانات الحقيقية من قاعدة بيانات Firestore.");
             }
         }
 
@@ -258,6 +258,7 @@
             const tbodyUsers = document.getElementById('firestoreUsersTable');
             const driverBox = document.getElementById('driverActiveOrderBox');
             
+            // تعبئة جدول الطلبات
             tbodyOrders.innerHTML = '';
             if (allOrders.length === 0) {
                 tbodyOrders.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">لا توجد طلبات سحابية واردة حالياً.</td></tr>`;
@@ -286,19 +287,20 @@
                 });
             }
 
+            // تعبئة جدول المستخدمين الحقيقيين المسترجعين من السحابة
             tbodyUsers.innerHTML = '';
             if (allUsers.length === 0) {
-                tbodyUsers.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">لا توجد حسابات مسجلة.</td></tr>`;
+                tbodyUsers.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">لا توجد حسابات مستخدمين مسجلة في مجموعة users حتى الآن.</td></tr>`;
             } else {
                 allUsers.forEach(user => {
                     const currentRole = user.role || 'مندوب توصيل';
                     tbodyUsers.innerHTML += `
                         <tr>
                             <td class="p-3">
-                                <div class="font-bold text-white">${user.name || 'مستخدم جديد'}</div>
-                                <div class="text-xs text-gray-400">${user.email || 'بدون بريد'}</div>
+                                <div class="font-bold text-white">${user.name}</div>
+                                <div class="text-xs text-gray-400">${user.email}</div>
                             </td>
-                            <td class="p-3 text-gray-300 text-xs">${user.phone || 'غير مسجل'}</td>
+                            <td class="p-3 text-gray-300 text-xs">${user.phone}</td>
                             <td class="p-3">
                                 <span class="px-2.5 py-1 rounded-lg text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20">${currentRole}</span>
                             </td>
@@ -317,6 +319,7 @@
                 });
             }
 
+            // عرض الطلب للمندوب النشط
             const driverOrder = allOrders.find(o => o.assignedDriver === activeDriverName && o.status !== 'منجز');
 
             if (driverOrder) {
@@ -345,17 +348,12 @@
             try {
                 await updateDoc(doc(db, "users", userId), {
                     role: newRole
-                }).catch(() => {
-                    const targetUser = allUsers.find(u => u.id === userId);
-                    if(targetUser) targetUser.role = newRole;
                 });
-
-                showCustomAlert('تم التحديث', `تم تعديل صلاحية المستخدم بنجاح إلى (${newRole}) في النظام السحابي.`);
+                showCustomAlert('تم التحديث السحابي', `تم تحديث صلاحية المستخدم الحقيقي في قاعدة البيانات إلى (${newRole}) بنجاح.`);
                 fetchCloudData();
             } catch (err) {
                 console.error(err);
-                showCustomAlert('تنبيه', 'تم تحديث الصلاحية محلياً في الواجهة بنجاح.');
-                fetchCloudData();
+                showCustomAlert('خطأ', 'فشل تحديث الصلاحية في قاعدة بيانات السحابة.');
             }
         }
 
