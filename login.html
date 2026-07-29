@@ -3,332 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sudan Play - تسجيل الدخول</title>
+    <title>طلب توصيل جديد | For-U</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandYellow: '#FFB800',
+                        brandDark: '#121212',
+                        brandCard: '#1E1E1E'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Leaflet CSS للخرائط المجانية -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- استيراد مكتبة Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <!-- Google Fonts Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --primary: #4a6bff;
-            --secondary: #ff5e7d;
-            --dark: #0f111a;
-            --light: #f0f3f9;
-            --glass-card: rgba(255, 255, 255, 0.88);
-            --glass-border: rgba(255, 255, 255, 0.75);
-            --radius: 16px;
-        }
-
-        body {
-            background: linear-gradient(135deg, #eef2f3 0%, #8e9eab 100%);
-            background-attachment: fixed;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #1e293b;
-        }
-
-        .login-card {
-            background: var(--glass-card);
-            backdrop-filter: blur(12px);
-            border-radius: var(--radius);
-            padding: 30px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-            border: 1px solid var(--glass-border);
-        }
-
-        .login-header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
-
-        .login-header h2 {
-            color: var(--dark);
-            margin-bottom: 8px;
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            font-size: 0.9em;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px 15px;
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .form-group input:focus {
-            border-color: var(--primary);
-        }
-
-        .btn-action {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-top: 5px;
-        }
-
-        .btn-primary-custom {
-            background: var(--primary);
-            color: white;
-        }
-
-        .btn-primary-custom:hover {
-            background: #3b5bdb;
-        }
-
-        .btn-sudan-play {
-            background: #2ec4b6;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-sudan-play:hover {
-            background: #259e93;
-        }
-
-        .divider {
-            text-align: center;
-            margin: 20px 0;
-            color: #64748b;
-            font-size: 0.85em;
-            border-bottom: 1px solid #cbd5e1;
-            line-height: 0.1em;
-        }
-
-        .divider span {
-            background: #f4f6f9;
-            padding: 0 10px;
-        }
-
-        .section-box {
-            display: none;
-        }
-
-        .section-box.active {
-            display: block;
-        }
-
-        .toggle-section {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 0.9em;
-            color: var(--primary);
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        .toggle-section:hover {
-            text-decoration: underline;
-        }
-
-        .back-home {
-            text-align: center;
-            margin-top: 15px;
-        }
-
-        .back-home a {
-            color: #64748b;
-            text-decoration: none;
-            font-size: 0.85em;
-        }
-
-        .back-home a:hover {
-            color: var(--dark);
-        }
+        body { font-family: 'Cairo', sans-serif; }
+        #map { height: 400px; width: 100%; border-radius: 1rem; }
     </style>
 </head>
-<body>
+<body class="bg-brandDark text-white min-h-screen flex flex-col justify-between">
 
-    <div class="login-card">
-        <div class="login-header">
-            <h2>تسجيل الدخول</h2>
-            <p id="sub-title">اختر طريقة الدخول لموقع Sudan Play</p>
+    <!-- الهيدر -->
+    <header class="p-4 md:p-6 flex justify-between items-center border-b border-gray-800">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <div class="bg-brandYellow text-brandDark font-black text-xl px-3 py-1 rounded-xl">4U</div>
+            <h1 class="text-lg font-bold">بوابة طلبات التوصيل للعملاء</h1>
         </div>
-
-        <!-- القسم الأول: خيارات الدخول الرئيسية -->
-        <div id="main-options" class="section-box active">
-            <button type="button" class="btn-action btn-sudan-play" onclick="showSudanPlayForm()">
-                <i class="fas fa-id-badge"></i> تسجيل الدخول برقم تعريف Sudan Play
-            </button>
-            
-            <div class="divider"><span>أو</span></div>
-
-            <button type="button" class="btn-action btn-primary-custom" onclick="showEmailForm()">
-                <i class="fas fa-envelope"></i> الدخول بالإيميل وكلمة المرور
-            </button>
-        </div>
-
-        <!-- القسم الثاني: نموذج الرقم التعريفي الخاص بسودان بلاي -->
-        <div id="sudan-play-form" class="section-box">
-            <div class="form-group">
-                <label for="sp-id">الرقم التعريفي (Sudan Play ID)</label>
-                <input type="text" id="sp-id" placeholder="أدخل رقمك التعريفي الخاص">
-            </div>
-
-            <div class="form-group">
-                <label for="sp-pass">كلمة المرور</label>
-                <input type="password" id="sp-pass" placeholder="أدخل كلمة المرور الخاصة بحسابك">
-            </div>
-
-            <button type="button" class="btn-action btn-sudan-play" onclick="loginWithSudanPlayId()">تأكيد ودخول</button>
-            <div class="toggle-section" onclick="showMainOptions()"><i class="fas fa-arrow-right"></i> رجوع للخيار الرئيسي</div>
-        </div>
-
-        <!-- القسم الثالث: نموذج البريد الإلكتروني التقليدي -->
-        <div id="email-form" class="section-box">
-            <div class="form-group">
-                <label for="email">البريد الإلكتروني</label>
-                <input type="email" id="email" placeholder="أدخل بريدك الإلكتروني">
-            </div>
-
-            <div class="form-group">
-                <label for="password">كلمة المرور</label>
-                <input type="password" id="password" placeholder="أدخل كلمة المرور">
-            </div>
-
-            <button type="button" class="btn-action btn-primary-custom" onclick="executeFirebaseLogin()">دخول بالإيميل</button>
-            <div class="toggle-section" onclick="showMainOptions()"><i class="fas fa-arrow-right"></i> رجوع للخيار الرئيسي</div>
-        </div>
-
-        <div class="back-home">
-            <a href="index.html"><i class="fas fa-store"></i> العودة إلى المتجر الرئيسي</a>
-        </div>
-    </div>
-
-    <script>
-        // إعدادات Firebase الخاصة بمشروعك (قم بتعديلها ببياناتك الفعلية)
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
         
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        <!-- أزرار التنقل السريع في الهيدر -->
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <!-- زر تسجيل الدخول كمتجر مع حفظ الصفحة للرجوع إليها -->
+            <button onclick="goToStoreLogin()" class="bg-brandDark border border-brandYellow text-brandYellow text-xs font-bold px-3.5 py-2 rounded-xl hover:bg-brandYellow hover:text-brandDark transition flex items-center gap-1.5 shadow-md">
+                <i class="fa-solid fa-store"></i> تسجيل دخول متجر
+            </button>
+            <a href="index.html" class="text-gray-400 hover:text-white text-sm px-2">
+                <i class="fa-solid fa-house ml-1"></i> الرئيسية
+            </a>
+        </div>
+    </header>
 
-        // دوال التنقل بين واجهات النماذج داخل نفس الصفحة
-        function showSudanPlayForm() {
-            document.getElementById('main-options').classList.remove('active');
-            document.getElementById('sudan-play-form').classList.add('active');
-            document.getElementById('email-form').classList.remove('active');
-            document.getElementById('sub-title').innerText = 'أدخل بيانات حساب Sudan Play الخاص بك';
-        }
-
-        function showEmailForm() {
-            document.getElementById('main-options').classList.remove('active');
-            document.getElementById('sudan-play-form').classList.remove('active');
-            document.getElementById('email-form').classList.add('active');
-            document.getElementById('sub-title').innerText = 'تسجيل الدخول عبر البريد الإلكتروني';
-        }
-
-        function showMainOptions() {
-            document.getElementById('main-options').classList.add('active');
-            document.getElementById('sudan-play-form').classList.remove('active');
-            document.getElementById('email-form').classList.remove('active');
-            document.getElementById('sub-title').innerText = 'اختر طريقة الدخول لموقع Sudan Play';
-        }
-
-        // دالة التوجيه الذكي بعد النجاح (ترجع المستخدم للصفحة المقصودة مثل فور يو)
-        function handleSuccessfulLogin(identifier) {
-            localStorage.setItem('sudanPlayAdmin', identifier);
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
+        <div class="flex flex-col gap-8">
             
-            const targetPage = localStorage.getItem('redirectAfterLogin');
-            
-            if (targetPage) {
-                localStorage.removeItem('redirectAfterLogin');
-                window.location.href = targetPage;
+            <!-- 1. الخريطة في الأعلى مع زر تحديد الموقع الحالي -->
+            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl flex flex-col space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold mb-1 flex items-center">
+                            <i class="fa-solid fa-map-location-dot text-brandYellow ml-2"></i> تحديد موقع الاستلام والوصول
+                        </h2>
+                        <p class="text-xs text-gray-400">انقر على الخريطة لتحديد نقطة التسليم، أو اضغط على زر تحديد موقعك الحالي.</p>
+                    </div>
+                    <button type="button" onclick="locateUser()" class="bg-brandDark border border-brandYellow text-brandYellow text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-brandYellow hover:text-brandDark transition flex items-center gap-2 shadow-md">
+                        <i class="fa-solid fa-location-crosshairs"></i> تحديد موقعي الحالي
+                    </button>
+                </div>
+                <div id="map"></div>
+            </div>
+
+            <!-- 2. نموذج إدخال بيانات الطلب في الأسفل -->
+            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
+                <h2 class="text-xl font-bold border-b border-gray-700 pb-3 flex items-center">
+                    <i class="fa-solid fa-box-open text-brandYellow ml-2"></i> تفاصيل الطلب والمتجر
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">اسم العميل</label>
+                        <input type="text" id="clientName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="الاسم الكامل">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">رقم هاتف العميل</label>
+                        <input type="tel" id="clientPhone" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="09xxxxxxxx">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">اسم المتجر (المرسل)</label>
+                        <input type="text" id="storeName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: متجر شاهين الإلكتروني">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">رقم هاتف المتجر</label>
+                        <input type="tel" id="storePhone" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="09xxxxxxxx">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">نوع البضاعة / الوصف</label>
+                    <textarea id="orderDesc" rows="2" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: طرد ملابس، أوراق مهمة..."></textarea>
+                </div>
+
+                <div class="bg-brandDark p-4 rounded-2xl border border-gray-800 space-y-2">
+                    <div class="flex justify-between text-sm text-gray-400">
+                        <span>المسافة المقدرة:</span>
+                        <span id="distanceText" class="font-bold text-white">0 كم</span>
+                    </div>
+                    <div class="flex justify-between text-base font-bold text-brandYellow">
+                        <span>التكلفة الإجمالية:</span>
+                        <span id="costText">0 جنيه</span>
+                    </div>
+                </div>
+
+                <button onclick="submitOrder()" id="submitBtn" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg">
+                    تأكيد وإرسال الطلب عبر السحابة
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- الفوتر -->
+    <footer class="p-4 text-center border-t border-gray-800 text-gray-500 text-sm">
+        جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
+            authDomain: "for-u-56f3f.firebaseapp.com",
+            projectId: "for-u-56f3f",
+            storageBucket: "for-u-56f3f.firebasestorage.app",
+            messagingSenderId: "519930793199",
+            appId: "1:519930793199:web:0c876d149832cd0a8d5f1a",
+            measurementId: "G-2ZV3NGRYZG"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const map = L.map('map').setView([15.5007, 32.5599], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+
+        let marker = null;
+        let selectedLat = null;
+        let selectedLng = null;
+        const basePricePerKm = 500; 
+        let calculatedDistance = 0;
+
+        const companyLat = 15.5007;
+        const companyLng = 32.5599;
+
+        function updateLocationData(lat, lng) {
+            selectedLat = lat;
+            selectedLng = lng;
+
+            if (marker) {
+                marker.setLatLng([selectedLat, selectedLng]);
             } else {
-                window.location.href = 'dashboard.html';
+                marker = L.marker([selectedLat, selectedLng]).addTo(map);
             }
+            map.setView([selectedLat, selectedLng], 15);
+
+            calculatedDistance = calculateDistance(companyLat, companyLng, selectedLat, selectedLng);
+            const totalCost = Math.round(calculatedDistance * basePricePerKm);
+
+            document.getElementById('distanceText').innerText = calculatedDistance.toFixed(2) + ' كم';
+            document.getElementById('costText').innerText = totalCost.toLocaleString() + ' جنيه';
         }
 
-        // 1. التحقق والدخول عبر الرقم التعريفي الخاص بسودان بلاي من قاعدة البيانات (Realtime Database)
-        function loginWithSudanPlayId() {
-            const spId = document.getElementById('sp-id').value.trim();
-            const spPass = document.getElementById('sp-pass').value.trim();
+        map.on('click', function(e) {
+            updateLocationData(e.latlng.lat, e.latlng.lng);
+        });
 
-            if (!spId || !spPass) {
-                alert("الرجاء إدخال الرقم التعريفي وكلمة المرور.");
+        window.locateUser = function() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        updateLocationData(position.coords.latitude, position.coords.longitude);
+                    },
+                    (error) => {
+                        alert('تعسّر تحديد موقعك تلقائياً. تأكد من تفعيل خدمة الموقع (GPS) في متصفحك.');
+                    },
+                    { enableHighAccuracy: true }
+                );
+            } else {
+                alert('متصفحك لا يدعم خاصية تحديد الموقع الجغرافي.');
+            }
+        };
+
+        // دالة التوجيه لصفحة تسجيل الدخول مع حفظ مسار العودة
+        window.goToStoreLogin = function() {
+            localStorage.setItem('redirectAfterLogin', window.location.pathname.split('/').pop());
+            window.location.href = 'login.html'; // أو اسم ملف صفحة تسجيل الدخول لديك
+        };
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * (Math.PI/180);
+            const dLon = (lon2 - lon1) * (Math.PI/180);
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * (Math.PI/180)) * Math.cos(lat2 * (Math.PI/180)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+        }
+
+        window.submitOrder = async function() {
+            const name = document.getElementById('clientName').value.trim();
+            const phone = document.getElementById('clientPhone').value.trim();
+            const sName = document.getElementById('storeName').value.trim();
+            const sPhone = document.getElementById('storePhone').value.trim();
+            const desc = document.getElementById('orderDesc').value.trim();
+
+            if(!name || !phone || !sName || !sPhone || !marker) {
+                alert('الرجاء إكمال كافة حقول العميل والمتجر، وتحديد الموقع على الخريطة.');
                 return;
             }
 
-            // الاتصال بقاعدة بيانات سودان بلاي والبحث عن الحساب بناءً على الرقم التعريفي
-            const dbRef = firebase.database().ref('sudanPlayUsers/' + spId);
-            dbRef.once('value')
-                .then((snapshot) => {
-                    if (snapshot.exists()) {
-                        const userData = snapshot.val();
-                        
-                        // مطابقة كلمة المرور المخزنة مسبقاً
-                        if (userData.password === spPass) {
-                            alert("تم تسجيل الدخول بنجاح عبر حساب سودان بلاي!");
-                            handleSuccessfulLogin(spId);
-                        } else {
-                            alert("كلمة المرور غير صحيحة.");
-                        }
-                    } else {
-                        alert("الرقم التعريفي غير موجود في قاعدة بيانات سودان بلاي.");
-                    }
-                })
-                .catch((error) => {
-                    console.error(error);
-                    alert("حدث خطأ أثناء الاتصال بقاعدة البيانات: " + error.message);
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "جاري إرسال الطلب للسحابة...";
+            btn.disabled = true;
+
+            const generatedOrderId = 'FOR-' + Math.floor(1000 + Math.random() * 9000);
+
+            try {
+                await addDoc(collection(db, "orders"), {
+                    orderId: generatedOrderId,
+                    clientName: name,
+                    clientPhone: phone,
+                    storeName: sName,
+                    storePhone: sPhone,
+                    description: desc,
+                    lat: selectedLat,
+                    lng: selectedLng,
+                    distance: calculatedDistance.toFixed(2),
+                    cost: Math.round(calculatedDistance * basePricePerKm),
+                    status: 'جديد',
+                    assignedDriver: '',
+                    createdAt: new Date()
                 });
-        }
 
-        // 2. الدخول التقليدي عبر البريد الإلكتروني وكلمة المرور (Firebase Auth)
-        function executeFirebaseLogin() {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value.trim();
-
-            if (!email || !password) {
-                alert("الرجاء إدخال البريد الإلكتروني وكلمة المرور.");
-                return;
+                window.location.href = `track.html?order=${generatedOrderId}`;
+            } catch (error) {
+                console.error("خطأ في الإرسال:", error);
+                alert('حدث خطأ أثناء الاتصال بقاعدة البيانات.');
+                btn.innerText = "تأكيد وإرسال الطلب عبر السحابة";
+                btn.disabled = false;
             }
-
-            firebase.auth().signInWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    handleSuccessfulLogin(userCredential.user.uid);
-                })
-                .catch((error) => {
-                    alert('خطأ في تسجيل الدخول: ' + error.message);
-                });
         }
     </script>
 </body>
