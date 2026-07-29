@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>For-U | فور يو - توصيل طلباتك بسرعة وأمان</title>
-    <!-- استبدال ملف الـ CSS المحلي بـ Tailwind CDN لضمان ظهور التصميم فوراً -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -123,6 +123,20 @@
         </div>
     </div>
 
+    <!-- نافذة التنبيه الاحترافية المخصصة (بدلاً من alert المتصفح المزعجة) -->
+    <div id="customAlertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl animate-scale">
+            <div id="alertIconContainer" class="w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h4 id="alertTitle" class="text-xl font-bold mb-2">تنبيه النظام</h4>
+            <p id="alertMessage" class="text-gray-300 text-sm mb-6 leading-relaxed">رسالة التنبيه هنا...</p>
+            <button onclick="closeCustomAlert()" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg">
+                حسنًا، شكرًا
+            </button>
+        </div>
+    </div>
+
     <!-- الفوتر -->
     <footer class="p-6 text-center border-t border-gray-800 text-gray-500 text-sm">
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
@@ -155,6 +169,31 @@
         const auth = getAuth(app);
 
         let currentMode = 'login';
+
+        // دالة عرض التنبيه الاحترافي المخصص
+        window.showCustomAlert = function(title, message, isError = false) {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            
+            const iconContainer = document.getElementById('alertIconContainer');
+            if (isError) {
+                iconContainer.className = "w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-red-400 text-2xl";
+                iconContainer.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else {
+                iconContainer.className = "w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl";
+                iconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            }
+
+            const alertModal = document.getElementById('customAlertModal');
+            alertModal.classList.remove('hidden');
+            alertModal.classList.add('flex');
+        };
+
+        window.closeCustomAlert = function() {
+            const alertModal = document.getElementById('customAlertModal');
+            alertModal.classList.remove('flex');
+            alertModal.classList.add('hidden');
+        };
 
         window.openAuthModal = function(mode) {
             currentMode = mode;
@@ -236,10 +275,10 @@
                     localStorage.setItem('foru_user_email', user.email);
                     updateUIAfterLogin(user.email);
                     closeAuthModal();
-                    alert('✅ تم تسجيل الدخول عبر غوغل بنجاح!');
+                    showCustomAlert('نجاح العملية', '✅ تم تسجيل الدخول عبر حساب غوغل بنجاح!');
                 })
                 .catch((error) => {
-                    alert('❌ خطأ في المصادقة: ' + error.message);
+                    showCustomAlert('خطأ في المصادقة', '❌ خطأ: ' + error.message, true);
                 });
         };
 
@@ -261,10 +300,10 @@
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(user.email);
                         closeAuthModal();
-                        alert('✅ تم إنشاء الحساب وتسجيل الدخول بنجاح!');
+                        showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب وتسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
-                        alert('❌ خطأ في إنشاء الحساب: ' + error.message);
+                        showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.message, true);
                     });
             } else {
                 signInWithEmailAndPassword(auth, email, password)
@@ -273,10 +312,10 @@
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(user.email);
                         closeAuthModal();
-                        alert('✅ تم تسجيل الدخول بنجاح!');
+                        showCustomAlert('نجاح الدخول', '✅ تم تسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
-                        alert('❌ خطأ في البريد أو كلمة المرور: ' + error.message);
+                        showCustomAlert('خطأ في الدخول', '❌ خطأ في البريد أو كلمة المرور: ' + error.message, true);
                     });
             }
         };
@@ -288,7 +327,7 @@
                 profileDisplay.classList.remove('flex');
                 profileDisplay.classList.add('hidden');
                 document.getElementById('authButtonsContainer').classList.remove('hidden');
-                alert('👋 تم تسجيل الخروج بنجاح');
+                showCustomAlert('تسجيل الخروج', '👋 تم تسجيل الخروج بنجاح');
             });
         };
     </script>
