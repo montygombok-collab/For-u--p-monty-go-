@@ -242,7 +242,7 @@
             }
         }
 
-        // التعامل مع نتيجة العودة من إعادة التوجيه لغوغل
+        // معالجة نتيجة إعادة التوجيه ورصد حالة المستخدم الحية
         window.addEventListener('DOMContentLoaded', () => {
             getRedirectResult(auth)
                 .then((result) => {
@@ -250,13 +250,10 @@
                         const user = result.user;
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(user.email);
-                        showCustomAlert('نجاح العملية', '✅ تم تسجيل الدخول عبر حساب غوغل بنجاح!');
                     }
                 })
                 .catch((error) => {
-                    if (error.code !== 'auth/popup-closed-by-user') {
-                        showCustomAlert('خطأ في المصادقة', '❌ خطأ: ' + error.message, true);
-                    }
+                    console.error("Redirect error:", error);
                 });
 
             const urlParams = new URLSearchParams(window.location.search);
@@ -274,10 +271,12 @@
             }
         });
 
+        // مراقب دائم لحالة المصادقة لتحديث الواجهة فوراً بمجرد عودة المستخدم وتسجيله
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 localStorage.setItem('foru_user_email', user.email);
                 updateUIAfterLogin(user.email);
+                closeAuthModal();
             }
         });
 
@@ -289,7 +288,6 @@
             document.getElementById('userEmailSpan').innerText = email;
         }
 
-        // استخدام signInWithRedirect حصرياً لمنع ظهور مشاكل النوافذ المنبثقة على الهواتف
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
             provider.setCustomParameters({
