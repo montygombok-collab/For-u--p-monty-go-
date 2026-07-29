@@ -17,6 +17,12 @@
 </head>
 <body class="bg-[#121212] text-white h-screen flex flex-col justify-between selection:bg-[#FFB800] selection:text-[#121212]">
 
+    <!-- شاشة التحميل الخفية لتفقد الصلاحية في الخلفية دون إزعاج المستخدم -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-[#121212] z-50 flex flex-col items-center justify-center space-y-4 transition-opacity duration-300">
+        <div class="w-16 h-16 border-4 border-[#FFB800]/20 border-t-[#FFB800] rounded-full animate-spin"></div>
+        <p class="text-brandYellow font-bold text-sm tracking-wide animate-pulse">جاري التحميل لعدّة لحظات...</p>
+    </div>
+
     <!-- الهيدر العلوي -->
     <header class="p-4 sm:p-6 flex justify-between items-center border-b border-gray-800/60">
         <div class="flex items-center space-x-2 space-x-reverse">
@@ -171,7 +177,7 @@
 
         let currentMode = 'login';
 
-        // دالة التحقق من الصلاحية وتوجيه المستخدم تلقائياً
+        // دالة التحقق الفوري من الصلاحية والتوجيه في الخلفية دون إظهار أي وميض
         async function redirectUserByRole(user, customName = '') {
             try {
                 const userRef = doc(db, "users", user.uid);
@@ -185,7 +191,6 @@
                     role = userData.role || 'عميل';
                     userName = userData.name || userName;
                 } else {
-                    // إذا كان المستخدم جديداً، يتم تسجيله افتراضياً كـ "عميل"
                     await setDoc(userRef, {
                         uid: user.uid,
                         name: userName,
@@ -200,14 +205,18 @@
                 localStorage.setItem('foru_user_email', user.email);
                 localStorage.setItem('foru_user_role', role);
 
-                // التوجيه التلقائي لوحة التحكم الخاصة بالمشرف، المدير، أو المندوب
+                // التوجيه الفوري المخفي حسب الصلاحية
                 if (role === 'مدير النظام' || role === 'مشرف طلبات' || role === 'مندوب توصيل' || role === 'admin' || role === 'supervisor' || role === 'driver') {
                     window.location.href = 'dashboard.html';
                 } else {
+                    // إذا كان عميل عادي، أخفِ شاشة التحميل وأظهر واجهة العميل بسلاسة
+                    document.getElementById('loadingOverlay').style.opacity = '0';
+                    setTimeout(() => document.getElementById('loadingOverlay').remove(), 300);
                     updateUIAfterLogin(userName);
                 }
             } catch (error) {
                 console.error("خطأ في توجيه المستخدم:", error);
+                document.getElementById('loadingOverlay').remove();
             }
         }
 
@@ -271,9 +280,17 @@
             window.location.href = 'store-dashboard.html';
         };
 
+        // المراقبة التلقائية لحالة الدخول وتفقد الصلاحية بالخلفية
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 await redirectUserByRole(user);
+            } else {
+                // إذا لم يكن مسجلاً، قم بإزالة شاشة التحميل فوراً لإظهار صفحة الترحيب/الدخول
+                const loader = document.getElementById('loadingOverlay');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 300);
+                }
             }
         });
 
@@ -306,7 +323,7 @@
             const provider = new GoogleAuthProvider();
             signInWithPopup(auth, provider)
                 .then(async (result) => {
-                    await redirectUserByRole(result.user);
+                    // سيتم تفقد الصلاحية والتوجيه تلقائياً عبر onAuthStateChanged أو redirectUserByRole
                 })
                 .catch((error) => {
                     showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
@@ -330,7 +347,7 @@
             } else {
                 signInWithEmailAndPassword(auth, email, password)
                     .then(async (userCredential) => {
-                        await redirectUserByRole(userCredential.user);
+                        // التوجيه سيتكفل به نظام المراقبة في الخلفية
                     })
                     .catch((error) => {
                         showCustomAlert('خطأ في الدخول', '❌ البريد غير مسجل أو كلمة المرور خاطئة.', true);
