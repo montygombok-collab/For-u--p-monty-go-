@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>For-U | فور يو - توصيل طلباتك بسرعة وأمان</title>
-    <!-- استبدل هذا الملف بملف الـ CSS الناتج بعد بناء Tailwind CLI في بيئة الإنتاج -->
-    <link href="./output.css" rel="stylesheet">
+    <!-- استبدال ملف الـ CSS المحلي بـ Tailwind CDN لضمان ظهور التصميم فوراً -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Cairo -->
@@ -13,9 +13,6 @@
     <style>
         body { font-family: 'Cairo', sans-serif; }
     </style>
-    <!-- Firebase SDKs (Compat v8) -->
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
 </head>
 <body class="bg-[#121212] text-white min-h-screen flex flex-col justify-between">
 
@@ -70,7 +67,7 @@
     </main>
 
     <!-- نافذة المصادقة -->
-    <div id="authModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
             <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white text-xl">
                 <i class="fa-solid fa-xmark"></i>
@@ -82,15 +79,13 @@
                 <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة تسجيل الدخول المناسبة</p>
             </div>
 
-            <!-- خيارات التسجيل السريع (غوغل + سودان بلاي) -->
+            <!-- خيارات التسجيل السريع -->
             <div class="space-y-3 mb-4">
-                <!-- 1. طريقة حساب غوغل -->
                 <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
                     <span>التسجيل عبر حساب غوغل</span>
                 </button>
 
-                <!-- 2. طريقة حساب سودان بلاي الموحد (مع تمرير رابط العودة) -->
                 <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-[#121212] border border-[#FFB800] text-[#FFB800] font-bold py-3 px-4 rounded-xl hover:bg-[#FFB800]/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-solid fa-store text-[#FFB800] text-lg ml-2"></i>
                     <span>التسجيل عبر حساب سودان بلاي</span>
@@ -103,7 +98,6 @@
                 <div class="flex-grow border-t border-gray-700"></div>
             </div>
 
-            <!-- 3. الطريقة التقليدية (البريد الإلكتروني وكلمة المرور) -->
             <form id="authForm" class="space-y-4 mt-3" onsubmit="handleEmailAuth(event)">
                 <div id="nameFieldContainer" class="hidden">
                     <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
@@ -122,7 +116,6 @@
                 </button>
             </form>
 
-            <!-- التبديل بين الدخول وإنشاء الحساب للبريد -->
             <div class="text-center mt-5 text-sm text-gray-400">
                 <span id="switchPrompt">ليس لديك حساب؟</span>
                 <button type="button" onclick="toggleAuthMode()" id="switchBtnText" class="text-[#FFB800] font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
@@ -135,11 +128,19 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- سكريبت التحكم والربط -->
-    <script>
-        let currentMode = 'login';
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            signInWithPopup, 
+            GoogleAuthProvider, 
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
-        // إعدادات Firebase المحدثة الخاصة بالمشروع الجديد
         const firebaseConfig = {
             apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
             authDomain: "for-u-56f3f.firebaseapp.com",
@@ -150,61 +151,29 @@
             measurementId: "G-2ZV3NGRYZG"
         };
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const auth = firebase.auth();
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
 
-        // فحص بيانات العودة (Redirect) من سودان بلاي أو التحقق من الجلسة المخزنة
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const userEmailFromRedirect = urlParams.get('email');
+        let currentMode = 'login';
 
-            if (userEmailFromRedirect) {
-                // حفظ البريد القادم من سودان بلاي محلياً لتثبيت الجلسة في For-U[cite: 1]
-                localStorage.setItem('foru_user_email', userEmailFromRedirect);
-                updateUIAfterLogin(userEmailFromRedirect);
-                // تنظيف الرابط من البارامترات
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } else {
-                const savedEmail = localStorage.getItem('foru_user_email');
-                if (savedEmail) {
-                    updateUIAfterLogin(savedEmail);
-                } else {
-                    auth.onAuthStateChanged(user => {
-                        if (user) {
-                            localStorage.setItem('foru_user_email', user.email);
-                            updateUIAfterLogin(user.email);
-                        }
-                    });
-                }
-            }
-        });
-
-        function updateUIAfterLogin(email) {
-            document.getElementById('authButtonsContainer').classList.add('hidden');
-            const profileDisplay = document.getElementById('userProfileDisplay');
-            profileDisplay.classList.remove('hidden');
-            profileDisplay.classList.add('flex');
-            document.getElementById('userEmailSpan').innerText = email;
-        }
-
-        function openAuthModal(mode) {
+        window.openAuthModal = function(mode) {
             currentMode = mode;
             updateModalUI();
-            document.getElementById('authModal').classList.remove('hidden');
-            document.getElementById('authModal').classList.add('flex');
-        }
+            const modal = document.getElementById('authModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
 
-        function closeAuthModal() {
-            document.getElementById('authModal').classList.remove('flex');
-            document.getElementById('authModal').classList.add('hidden');
-        }
+        window.closeAuthModal = function() {
+            const modal = document.getElementById('authModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        };
 
-        function toggleAuthMode() {
+        window.toggleAuthMode = function() {
             currentMode = currentMode === 'login' ? 'register' : 'login';
             updateModalUI();
-        }
+        };
 
         function updateModalUI() {
             const title = document.getElementById('modalTitle');
@@ -228,10 +197,40 @@
             }
         }
 
-        // 1. تسجيل الدخول عبر غوغل
-        function loginWithGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const userEmailFromRedirect = urlParams.get('email');
+
+            if (userEmailFromRedirect) {
+                localStorage.setItem('foru_user_email', userEmailFromRedirect);
+                updateUIAfterLogin(userEmailFromRedirect);
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                const savedEmail = localStorage.getItem('foru_user_email');
+                if (savedEmail) {
+                    updateUIAfterLogin(savedEmail);
+                }
+            }
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                localStorage.setItem('foru_user_email', user.email);
+                updateUIAfterLogin(user.email);
+            }
+        });
+
+        function updateUIAfterLogin(email) {
+            document.getElementById('authButtonsContainer').classList.add('hidden');
+            const profileDisplay = document.getElementById('userProfileDisplay');
+            profileDisplay.classList.remove('hidden');
+            profileDisplay.classList.add('flex');
+            document.getElementById('userEmailSpan').innerText = email;
+        }
+
+        window.loginWithGoogle = function() {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider)
                 .then((result) => {
                     const user = result.user;
                     localStorage.setItem('foru_user_email', user.email);
@@ -242,23 +241,21 @@
                 .catch((error) => {
                     alert('❌ خطأ في المصادقة: ' + error.message);
                 });
-        }
+        };
 
-        // 2. تسجيل الدخول عبر حساب سودان بلاي (التوجيه مع تمرير رابط العودة)[cite: 1]
-        function loginWithSudanPlay() {
+        window.loginWithSudanPlay = function() {
             const sudanPlayAuthUrl = "https://sudan-play.vercel.app/index.html"; 
             const currentRedirectUrl = window.location.href.split('?')[0];
             window.location.href = `${sudanPlayAuthUrl}?redirect_uri=${encodeURIComponent(currentRedirectUrl)}`;
-        }
+        };
 
-        // 3. تسجيل الدخول أو إنشاء حساب بالبريد الإلكتروني وكلمة المرور
-        function handleEmailAuth(event) {
+        window.handleEmailAuth = function(event) {
             event.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
             if (currentMode === 'register') {
-                auth.createUserWithEmailAndPassword(email, password)
+                createUserWithEmailAndPassword(auth, email, password)
                     .then((userCredential) => {
                         const user = userCredential.user;
                         localStorage.setItem('foru_user_email', user.email);
@@ -270,7 +267,7 @@
                         alert('❌ خطأ في إنشاء الحساب: ' + error.message);
                     });
             } else {
-                auth.signInWithEmailAndPassword(email, password)
+                signInWithEmailAndPassword(auth, email, password)
                     .then((userCredential) => {
                         const user = userCredential.user;
                         localStorage.setItem('foru_user_email', user.email);
@@ -282,18 +279,18 @@
                         alert('❌ خطأ في البريد أو كلمة المرور: ' + error.message);
                     });
             }
-        }
+        };
 
-        // تسجيل الخروج
-        function logoutUser() {
-            auth.signOut().then(() => {
+        window.logoutUser = function() {
+            signOut(auth).then(() => {
                 localStorage.removeItem('foru_user_email');
-                document.getElementById('userProfileDisplay').classList.remove('flex');
-                document.getElementById('userProfileDisplay').classList.add('hidden');
+                const profileDisplay = document.getElementById('userProfileDisplay');
+                profileDisplay.classList.remove('flex');
+                profileDisplay.classList.add('hidden');
                 document.getElementById('authButtonsContainer').classList.remove('hidden');
                 alert('👋 تم تسجيل الخروج بنجاح');
             });
-        }
+        };
     </script>
 </body>
 </html>
