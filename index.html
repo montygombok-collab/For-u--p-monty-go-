@@ -10,28 +10,28 @@
     <style>
         body { 
             font-family: 'Cairo', sans-serif; 
-            overflow: hidden; /* منع التمرير نهائياً وتثبيت الصفحة */
+            overflow: hidden; 
             height: 100vh;
         }
     </style>
 </head>
 <body class="bg-[#121212] text-white h-screen flex flex-col justify-between selection:bg-[#FFB800] selection:text-[#121212]">
 
-    <!-- الهيدر العلوي يقتصر على أزرار الدخول أو حالة المستخدم -->
-    <header class="p-6 flex justify-end items-center border-b border-gray-800/60">
-        <div class="flex space-x-2 space-x-reverse items-center">
-            <!-- قسم عرض البريد وحالة تسجيل الدخول -->
-            <div id="userProfileDisplay" class="hidden items-center space-x-2 space-x-reverse bg-[#1E1E1E] border border-gray-800 px-3 py-1.5 rounded-xl">
+    <!-- الهيدر العلوي -->
+    <header class="p-4 sm:p-6 flex justify-between items-center border-b border-gray-800/60">
+        <div class="flex items-center space-x-2 space-x-reverse">
+            <!-- قسم عرض اسم المستخدم وحالة تسجيل الدخول (يظهر بعد الدخول) -->
+            <div id="userProfileDisplay" class="hidden items-center space-x-2 space-x-reverse bg-[#1E1E1E] border border-gray-800 px-3 py-1.5 rounded-xl shadow-lg">
                 <i class="fa-solid fa-circle-user text-[#FFB800] text-lg"></i>
-                <span id="userEmailSpan" class="text-xs text-white font-semibold"></span>
-                <a href="customer.html" class="bg-[#FFB800] text-[#121212] font-bold text-xs px-2.5 py-1 rounded-lg hover:bg-yellow-400 transition ml-1">
-                    اطلب الآن
-                </a>
-                <button onclick="logoutUser()" class="bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold px-2 py-1 rounded-lg hover:bg-red-500/30 transition">
+                <span id="userNameSpan" class="text-xs text-white font-semibold"></span>
+                <button onclick="logoutUser()" class="bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold px-2.5 py-1 rounded-lg hover:bg-red-500/30 transition mr-1">
                     خروج
                 </button>
             </div>
-            <!-- أزرار الدخول العادية -->
+        </div>
+
+        <div class="flex space-x-2 space-x-reverse items-center">
+            <!-- أزرار الدخول العادية في الهيدر (تظهر قبل الدخول) -->
             <div id="authButtonsContainer" class="flex space-x-2 space-x-reverse">
                 <button onclick="openAuthModal('login')" class="bg-[#1E1E1E] border border-gray-700 text-[#FFB800] text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-800 transition shadow-md flex items-center">
                     <i class="fa-solid fa-right-to-bracket ml-2"></i> تسجيل الدخول
@@ -47,12 +47,12 @@
     <main class="flex-grow flex items-center justify-center px-6">
         <div class="max-w-md w-full text-center flex flex-col items-center">
             
-            <span class="bg-[#FFB800]/10 text-[#FFB800] text-xs font-semibold px-3 py-1 rounded-full border border-[#FFB800]/20 inline-block mb-4">
+            <span class="bg-[#FFB800]/10 text-[#FFB800] text-xs font-semibold px-3 py-1 rounded-full border border-[#FFB800]/20 inline-block mb-3">
                 🚀 النظام اللوجستعي الذكي والمتكامل
             </span>
 
             <!-- الشعار والعنوان في المنتصف -->
-            <div class="mb-6 flex flex-col items-center">
+            <div class="mb-4 flex flex-col items-center">
                 <img src="image.jpg" alt="For-U Logo" class="w-20 h-20 object-cover rounded-2xl shadow-2xl border-2 border-[#FFB800]/40 mb-3 animate-pulse">
                 <h1 class="text-3xl font-black tracking-wider mb-1">فور يو <span class="text-[#FFB800] text-base">For-U</span></h1>
                 <p class="text-xs text-gray-400">توصيل طلباتك بسرعة وأمان</p>
@@ -62,10 +62,13 @@
                 منصة متكاملة تربط العملاء، المسوقين، والمناديب، مع نظام تتبع جغرافي ذكي وإدارة دقيقة.
             </p>
 
+            <!-- زر البدء أو اطلب الآن في المنتصف -->
             <div class="w-full flex flex-col space-y-3">
-                <button onclick="openAuthModal('login')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
-                    <i class="fa-solid fa-box-open ml-2"></i> ابدأ الآن / تسجيل الدخول
-                </button>
+                <div id="centerActionContainer">
+                    <button id="centerActionBtn" onclick="openAuthModal('login')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-box-open ml-2"></i> ابدأ الآن / تسجيل الدخول
+                    </button>
+                </div>
             </div>
 
         </div>
@@ -239,25 +242,39 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            const savedName = localStorage.getItem('foru_user_name');
             const savedEmail = localStorage.getItem('foru_user_email');
             if (savedEmail) {
-                updateUIAfterLogin(savedEmail);
+                updateUIAfterLogin(savedName || savedEmail);
             }
         });
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
+                const displayName = user.displayName || user.email.split('@')[0];
+                localStorage.setItem('foru_user_name', displayName);
                 localStorage.setItem('foru_user_email', user.email);
-                updateUIAfterLogin(user.email);
+                updateUIAfterLogin(displayName);
             }
         });
 
-        function updateUIAfterLogin(email) {
+        function updateUIAfterLogin(displayName) {
+            // إخفاء زر تسجيل الدخول من الهيدر
             document.getElementById('authButtonsContainer').classList.add('hidden');
+            
+            // إظهار البروفايل بالاسم في الهيدر
             const profileDisplay = document.getElementById('userProfileDisplay');
             profileDisplay.classList.remove('hidden');
             profileDisplay.classList.add('flex');
-            document.getElementById('userEmailSpan').innerText = email;
+            document.getElementById('userNameSpan').innerText = displayName;
+
+            // استبدال زر "ابدأ الآن / تسجيل الدخول" في المنتصف بزر "اطلب الآن"
+            const centerContainer = document.getElementById('centerActionContainer');
+            centerContainer.innerHTML = `
+                <a href="customer.html" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-box-open ml-2"></i> اطلب الآن
+                </a>
+            `;
         }
 
         window.loginWithGoogle = function() {
@@ -265,8 +282,10 @@
             signInWithPopup(auth, provider)
                 .then((result) => {
                     const user = result.user;
+                    const displayName = user.displayName || user.email.split('@')[0];
+                    localStorage.setItem('foru_user_name', displayName);
                     localStorage.setItem('foru_user_email', user.email);
-                    updateUIAfterLogin(user.email);
+                    updateUIAfterLogin(displayName);
                     closeAuthModal();
                     showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
                 })
@@ -285,13 +304,16 @@
             event.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const customNameInput = document.getElementById('fullName').value;
 
             if (currentMode === 'register') {
                 createUserWithEmailAndPassword(auth, email, password)
                     .then((userCredential) => {
                         const user = userCredential.user;
+                        const displayName = customNameInput.trim() !== '' ? customNameInput : email.split('@')[0];
+                        localStorage.setItem('foru_user_name', displayName);
                         localStorage.setItem('foru_user_email', user.email);
-                        updateUIAfterLogin(user.email);
+                        updateUIAfterLogin(displayName);
                         closeAuthModal();
                         showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب الجديد وتسجيل الدخول بنجاح!');
                     })
@@ -302,8 +324,10 @@
                 signInWithEmailAndPassword(auth, email, password)
                     .then((userCredential) => {
                         const user = userCredential.user;
+                        const displayName = user.displayName || email.split('@')[0];
+                        localStorage.setItem('foru_user_name', displayName);
                         localStorage.setItem('foru_user_email', user.email);
-                        updateUIAfterLogin(user.email);
+                        updateUIAfterLogin(displayName);
                         closeAuthModal();
                         showCustomAlert('نجاح الدخول', '✅ تم تسجيل الدخول بنجاح!');
                     })
@@ -315,11 +339,23 @@
 
         window.logoutUser = function() {
             signOut(auth).then(() => {
+                localStorage.removeItem('foru_user_name');
                 localStorage.removeItem('foru_user_email');
+                
+                // إعادة إظهار أزرار الدخول في الهيدر
                 const profileDisplay = document.getElementById('userProfileDisplay');
                 profileDisplay.classList.remove('flex');
                 profileDisplay.classList.add('hidden');
                 document.getElementById('authButtonsContainer').classList.remove('hidden');
+
+                // إعادة زر "ابدأ الآن / تسجيل الدخول" في المنتصف
+                const centerContainer = document.getElementById('centerActionContainer');
+                centerContainer.innerHTML = `
+                    <button onclick="openAuthModal('login')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-box-open ml-2"></i> ابدأ الآن / تسجيل الدخول
+                    </button>
+                `;
+
                 showCustomAlert('تسجيل الخروج', '👋 تم تسجيل الخروج بنجاح');
             });
         };
