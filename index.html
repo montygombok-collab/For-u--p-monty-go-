@@ -139,9 +139,9 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs (تم تحديث النسخة إلى 10.8.0 لتتوافق مع بقية النظام وتخزين المستخدمين تلقائياً في Firestore) -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
             getAuth, 
             onAuthStateChanged, 
@@ -152,7 +152,8 @@
             signOut,
             setPersistence,
             browserLocalPersistence
-        } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
@@ -166,12 +167,43 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
 
         setPersistence(auth, browserLocalPersistence).catch((error) => {
             console.error("Auth persistence error:", error);
         });
 
         let currentMode = 'login';
+
+        // دالة مساعدة لحفظ أو تحديث بيانات المستخدم تلقائياً في مجموعة users بقاعدة البيانات Firestore
+        async function saveUserToFirestore(user, customName = '') {
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                
+                const displayName = customName || user.displayName || user.email.split('@')[0];
+
+                if (!userSnap.exists()) {
+                    // إذا لم يكن المستخدم موجوداً مسبقاً، يتم إنشاؤه مع الصلاحية الافتراضية
+                    await setDoc(userRef, {
+                        uid: user.uid,
+                        name: displayName,
+                        email: user.email,
+                        phone: user.phoneNumber || 'غير مسجل',
+                        role: 'مندوب توصيل', // الصلاحية الافتراضية القابلة للتعديل من لوحة التحكم
+                        createdAt: new Date().toISOString()
+                    });
+                } else {
+                    // تحديث بيانات الدخول الأخيرة إذا لزم الأمر
+                    await setDoc(userRef, {
+                        email: user.email,
+                        name: userSnap.data().name || displayName
+                    }, { merge: true });
+                }
+            } catch (error) {
+                console.error("خطأ في حفظ بيانات المستخدم في السحابة:", error);
+            }
+        }
 
         window.showCustomAlert = function(title, message, isError = false) {
             document.getElementById('alertTitle').innerText = title;
@@ -297,9 +329,13 @@
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
             signInWithPopup(auth, provider)
-                .then((result) => {
+                .then(async (result) => {
                     const user = result.user;
                     const displayName = user.displayName || user.email.split('@')[0];
+                    
+                    // حفظ المستخدم تلقائياً في مجموعة users بقاعدة البيانات ليظهر في لوحة التحكم
+                    await saveUserToFirestore(user, displayName);
+
                     localStorage.setItem('foru_user_name', displayName);
                     localStorage.setItem('foru_user_email', user.email);
                     updateUIAfterLogin(displayName);
@@ -318,9 +354,13 @@
 
             if (currentMode === 'register') {
                 createUserWithEmailAndPassword(auth, email, password)
-                    .then((userCredential) => {
+                    .then(async (userCredential) => {
                         const user = userCredential.user;
                         const displayName = customNameInput.trim() !== '' ? customNameInput : email.split('@')[0];
+                        
+                        // حفظ المستخدم في قاعدة البيانات ضمن مجموعة users
+                        await saveUserToFirestore(user, displayName);
+
                         localStorage.setItem('foru_user_name', displayName);
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(displayName);
@@ -331,9 +371,13 @@
                     });
             } else {
                 signInWithEmailAndPassword(auth, email, password)
-                    .then((userCredential) => {
+                    .then(async (userCredential) => {
                         const user = userCredential.user;
                         const displayName = user.displayName || email.split('@')[0];
+                        
+                        // التأكد من وجود المستخدم في قاعدة البيانات عند تسجيل الدخول العادي
+                        await saveUserToFirestore(user, displayName);
+
                         localStorage.setItem('foru_user_name', displayName);
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(displayName);
