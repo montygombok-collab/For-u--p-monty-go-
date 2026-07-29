@@ -95,9 +95,9 @@
                 <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة تسجيل الدخول المناسبة</p>
             </div>
 
-            <!-- خيارات التسجيل السريع (غوغل فقط) -->
+            <!-- خيارات التسجيل السريع (غوغل) -->
             <div class="space-y-3 mb-4">
-                <!-- 1. طريقة حساب غوغل -->
+                <!-- 1. طريقة حساب غوغل (باستخدام التوجيه لتظهر حسابات الجهاز في الأندرويد) -->
                 <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
                     <span>التسجيل عبر حساب غوغل</span>
@@ -112,7 +112,6 @@
 
             <!-- 2. الطريقة التقليدية (البريد الإلكتروني وكلمة المرور) -->
             <form id="authForm" class="space-y-4 mt-3" onsubmit="handleEmailAuth(event)" autocomplete="off">
-                <!-- حقول وهمية مخفية لمنع المتصفحات في الهواتف من ملء الحقول التلقائي -->
                 <input type="text" style="display:none" name="fakeusernameremembered">
                 <input type="password" style="display:none" name="fakepasswordremembered">
 
@@ -166,8 +165,22 @@
         }
         const auth = firebase.auth();
 
-        // فحص بيانات الجلسة المخزنة
+        // فحص بيانات الجلسة عند تحميل الصفحة (بما في ذلك نتيجة العودة من تسجيل دخول غوغل)
         window.addEventListener('DOMContentLoaded', () => {
+            // معالجة نتيجة التوجيه من غوغل
+            auth.getRedirectResult()
+                .then((result) => {
+                    if (result.user) {
+                        const user = result.user;
+                        localStorage.setItem('foru_user_email', user.email);
+                        updateUIAfterLogin(user.email);
+                        alert('✅ تم تسجيل الدخول عبر غوغل بنجاح!');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Google Redirect Error:', error);
+                });
+
             const savedEmail = localStorage.getItem('foru_user_email');
             if (savedEmail) {
                 updateUIAfterLogin(savedEmail);
@@ -228,20 +241,10 @@
             }
         }
 
-        // 1. تسجيل الدخول عبر غوغل
+        // 1. تسجيل الدخول عبر غوغل باستخدام التوجيه (Redirect) لتظهر حسابات الجهاز على أندرويد
         function loginWithGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    const user = result.user;
-                    localStorage.setItem('foru_user_email', user.email);
-                    updateUIAfterLogin(user.email);
-                    closeAuthModal();
-                    alert('✅ تم تسجيل الدخول عبر غوغل بنجاح!');
-                })
-                .catch((error) => {
-                    alert('❌ خطأ في المصادقة: ' + error.message);
-                });
+            auth.signInWithRedirect(provider);
         }
 
         // 2. تسجيل الدخول أو إنشاء حساب بالبريد الإلكتروني وكلمة المرور
