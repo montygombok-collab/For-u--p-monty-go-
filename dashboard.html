@@ -30,17 +30,12 @@
             <div class="bg-brandYellow text-brandDark font-black text-xl px-3 py-1 rounded-xl">4U</div>
             <div>
                 <h1 id="headerTitle" class="text-lg font-bold">لوحة التحكم السحابية</h1>
-                <p id="userRoleBadge" class="text-xs text-brandYellow">جاري الاتصال بقاعدة البيانات...</p>
+                <p id="userRoleBadge" class="text-xs text-brandYellow">جاري التحقق من الصلاحية...</p>
             </div>
         </div>
         <div class="flex items-center space-x-3 space-x-reverse">
-            <select id="roleSelector" onchange="switchRole(this.value)" class="bg-brandCard border border-gray-700 text-xs text-white rounded-xl px-3 py-2 outline-none focus:border-brandYellow">
-                <option value="admin">صلاحية: المدير (إدارة المستخدمين والطلبات)</option>
-                <option value="supervisor">صلاحية: مشرف الطلبات</option>
-                <option value="driver">صلاحية: مندوب التوصيل</option>
-            </select>
-            <button onclick="logout()" class="text-gray-400 hover:text-red-400 text-sm flex items-center" title="تسجيل الخروج">
-                <i class="fa-solid fa-right-from-bracket ml-1"></i>
+            <button onclick="logout()" class="text-gray-400 hover:text-red-400 text-sm flex items-center bg-brandCard border border-gray-700 px-3 py-2 rounded-xl" title="تسجيل الخروج">
+                <i class="fa-solid fa-right-from-bracket ml-1"></i> خروج
             </button>
         </div>
     </header>
@@ -69,11 +64,11 @@
                 </div>
             </div>
 
-            <!-- قسم إدارة المستخدمين والحقيقيين من قاعدة البيانات -->
+            <!-- قسم إدارة المستخدمين الحقيقيين من قاعدة البيانات -->
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-gray-700 pb-3">
                     <h2 class="text-xl font-bold flex items-center text-brandYellow">
-                        <i class="fa-solid fa-users-gear ml-2"></i> إدارة المستخدمين الحقيقيين وتعديل الصلاحيات
+                        <i class="fa-solid fa-users-gear ml-2"></i> إدارة المستخدمين وتعديل الصلاحيات
                     </h2>
                     <span id="usersCounterBadge" class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1 rounded-lg text-xs font-bold">عدد المستخدمين: 0</span>
                 </div>
@@ -88,14 +83,14 @@
                             </tr>
                         </thead>
                         <tbody id="firestoreUsersTable" class="divide-y divide-gray-800">
-                            <tr><td colspan="4" class="p-4 text-center text-gray-500">جاري جلب المستخدمين الحقيقيين من قاعدة البيانات...</td></tr>
+                            <tr><td colspan="4" class="p-4 text-center text-gray-500">جاري جلب المستخدمين...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- قسم مشرف الطلبات والمدير: جدول الطلبات الحقيقية من Firestore -->
+        <!-- قسم مشرف الطلبات -->
         <section id="supervisorSection" class="space-y-6 hidden">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
                 <h2 class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
@@ -114,7 +109,7 @@
                             </tr>
                         </thead>
                         <tbody id="firestoreOrdersTable" class="divide-y divide-gray-800">
-                            <tr><td colspan="6" class="p-4 text-center text-gray-500">جاري تحميل الطلبات من السحابة...</td></tr>
+                            <tr><td colspan="6" class="p-4 text-center text-gray-500">جاري تحميل الطلبات...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -151,11 +146,11 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- ربط Firebase وجلب المستخدمين الحقيقيين من قاعدة البيانات -->
+    <!-- ربط Firebase وجلب الصلاحية الحقيقية للمستخدم -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-        import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
@@ -168,12 +163,13 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
         const db = getFirestore(app);
 
         let allOrders = [];
         let allUsers = [];
-        let activeDriverName = "محمود حسن";
+        let currentUserRole = '';
+        let currentUserName = '';
 
         window.showCustomAlert = function(title, message) {
             document.getElementById('alertTitle').innerText = title;
@@ -189,8 +185,8 @@
             modal.classList.add('hidden');
         }
 
-        window.switchRole = function(role) {
-            document.getElementById('roleSelector').value = role;
+        // دالة إظهار الصفحة المخصصة بناءً على الصلاحية الفعلية
+        function applyRoleView(role) {
             document.getElementById('adminSection').classList.add('hidden');
             document.getElementById('supervisorSection').classList.add('hidden');
             document.getElementById('driverSection').classList.add('hidden');
@@ -198,34 +194,65 @@
             const roleBadge = document.getElementById('userRoleBadge');
             const headerTitle = document.getElementById('headerTitle');
 
-            if (role === 'admin') {
+            // توحيد قراءة أسماء الصلاحيات (سواء مكتوبة بالعربي أو الإنجليزي)
+            if (role === 'مدير النظام' || role === 'admin') {
                 headerTitle.innerText = 'لوحة تحكم المدير العام';
-                roleBadge.innerText = 'صلاحية كاملة (إدارة المستخدمين الحقيقيين والسحابة)';
+                roleBadge.innerText = 'صلاحية كاملة (إدارة النظام والمستخدمين)';
                 document.getElementById('adminSection').classList.remove('hidden');
                 document.getElementById('supervisorSection').classList.remove('hidden');
-            } else if (role === 'supervisor') {
+            } else if (role === 'مشرف طلبات' || role === 'supervisor') {
                 headerTitle.innerText = 'لوحة مشرفي الطلبات';
                 roleBadge.innerText = 'متابعة وإسناد الطلبات السحابية';
                 document.getElementById('supervisorSection').classList.remove('hidden');
-            } else if (role === 'driver') {
+            } else if (role === 'مندوب توصيل' || role === 'driver') {
                 headerTitle.innerText = 'بوابة مناديب التوصيل';
                 roleBadge.innerText = 'متابعة الطلبات المسندة إليك';
                 document.getElementById('driverSection').classList.remove('hidden');
+            } else {
+                headerTitle.innerText = 'بوابة المستخدم';
+                roleBadge.innerText = `الصلاحية الحالية: ${role || 'عميل'}`;
             }
             renderViews();
         }
 
+        // التحقق من المستخدم الحالي وجلب صلاحيته من جدول users
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userRef = doc(db, "users", user.uid);
+                    const userSnap = await getDoc(userRef);
+                    
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
+                        currentUserRole = userData.role || 'مندوب توصيل';
+                        currentUserName = userData.name || user.displayName || 'مستخدم';
+                    } else {
+                        currentUserRole = 'مندوب توصيل';
+                        currentUserName = user.email.split('@')[0];
+                    }
+                    
+                    applyRoleView(currentUserRole);
+                    fetchCloudData();
+                } catch (err) {
+                    console.error("خطأ في جلب بيانات المستخدم:", err);
+                }
+            } else {
+                // لو لم يكن مسجلاً للدخول، يتم توجيهه للرئيسية
+                window.location.href = 'index.html';
+            }
+        });
+
         async function fetchCloudData() {
             try {
-                // 1. جلب الطلبات من مجموعة orders
                 const ordersSnapshot = await getDocs(collection(db, "orders"));
                 allOrders = [];
                 ordersSnapshot.forEach((docSnap) => {
                     allOrders.push({ id: docSnap.id, ...docSnap.data() });
                 });
-                document.getElementById('totalOrdersCount').innerText = allOrders.length;
+                if(document.getElementById('totalOrdersCount')) {
+                    document.getElementById('totalOrdersCount').innerText = allOrders.length;
+                }
 
-                // 2. جلب المستخدمين الحقيقيين من مجموعة "users" في قاعدة البيانات (Firestore)
                 const usersSnapshot = await getDocs(collection(db, "users"));
                 allUsers = [];
                 usersSnapshot.forEach((docSnap) => {
@@ -239,17 +266,17 @@
                     });
                 });
 
-                // تحديث عدادات الواجهة بالأرقام والبيانات الحقيقية المسترجعة
-                document.getElementById('totalUsersCount').innerText = allUsers.length;
-                document.getElementById('usersCounterBadge').innerText = `عدد المستخدمين الحقيقيين: ${allUsers.length}`;
-                
-                const driversCount = allUsers.filter(u => u.role === 'مندوب توصيل' || u.role === 'driver').length;
-                document.getElementById('totalDriversCount').innerText = driversCount;
+                if(document.getElementById('totalUsersCount')) {
+                    document.getElementById('totalUsersCount').innerText = allUsers.length;
+                    document.getElementById('usersCounterBadge').innerText = `عدد المستخدمين: ${allUsers.length}`;
+                    
+                    const driversCount = allUsers.filter(u => u.role === 'مندوب توصيل' || u.role === 'driver').length;
+                    document.getElementById('totalDriversCount').innerText = driversCount;
+                }
 
                 renderViews();
             } catch (error) {
-                console.error("خطأ في جلب البيانات من السحابة:", error);
-                showCustomAlert("خطأ في الاتصال", "تعذر جلب البيانات الحقيقية من قاعدة بيانات Firestore.");
+                console.error("خطأ في جلب البيانات:", error);
             }
         }
 
@@ -258,102 +285,104 @@
             const tbodyUsers = document.getElementById('firestoreUsersTable');
             const driverBox = document.getElementById('driverActiveOrderBox');
             
-            // تعبئة جدول الطلبات
-            tbodyOrders.innerHTML = '';
-            if (allOrders.length === 0) {
-                tbodyOrders.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">لا توجد طلبات سحابية واردة حالياً.</td></tr>`;
-            } else {
-                allOrders.forEach(order => {
-                    let driverOptions = `<option value="">اختر المندوب...</option>`;
-                    allUsers.filter(u => u.role === 'مندوب توصيل' || u.role === 'driver').forEach(d => {
-                        const isSelected = order.assignedDriver === d.name ? 'selected' : '';
-                        driverOptions += `<option value="${d.name}" ${isSelected}>${d.name}</option>`;
+            // تعبئة جدول الطلبات للمشرف والمدير
+            if (tbodyOrders) {
+                tbodyOrders.innerHTML = '';
+                if (allOrders.length === 0) {
+                    tbodyOrders.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">لا توجد طلبات سحابية واردة حالياً.</td></tr>`;
+                } else {
+                    allOrders.forEach(order => {
+                        let driverOptions = `<option value="">اختر المندوب...</option>`;
+                        allUsers.filter(u => u.role === 'مندوب توصيل' || u.role === 'driver').forEach(d => {
+                            const isSelected = order.assignedDriver === d.name ? 'selected' : '';
+                            driverOptions += `<option value="${d.name}" ${isSelected}>${d.name}</option>`;
+                        });
+
+                        tbodyOrders.innerHTML += `
+                            <tr>
+                                <td class="p-3 font-bold text-brandYellow">${order.orderId || order.id}</td>
+                                <td class="p-3">${order.clientName || 'عميل'} (${order.clientPhone || ''})</td>
+                                <td class="p-3">${order.description || 'توصيل طلب'}</td>
+                                <td class="p-3 font-bold">${(order.cost || 0).toLocaleString()} جنيه</td>
+                                <td class="p-3"><span class="bg-yellow-500/10 text-brandYellow px-2.5 py-1 rounded-lg text-xs border border-yellow-500/20">${order.status || 'قيد المراجعة'}</span></td>
+                                <td class="p-3">
+                                    <select onchange="assignDriverToOrder('${order.id}', this.value)" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
+                                        ${driverOptions}
+                                    </select>
+                                </td>
+                            </tr>
+                        `;
                     });
-
-                    tbodyOrders.innerHTML += `
-                        <tr>
-                            <td class="p-3 font-bold text-brandYellow">${order.orderId || order.id}</td>
-                            <td class="p-3">${order.clientName || 'عميل'} (${order.clientPhone || ''})</td>
-                            <td class="p-3">${order.description || 'توصيل طلب'}</td>
-                            <td class="p-3 font-bold">${(order.cost || 0).toLocaleString()} جنيه</td>
-                            <td class="p-3"><span class="bg-yellow-500/10 text-brandYellow px-2.5 py-1 rounded-lg text-xs border border-yellow-500/20">${order.status || 'قيد المراجعة'}</span></td>
-                            <td class="p-3">
-                                <select onchange="assignDriverToOrder('${order.id}', this.value)" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
-                                    ${driverOptions}
-                                </select>
-                            </td>
-                        </tr>
-                    `;
-                });
+                }
             }
 
-            // تعبئة جدول المستخدمين الحقيقيين المسترجعين من السحابة
-            tbodyUsers.innerHTML = '';
-            if (allUsers.length === 0) {
-                tbodyUsers.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">لا توجد حسابات مستخدمين مسجلة في مجموعة users حتى الآن.</td></tr>`;
-            } else {
-                allUsers.forEach(user => {
-                    const currentRole = user.role || 'مندوب توصيل';
-                    tbodyUsers.innerHTML += `
-                        <tr>
-                            <td class="p-3">
-                                <div class="font-bold text-white">${user.name}</div>
-                                <div class="text-xs text-gray-400">${user.email}</div>
-                            </td>
-                            <td class="p-3 text-gray-300 text-xs">${user.phone}</td>
-                            <td class="p-3">
-                                <span class="px-2.5 py-1 rounded-lg text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20">${currentRole}</span>
-                            </td>
-                            <td class="p-3 text-center">
-                                <select onchange="updateUserRoleInCloud('${user.id}', this.value)" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
-                                    <option value="" disabled>تغيير الصلاحية...</option>
-                                    <option value="مندوب توصيل" ${currentRole === 'مندوب توصيل' ? 'selected' : ''}>مندوب توصيل</option>
-                                    <option value="مشرف موارد" ${currentRole === 'مشرف موارد' ? 'selected' : ''}>مشرف موارد</option>
-                                    <option value="تسويق" ${currentRole === 'تسويق' ? 'selected' : ''}>تسويق</option>
-                                    <option value="مشرف طلبات" ${currentRole === 'مشرف طلبات' ? 'selected' : ''}>مشرف طلبات</option>
-                                    <option value="مدير النظام" ${currentRole === 'مدير النظام' ? 'selected' : ''}>مدير النظام</option>
-                                </select>
-                            </td>
-                        </tr>
-                    `;
-                });
+            // تعبئة جدول المستخدمين للمدير فقط
+            if (tbodyUsers) {
+                tbodyUsers.innerHTML = '';
+                if (allUsers.length === 0) {
+                    tbodyUsers.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">لا توجد حسابات مسجلة.</td></tr>`;
+                } else {
+                    allUsers.forEach(user => {
+                        const currentRole = user.role || 'مندوب توصيل';
+                        tbodyUsers.innerHTML += `
+                            <tr>
+                                <td class="p-3">
+                                    <div class="font-bold text-white">${user.name}</div>
+                                    <div class="text-xs text-gray-400">${user.email}</div>
+                                </td>
+                                <td class="p-3 text-gray-300 text-xs">${user.phone}</td>
+                                <td class="p-3">
+                                    <span class="px-2.5 py-1 rounded-lg text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20">${currentRole}</span>
+                                </td>
+                                <td class="p-3 text-center">
+                                    <select onchange="updateUserRoleInCloud('${user.id}', this.value)" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
+                                        <option value="" disabled>تغيير الصلاحية...</option>
+                                        <option value="مندوب توصيل" ${currentRole === 'مندوب توصيل' ? 'selected' : ''}>مندوب توصيل</option>
+                                        <option value="مشرف طلبات" ${currentRole === 'مشرف طلبات' ? 'selected' : ''}>مشرف طلبات</option>
+                                        <option value="مدير النظام" ${currentRole === 'مدير النظام' ? 'selected' : ''}>مدير النظام</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
             }
 
-            // عرض الطلب للمندوب النشط
-            const driverOrder = allOrders.find(o => o.assignedDriver === activeDriverName && o.status !== 'منجز');
+            // عرض الطلب للمندوب النشط بناءً على اسمه الحقيقي
+            if (driverBox) {
+                const driverOrder = allOrders.find(o => o.assignedDriver === currentUserName && o.status !== 'منجز');
 
-            if (driverOrder) {
-                driverBox.innerHTML = `
-                    <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                        <span class="text-gray-400 text-xs">رقم الطلب النشط:</span>
-                        <span class="font-bold text-brandYellow text-sm">${driverOrder.orderId || driverOrder.id}</span>
-                    </div>
-                    <div class="flex justify-between items-center text-xs text-gray-300">
-                        <span>العميل:</span> <span class="font-bold text-white">${driverOrder.clientName} (${driverOrder.clientPhone})</span>
-                    </div>
-                    <div class="flex justify-between items-center text-xs text-gray-300">
-                        <span>الحالة:</span> <span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">${driverOrder.status}</span>
-                    </div>
-                    <button onclick="completeOrderInCloud('${driverOrder.id}')" class="w-full bg-green-500 text-brandDark font-bold py-3 rounded-xl hover:bg-green-400 transition shadow-lg text-xs mt-2">
-                        <i class="fa-solid fa-check-double ml-1"></i> إنجاز الطلب الحالي (لإتاحة استقبال طلب جديد)
-                    </button>
-                `;
-            } else {
-                driverBox.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">لا توجد طلبات نشطة مسندة إليك حالياً (${activeDriverName}).</p>`;
+                if (driverOrder) {
+                    driverBox.innerHTML = `
+                        <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                            <span class="text-gray-400 text-xs">رقم الطلب النشط:</span>
+                            <span class="font-bold text-brandYellow text-sm">${driverOrder.orderId || driverOrder.id}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs text-gray-300">
+                            <span>العميل:</span> <span class="font-bold text-white">${driverOrder.clientName} (${driverOrder.clientPhone})</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs text-gray-300">
+                            <span>الحالة:</span> <span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">${driverOrder.status}</span>
+                        </div>
+                        <button onclick="completeOrderInCloud('${driverOrder.id}')" class="w-full bg-green-500 text-brandDark font-bold py-3 rounded-xl hover:bg-green-400 transition shadow-lg text-xs mt-2">
+                            <i class="fa-solid fa-check-double ml-1"></i> إنجاز الطلب الحالي
+                        </button>
+                    `;
+                } else {
+                    driverBox.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">لا توجد طلبات نشطة مسندة إليك حالياً (${currentUserName}).</p>`;
+                }
             }
         }
 
         window.updateUserRoleInCloud = async function(userId, newRole) {
             if(!newRole) return;
             try {
-                await updateDoc(doc(db, "users", userId), {
-                    role: newRole
-                });
-                showCustomAlert('تم التحديث السحابي', `تم تحديث صلاحية المستخدم الحقيقي في قاعدة البيانات إلى (${newRole}) بنجاح.`);
+                await updateDoc(doc(db, "users", userId), { role: newRole });
+                showCustomAlert('تم التحديث', `تم تحديث الصلاحية بنجاح إلى (${newRole}).`);
                 fetchCloudData();
             } catch (err) {
                 console.error(err);
-                showCustomAlert('خطأ', 'فشل تحديث الصلاحية في قاعدة بيانات السحابة.');
+                showCustomAlert('خطأ', 'فشل تحديث الصلاحية.');
             }
         }
 
@@ -364,35 +393,30 @@
                     assignedDriver: driverName,
                     status: 'قيد التوصيل (' + driverName + ')'
                 });
-                showCustomAlert('تم الإسناد', `تم إسناد الطلب للمندوب ${driverName} بنجاح في السحابة.`);
+                showCustomAlert('تم الإسناد', `تم إسناد الطلب للمندوب ${driverName} بنجاح.`);
                 fetchCloudData();
             } catch (err) {
                 console.error(err);
-                showCustomAlert('خطأ', 'فشل تحديث البيانات في السحابة.');
+                showCustomAlert('خطأ', 'فشل إسناد الطلب.');
             }
         }
 
         window.completeOrderInCloud = async function(docId) {
             try {
-                await updateDoc(doc(db, "orders", docId), {
-                    status: 'منجز'
-                });
-                showCustomAlert('تم بنجاح', 'تم إنجاز الطلب بنجاح وأصبح بإمكانك استلام طلب جديد.');
+                await updateDoc(doc(db, "orders", docId), { status: 'منجز' });
+                showCustomAlert('تم بنجاح', 'تم إنجاز الطلب بنجاح.');
                 fetchCloudData();
             } catch (err) {
                 console.error(err);
-                showCustomAlert('خطأ', 'فشل إنجاز الطلب في السحابة.');
+                showCustomAlert('خطأ', 'فشل إنجاز الطلب.');
             }
         }
 
         window.logout = function() {
-            window.location.href = 'index.html';
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            });
         }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            fetchCloudData();
-            switchRole('admin');
-        });
     </script>
 </body>
 </html>
