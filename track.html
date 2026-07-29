@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For-U | تتبع الطلب والموقع الجغرافي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#121212] text-white min-h-screen flex flex-col justify-between selection:bg-[#FFB800] selection:text-[#121212]">
+
+    <!-- الهيدر العلوي -->
+    <header class="p-4 sm:p-6 flex justify-between items-center border-b border-gray-800/60">
+        <div class="flex items-center space-x-2 space-x-reverse">
+            <a href="index.html" class="bg-[#1E1E1E] border border-gray-700 text-[#FFB800] text-xs font-bold px-3 py-2 rounded-xl hover:bg-gray-800 transition flex items-center shadow">
+                <i class="fa-solid fa-arrow-right ml-1"></i> الرئيسية
+            </a>
+        </div>
+        <h1 class="text-sm font-bold text-gray-300">تتبع الطلب والشحنات</h1>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-grow flex flex-col items-center justify-center p-6 max-w-md mx-auto w-full">
+        
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-[#FFB800] text-2xl shadow-lg">
+                <i class="fa-solid fa-location-crosshairs"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-1">تتبع شحنتك بدقة</h2>
+            <p class="text-xs text-gray-400">أدخل رقم الطلب أو استخدم محدد الموقع الجغرافي GPS</p>
+        </div>
+
+        <!-- بطاقة البحث والتتبع -->
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-5 w-full shadow-2xl space-y-4">
+            
+            <div>
+                <label class="block text-xs text-gray-300 mb-1">رقم الطلب أو الشحنة</label>
+                <div class="flex space-x-2 space-x-reverse">
+                    <input type="text" id="orderIdInput" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="مثال: #FOR-9821">
+                    <button onclick="trackOrder()" class="bg-[#FFB800] text-[#121212] font-bold px-4 py-2.5 rounded-xl hover:bg-yellow-400 transition shadow text-sm">
+                        بحث
+                    </button>
+                </div>
+            </div>
+
+            <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-gray-700"></div>
+                <span class="flex-shrink mx-3 text-gray-500 text-xs">أو تحديد الموقع المباشر</span>
+                <div class="flex-grow border-t border-gray-700"></div>
+            </div>
+
+            <!-- زر تفعيل الـ GPS بضغطة زر -->
+            <button onclick="getMyLocation()" class="w-full bg-[#121212] border border-[#FFB800] text-[#FFB800] font-bold py-3 px-4 rounded-xl hover:bg-[#FFB800]/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse text-sm">
+                <i class="fa-solid fa-crosshairs text-lg ml-2 animate-spin"></i>
+                <span>تحديد موقعي الحالي عبر الـ GPS</span>
+            </button>
+
+            <div id="locationResult" class="hidden text-xs bg-[#121212] border border-gray-800 p-3 rounded-xl text-gray-300 space-y-1">
+                <p class="text-[#FFB800] font-bold"><i class="fa-solid fa-circle-check ml-1"></i> تم تحديد إحداثياتك بنجاح:</p>
+                <p id="coordsText" class="font-mono text-gray-400"></p>
+            </div>
+
+        </div>
+
+        <!-- قسم عرض حالة الطلب (افتراضي مخفي لحين البحث) -->
+        <div id="orderStatusCard" class="hidden mt-5 bg-[#1E1E1E] border border-gray-800 rounded-3xl p-5 w-full shadow-2xl space-y-3">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                <span class="text-xs text-gray-400">حالة الطلب الحالية:</span>
+                <span id="statusBadge" class="bg-yellow-500/20 text-[#FFB800] border border-[#FFB800]/40 text-xs font-bold px-2.5 py-1 rounded-full">قيد المعالجة</span>
+            </div>
+            <div class="space-y-2 text-xs text-gray-300">
+                <div class="flex justify-between"><span>رقم الطلب:</span> <span id="resOrderId" class="font-bold text-white">#FOR-000</span></div>
+                <div class="flex justify-between"><span>المندوب المكلف:</span> <span class="text-gray-400">جاري تعيين مندوب...</span></div>
+                <div class="flex justify-between"><span>وقت الوصول المتوقع:</span> <span class="text-gray-400">15 - 25 دقيقة</span></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- نافذة التنبيهات المخصصة -->
+    <div id="customAlertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
+            <div id="alertIconContainer" class="w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h4 id="alertTitle" class="text-xl font-bold mb-2">تنبيه النظام</h4>
+            <p id="alertMessage" class="text-gray-300 text-sm mb-6 leading-relaxed">رسالة...</p>
+            <button onclick="closeCustomAlert()" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg">
+                حسنًا
+            </button>
+        </div>
+    </div>
+
+    <!-- البرمجة والسكربتات -->
+    <script>
+        function showCustomAlert(title, message, isError = false) {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            const iconContainer = document.getElementById('alertIconContainer');
+            if (isError) {
+                iconContainer.className = "w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-red-400 text-2xl";
+                iconContainer.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else {
+                iconContainer.className = "w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl";
+                iconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            }
+            const alertModal = document.getElementById('customAlertModal');
+            alertModal.classList.remove('hidden');
+            alertModal.classList.add('flex');
+        }
+
+        function closeCustomAlert() {
+            const alertModal = document.getElementById('customAlertModal');
+            alertModal.classList.remove('flex');
+            alertModal.classList.add('hidden');
+        }
+
+        // وظيفة تحديد الموقع الجغرافي بضغط زر
+        function getMyLocation() {
+            if (!navigator.geolocation) {
+                showCustomAlert('خطأ', 'متصفحك لا يدعم خاصية تحديد الموقع الجغرافي', true);
+                return;
+            }
+
+            showCustomAlert('جاري تحديد الموقع', '📡 يرجى السماح للمتصفح بالوصول إلى موقعك الحالي...');
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    closeCustomAlert();
+                    
+                    // إظهار النتيجة في الواجهة
+                    document.ريسresultBox = document.getElementById('locationResult');
+                    document.getElementById('locationResult').classList.remove('hidden');
+                    document.getElementById('coordsText').innerText = `خط العرض: ${lat.toFixed(4)}, خط الطول: ${lon.toFixed(4)}`;
+                    
+                    showCustomAlert('تم بنجاح', '📍 تم تحديد موقعك الجغرافي بدقة ومطابقته مع شبكة المناديب.');
+                },
+                (error) => {
+                    closeCustomAlert();
+                    let errorMsg = 'تعذر الحصول على الموقع.';
+                    if (error.code === error.PERMISSION_DENIED) {
+                        errorMsg = 'تم رفض إذن الوصول للموقع من قبل المستخدم.';
+                    }
+                    showCustomAlert('خطأ في تحديد الموقع', errorMsg, true);
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+
+        // وظيفة محاكاة تتبع الطلب
+        function trackOrder() {
+            const orderId = document.getElementById('orderIdInput').value.trim();
+            if(!orderId) {
+                showCustomAlert('تنبيه', 'الرجاء إدخال رقم الطلب أولاً', true);
+                return;
+            }
+
+            document.getElementById('resOrderId').innerText = orderId;
+            document.getElementById('orderStatusCard').classList.remove('hidden');
+            showCustomAlert('نجاح', '🔍 تم العثور على بيانات الطلب وجاري تحديث حالته.');
+        }
+    </script>
+</body>
+</html>
