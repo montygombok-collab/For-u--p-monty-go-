@@ -148,12 +148,13 @@
         import { 
             getAuth, 
             onAuthStateChanged, 
-            signInWithRedirect, 
-            getRedirectResult,
+            signInWithPopup, 
             GoogleAuthProvider, 
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
-            signOut 
+            signOut,
+            setPersistence,
+            browserLocalPersistence
         } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -168,6 +169,11 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+
+        // ضبط نظام الحفظ محلياً لتفادي مشاكل الجلسة
+        setPersistence(auth, browserLocalPersistence).catch((error) => {
+            console.error("Auth persistence error:", error);
+        });
 
         let currentMode = 'login';
 
@@ -237,20 +243,6 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            // التحقق من نتيجة العودة عبر التوجيه (Redirect Result) من Google
-            getRedirectResult(auth)
-                .then((result) => {
-                    if (result && result.user) {
-                        const user = result.user;
-                        localStorage.setItem('foru_user_email', user.email);
-                        updateUIAfterLogin(user.email);
-                        showCustomAlert('نجاح العملية', '✅ تم تسجيل الدخول عبر حساب غوغل بنجاح!');
-                    }
-                })
-                .catch((error) => {
-                    showCustomAlert('خطأ في المصادقة', '❌ خطأ: ' + error.message, true);
-                });
-
             const urlParams = new URLSearchParams(window.location.search);
             const userEmailFromRedirect = urlParams.get('email');
 
@@ -281,10 +273,22 @@
             document.getElementById('userEmailSpan').innerText = email;
         }
 
-        // استخدام التوجيه المباشر (Redirect) لتفادي خطأ إغلاق النافذة المنبثقة على الهواتف
+        // العودة لاستخدام signInWithPopup بشكل سليم وآمن
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
-            signInWithRedirect(auth, provider);
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    const user = result.user;
+                    localStorage.setItem('foru_user_email', user.email);
+                    updateUIAfterLogin(user.email);
+                    closeAuthModal();
+                    showCustomAlert('نجاح العملية', '✅ تم تسجيل الدخول عبر حساب غوغل بنجاح!');
+                })
+                .catch((error) => {
+                    if (error.code !== 'auth/popup-closed-by-user') {
+                        showCustomAlert('خطأ في المصادقة', '❌ خطأ: ' + error.message, true);
+                    }
+                });
         };
 
         window.loginWithSudanPlay = function() {
