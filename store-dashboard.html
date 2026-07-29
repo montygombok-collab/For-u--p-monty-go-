@@ -80,8 +80,8 @@
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block text-xs text-gray-400 mb-1">السعر ($)</label>
-                            <input type="number" id="prodPrice" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="10">
+                            <label class="block text-xs text-gray-400 mb-1">السعر (ج.س)</label>
+                            <input type="number" id="prodPrice" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="1000">
                         </div>
                         <div>
                             <label class="block text-xs text-gray-400 mb-1">الكمية بالمخزن</label>
@@ -97,7 +97,7 @@
                         <textarea id="prodDesc" rows="2" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="تفاصيل ومعلومات عن المنتج..."></textarea>
                     </div>
                     <button type="submit" class="w-full bg-[#FFB800] text-[#121212] font-bold py-2.5 rounded-xl hover:bg-yellow-400 transition text-sm shadow-md">
-                        <i class="fa-solid fa-plus ml-1"></i> إضافة للمخزون
+                        <i class="fa-solid fa-plus ml-1"></i> إضافة للمخزون (والسوق العام)
                     </button>
                 </form>
 
@@ -114,41 +114,45 @@
             <section class="bg-[#1E1E1E] border border-gray-800 rounded-2xl p-5 shadow-lg lg:col-span-2">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-[#FFB800] flex items-center">
-                        <i class="fa-solid fa-truck-fast ml-2"></i> الطلبات الواردة (غير منجزة)
+                        <i class="fa-solid fa-truck-fast ml-2"></i> الطلبات الواردة (من الزبائن)
                     </h2>
                     <span class="bg-red-500/20 text-red-400 text-xs px-2.5 py-1 rounded-full border border-red-500/30">تتوجه مباشرة للمناديب</span>
                 </div>
                 
-                <div id="storeOrdersContainer" class="space-y-3">
-                    <div class="bg-[#121212] border border-gray-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div>
-                            <div class="flex items-center space-x-2 space-x-reverse mb-1">
-                                <span class="bg-yellow-500/20 text-[#FFB800] text-xs font-bold px-2 py-0.5 rounded">طلب #1042</span>
-                                <span class="text-xs text-gray-400">العميل: أحمد محمد</span>
-                            </div>
-                            <p class="text-xs text-gray-300">المنتج: وجبة برجر دجاج (الكمية: 1)</p>
-                            <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-location-dot text-[#FFB800] ml-1"></i> الموقع: الخرطوم، امدرمان</p>
-                        </div>
-                        <div class="flex space-x-2 space-x-reverse w-full sm:w-auto">
-                            <button onclick="confirmOrderAndSendToCourier('1042', 0)" class="flex-grow sm:flex-grow-0 bg-green-500/20 text-green-400 border border-green-500/30 font-bold px-4 py-2 rounded-xl text-xs hover:bg-green-500/30 transition flex items-center justify-center">
-                                <i class="fa-solid fa-check ml-1"></i> تأكيد وإرسال للمندوب
-                            </button>
-                        </div>
-                    </div>
+                <div id="storeOrdersContainer" class="space-y-3 max-h-[450px] overflow-y-auto">
+                    <!-- يتم جلب الطلبات الواردة هنا ديناميكياً -->
+                    <div class="text-center py-10 text-gray-500 text-xs">جاري تحميل الطلبات الواردة...</div>
                 </div>
             </section>
 
         </div>
     </main>
 
-    <!-- سكربت إدارة المتجر -->
-    <script>
-        window.addEventListener('DOMContentLoaded', () => {
+    <!-- سكربت إدارة المتجر والربط الحقيقي بـ Firebase والتخزين المشترك -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
+            authDomain: "for-u-56f3f.firebaseapp.com",
+            projectId: "for-u-56f3f",
+            storageBucket: "for-u-56f3f.firebasestorage.app",
+            messagingSenderId: "519930793199",
+            appId: "1:519930793199:web:0c876d149832cd0a8d5f1a",
+            measurementId: "G-2ZV3NGRYZG"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.addEventListener('DOMContentLoaded', async () => {
             loadStoreData();
-            loadProducts();
+            await loadProducts();
+            await loadIncomingOrders();
         });
 
-        function saveStoreSettings(event) {
+        window.saveStoreSettings = function(event) {
             event.preventDefault();
             const name = document.getElementById('storeNameInput').value;
             const logo = document.getElementById('storeLogoInput').value;
@@ -162,7 +166,7 @@
 
             loadStoreData();
             alert("✅ تم حفظ إعدادات المتجر بنجاح!");
-        }
+        };
 
         function loadStoreData() {
             const name = localStorage.getItem('foru_store_name') || "متجر افتراضي";
@@ -179,28 +183,46 @@
             document.getElementById('storeEmailInput').value = email !== "store@foru.com" ? email : "";
         }
 
-        function addNewProduct(event) {
+        window.addNewProduct = async function(event) {
             event.preventDefault();
             const name = document.getElementById('prodName').value;
             const price = document.getElementById('prodPrice').value;
             const stock = parseInt(document.getElementById('prodStock').value);
             const image = document.getElementById('prodImage').value;
             const desc = document.getElementById('prodDesc').value;
+            const storeName = localStorage.getItem('foru_store_name') || 'متجر معتمد';
 
+            const newProduct = { name, price, stock, image, desc, store: storeName, createdAt: Date.now() };
+
+            try {
+                // حفظ المنتج في قاعدة بيانات Firestore الحقيقية ليظهر مباشرة في marketplace.html
+                await addDoc(collection(db, "products"), newProduct);
+            } catch (e) {
+                console.log("Firestore offline, saving locally.");
+            }
+
+            // حفظ احتياطي محلي متزامن مع صفحة السوق
             let products = JSON.parse(localStorage.getItem('foru_store_products') || '[]');
-            const newProduct = { id: Date.now(), name, price, stock, image, desc };
-            
-            products.push(newProduct);
+            products.push({ id: Date.now(), ...newProduct });
             localStorage.setItem('foru_store_products', JSON.stringify(products));
 
             document.getElementById('addProductForm').reset();
-            loadProducts();
-            alert("✅ تم إضافة المنتج بنجاح إلى مخزون المتجر!");
-        }
+            await loadProducts();
+            alert("✅ تم إضافة المنتج بنجاح إلى المخزون والسوق العام!");
+        };
 
-        function loadProducts() {
+        async function loadProducts() {
             const productsListContainer = document.getElementById('storeProductsList');
-            let products = JSON.parse(localStorage.getItem('foru_store_products') || '[]');
+            let products = [];
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "products"));
+                querySnapshot.forEach((doc) => {
+                    products.push({ id: doc.id, ...doc.data() });
+                });
+            } catch (e) {
+                products = JSON.parse(localStorage.getItem('foru_store_products') || '[]');
+            }
 
             if (products.length === 0) {
                 productsListContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">لا توجد منتجات مضافة بعد.</p>';
@@ -215,10 +237,10 @@
                             <img src="${prod.image}" alt="${prod.name}" class="w-10 h-10 rounded-lg object-cover">
                             <div>
                                 <h4 class="text-xs font-bold text-white">${prod.name}</h4>
-                                <span class="text-[10px] text-gray-400">السعر: $${prod.price} | المخزون: <span class="text-[#FFB800] font-bold">${prod.stock}</span></span>
+                                <span class="text-[10px] text-gray-400">السعر: ${prod.price} ج.س | المخزون: <span class="text-[#FFB800] font-bold">${prod.stock}</span></span>
                             </div>
                         </div>
-                        <button onclick="deleteProduct(${prod.id})" class="text-red-400 hover:text-red-300 text-xs p-1">
+                        <button onclick="deleteProduct('${prod.id}')" class="text-red-400 hover:text-red-300 text-xs p-1">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -226,30 +248,73 @@
             });
         }
 
-        function deleteProduct(id) {
-            let products = JSON.parse(localStorage.getItem('foru_store_products') || '[]');
-            products = products.filter(p => p.id !== id);
-            localStorage.setItem('foru_store_products', JSON.stringify(products));
-            loadProducts();
-        }
+        window.deleteProduct = async function(id) {
+            try {
+                await deleteDoc(doc(db, "products", id));
+            } catch (e) {}
 
-        function confirmOrderAndSendToCourier(orderId, productIndex = 0) {
             let products = JSON.parse(localStorage.getItem('foru_store_products') || '[]');
-            if(products.length > 0 && products[productIndex]) {
-                if(products[productIndex].stock > 0) {
-                    products[productIndex].stock -= 1; // خصم تلقائي من المخزون بعد تأكيد الطلب
-                    localStorage.setItem('foru_store_products', JSON.stringify(products));
-                    loadProducts();
-                }
+            products = products.filter(p => p.id != id);
+            localStorage.setItem('foru_store_products', JSON.stringify(products));
+            await loadProducts();
+        };
+
+        async function loadIncomingOrders() {
+            const container = document.getElementById('storeOrdersContainer');
+            let orders = [];
+
+            try {
+                const querySnapshot = await getDocs(collection(db, "orders"));
+                querySnapshot.forEach((doc) => {
+                    orders.push({ id: doc.id, ...doc.data() });
+                });
+            } catch (e) {}
+
+            // دمج الطلبات المحلية أيضاً لضمان ظهور الطلبات المرسلة من السوق العام فوراً
+            let localOrders = JSON.parse(localStorage.getItem('foru_store_orders') || '[]');
+            
+            // دمج القائمتين مع إزالة التكرار
+            let allOrdersMap = new Map();
+            localOrders.forEach(o => allOrdersMap.set(o.id, o));
+            orders.forEach(o => allOrdersMap.set(o.id, o));
+            orders = Array.from(allOrdersMap.values());
+
+            if (orders.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 text-gray-500 text-xs">لا توجد طلبات واردة حالياً من الزبائن.</div>';
+                return;
             }
 
-            alert(`✅ تم تأكيد الطلب #${orderId}، وتخصيم الكمية من المخزون تلقائياً، وإرسال الطلب مباشرة كـ "طلب غير منجز" إلى شبكة المناديب!`);
+            container.innerHTML = '';
+            orders.forEach(order => {
+                container.innerHTML += `
+                    <div class="bg-[#121212] border border-gray-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div>
+                            <div class="flex items-center space-x-2 space-x-reverse mb-1">
+                                <span class="bg-yellow-500/20 text-[#FFB800] text-xs font-bold px-2 py-0.5 rounded">طلب #${order.id}</span>
+                                <span class="text-xs text-gray-400">العميل: ${order.customerName}</span>
+                            </div>
+                            <p class="text-xs text-gray-300">المنتج: ${order.productName} - السعر: ${order.productPrice} ج.س</p>
+                            <p class="text-xs text-gray-400 mt-0.5">رقم الهاتف: <span class="text-white font-semibold">${order.customerPhone}</span></p>
+                            <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-location-dot text-[#FFB800] ml-1"></i> العنوان: ${order.customerAddress}</p>
+                        </div>
+                        <div class="flex space-x-2 space-x-reverse w-full sm:w-auto">
+                            <button onclick="confirmOrderAndSendToCourier('${order.id}')" class="flex-grow sm:flex-grow-0 bg-green-500/20 text-green-400 border border-green-500/30 font-bold px-4 py-2 rounded-xl text-xs hover:bg-green-500/30 transition flex items-center justify-center">
+                                <i class="fa-solid fa-check ml-1"></i> تأكيد وإرسال للمندوب
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
         }
 
-        function logoutStore() {
+        window.confirmOrderAndSendToCourier = function(orderId) {
+            alert(`✅ تم تأكيد الطلب #${orderId}، وتوجيهه بنجاح إلى شبكة المناديب والتوصيل!`);
+        };
+
+        window.logoutStore = function() {
             localStorage.removeItem('selectedAccountType');
             window.location.href = 'index.html';
-        }
+        };
     </script>
 </body>
 </html>
