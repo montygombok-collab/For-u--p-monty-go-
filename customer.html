@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>طلب توصيل جديد | For-U</title>
+    <title>طلب وتتبع التوصيل | For-U</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -27,7 +27,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Cairo', sans-serif; }
-        #map { height: 400px; width: 100%; border-radius: 1rem; }
+        #map { height: 350px; width: 100%; border-radius: 1rem; }
     </style>
 </head>
 <body class="bg-brandDark text-white min-h-screen flex flex-col justify-between relative">
@@ -36,7 +36,7 @@
     <header class="p-4 md:p-6 flex justify-between items-center border-b border-gray-800">
         <div class="flex items-center space-x-3 space-x-reverse">
             <div class="bg-brandYellow text-brandDark font-black text-xl px-3 py-1 rounded-xl">4U</div>
-            <h1 class="text-lg font-bold">بوابة طلبات التوصيل للعملاء</h1>
+            <h1 class="text-lg font-bold">بوابة طلبات وتتبع التوصيل</h1>
         </div>
         <a href="index.html" class="text-gray-400 hover:text-white text-sm">
             <i class="fa-solid fa-house ml-1"></i> الرئيسية
@@ -47,92 +47,117 @@
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <div class="flex flex-col gap-8">
             
-            <!-- 1. الخريطة في الأعلى مع زر تحديد الموقع الحالي -->
-            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl flex flex-col space-y-4">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h2 class="text-xl font-bold mb-1 flex items-center">
-                            <i class="fa-solid fa-map-location-dot text-brandYellow ml-2"></i> تحديد موقع الاستلام والوصول
-                        </h2>
-                        <p class="text-xs text-gray-400">انقر على الخريطة لتحديد نقطة التسليم، أو اضغط على زر تحديد موقعك الحالي.</p>
+            <!-- قسم نموذج الطلب (يختفي أو يظهر حسب الحالة) -->
+            <div id="orderFormSection" class="flex flex-col gap-8">
+                <!-- 1. الخريطة في الأعلى مع زر تحديد الموقع الحالي -->
+                <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl flex flex-col space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <h2 class="text-xl font-bold mb-1 flex items-center">
+                                <i class="fa-solid fa-map-location-dot text-brandYellow ml-2"></i> تحديد موقع الاستلام والوصول
+                            </h2>
+                            <p class="text-xs text-gray-400">انقر على الخريطة لتحديد نقطة التسليم، أو اضغط على زر تحديد موقعك الحالي.</p>
+                        </div>
+                        <button type="button" onclick="locateUser()" class="bg-brandDark border border-brandYellow text-brandYellow text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-brandYellow hover:text-brandDark transition flex items-center gap-2 shadow-md">
+                            <i class="fa-solid fa-location-crosshairs"></i> تحديد موقعي الحالي
+                        </button>
                     </div>
-                    <button type="button" onclick="locateUser()" class="bg-brandDark border border-brandYellow text-brandYellow text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-brandYellow hover:text-brandDark transition flex items-center gap-2 shadow-md">
-                        <i class="fa-solid fa-location-crosshairs"></i> تحديد موقعي الحالي
+                    <div id="map"></div>
+                </div>
+
+                <!-- 2. نموذج إدخال بيانات الطلب في الأسفل -->
+                <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
+                    <h2 class="text-xl font-bold border-b border-gray-700 pb-3 flex items-center">
+                        <i class="fa-solid fa-box-open text-brandYellow ml-2"></i> تفاصيل الطلب والمتجر
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">اسم العميل</label>
+                            <input type="text" id="clientName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="الاسم الكامل">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">رقم هاتف العميل</label>
+                            <input type="tel" id="clientPhone" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="09xxxxxxxx">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">اسم المتجر (المرسل)</label>
+                            <input type="text" id="storeName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: متجر شاهين الإلكتروني">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">رقم هاتف المتجر</label>
+                            <input type="tel" id="storePhone" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="09xxxxxxxx">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm text-gray-300 mb-1">نوع البضاعة / الوصف</label>
+                        <textarea id="orderDesc" rows="2" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: طرد ملابس، أوراق مهمة..."></textarea>
+                    </div>
+
+                    <div class="bg-brandDark p-4 rounded-2xl border border-gray-800 space-y-2">
+                        <div class="flex justify-between text-sm text-gray-400">
+                            <span>المسافة المقدرة:</span>
+                            <span id="distanceText" class="font-bold text-white">0 كم</span>
+                        </div>
+                        <div class="flex justify-between text-base font-bold text-brandYellow">
+                            <span>التكلفة الإجمالية:</span>
+                            <span id="costText">0 جنيه</span>
+                        </div>
+                    </div>
+
+                    <button onclick="submitOrder()" id="submitBtn" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg">
+                        تأكيد وإرسال الطلب إلى مشرف التسويق
                     </button>
                 </div>
-                <div id="map"></div>
             </div>
 
-            <!-- 2. نموذج إدخال بيانات الطلب في الأسفل -->
-            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
-                <h2 class="text-xl font-bold border-b border-gray-700 pb-3 flex items-center">
-                    <i class="fa-solid fa-box-open text-brandYellow ml-2"></i> تفاصيل الطلب والمتجر
-                </h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- قسم تتبع الطلب المباشر في نفس الصفحة (يظهر بعد إرسال الطلب) -->
+            <div id="orderTrackingSection" class="hidden bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-6">
+                <div class="flex justify-between items-center border-b border-gray-700 pb-4">
                     <div>
-                        <label class="block text-sm text-gray-300 mb-1">اسم العميل</label>
-                        <input type="text" id="clientName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="الاسم الكامل">
+                        <h2 class="text-xl font-bold text-brandYellow flex items-center">
+                            <i class="fa-solid fa-satellite-dish ml-2"></i> تتبع طلبك المباشر
+                        </h2>
+                        <p class="text-xs text-gray-400 mt-1" id="trackOrderIdDisplay">رقم الطلب: --</p>
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">رقم هاتف العميل</label>
-                        <input type="tel" id="clientPhone" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="09xxxxxxxx">
+                    <button onclick="resetNewOrder()" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs px-3 py-2 rounded-xl transition">
+                        <i class="fa-solid fa-plus ml-1"></i> طلب جديد
+                    </button>
+                </div>
+
+                <!-- صندوق حالة الطلب -->
+                <div class="bg-brandDark p-5 rounded-2xl border border-gray-800 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-400">حالة الطلب الحالية:</span>
+                        <span id="trackStatusBadge" class="bg-yellow-500/20 text-brandYellow border border-yellow-500/30 text-xs font-bold px-3 py-1 rounded-full">بانتظار مراجعة مشرف التسويق</span>
+                    </div>
+
+                    <!-- معلومات مندوب التوصيل (تتحدث تلقائياً) -->
+                    <div id="driverInfoBox" class="bg-[#1E1E1E] p-4 rounded-xl border border-gray-800 flex items-center justify-between">
+                        <div class="flex items-center space-x-3 space-x-reverse">
+                            <div class="w-12 h-12 bg-brandYellow/10 border border-brandYellow rounded-full flex items-center justify-center text-brandYellow text-lg">
+                                <i class="fa-solid fa-motorcycle"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-sm text-white" id="driverNameText">مندوب التوصيل: لم يُسند بعد</h4>
+                                <p class="text-xs text-gray-400" id="driverPhoneText">رقم الهاتف: --</p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-500" id="driverStatusTime">قيد الانتظار</span>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">اسم المتجر (المرسل)</label>
-                        <input type="text" id="storeName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: متجر شاهين الإلكتروني">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">رقم هاتف المتجر</label>
-                        <input type="tel" id="storePhone" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="09xxxxxxxx">
-                    </div>
+                <div class="text-center">
+                    <p class="text-xs text-gray-400">تُحدث هذه الصفحة تلقائياً لمتابعة حالة اعتماد المشرف وإسناد المندوب.</p>
                 </div>
-
-                <div>
-                    <label class="block text-sm text-gray-300 mb-1">نوع البضاعة / الوصف</label>
-                    <textarea id="orderDesc" rows="2" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: طرد ملابس، أوراق مهمة..."></textarea>
-                </div>
-
-                <div class="bg-brandDark p-4 rounded-2xl border border-gray-800 space-y-2">
-                    <div class="flex justify-between text-sm text-gray-400">
-                        <span>المسافة المقدرة:</span>
-                        <span id="distanceText" class="font-bold text-white">0 كم</span>
-                    </div>
-                    <div class="flex justify-between text-base font-bold text-brandYellow">
-                        <span>التكلفة الإجمالية:</span>
-                        <span id="costText">0 جنيه</span>
-                    </div>
-                </div>
-
-                <button onclick="submitOrder()" id="submitBtn" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg">
-                    تأكيد وإرسال الطلب إلى مشرف التسويق
-                </button>
             </div>
 
         </div>
     </main>
-
-    <!-- نافذة منبثقة احترافية (Modal) بدلاً من تنبيه المتجر التقليدي -->
-    <div id="successModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-brandCard border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl animate-scaleIn">
-            <div class="w-16 h-16 bg-green-500/20 border border-green-500/40 rounded-full flex items-center justify-center mx-auto text-green-400 text-2xl">
-                <i class="fa-solid fa-check"></i>
-            </div>
-            <div>
-                <h3 class="text-lg font-bold text-white mb-1">تم إرسال طلبك بنجاح!</h3>
-                <p class="text-xs text-gray-400">تم توجيه طلبك إلى مشرف التسويق للمراجعة والاعتماد.</p>
-            </div>
-            <div class="bg-brandDark p-3 rounded-xl border border-gray-800 text-xs text-brandYellow font-mono" id="modalOrderId">
-                FOR-XXXX
-            </div>
-            <button onclick="redirectToTrack()" class="w-full bg-brandYellow text-brandDark font-bold py-3 rounded-xl hover:bg-yellow-400 transition text-sm shadow">
-                متابعة حالة الطلب
-            </button>
-        </div>
-    </div>
 
     <!-- الفوتر -->
     <footer class="p-4 text-center border-t border-gray-800 text-gray-500 text-sm">
@@ -168,7 +193,8 @@
         let selectedLng = null;
         const basePricePerKm = 500; 
         let calculatedDistance = 0;
-        let globalGeneratedOrderId = '';
+        let activeOrderId = '';
+        let trackingInterval = null;
 
         const companyLat = 15.5007;
         const companyLng = 32.5599;
@@ -235,10 +261,10 @@
             btn.innerText = "جاري إرسال الطلب إلى مشرف التسويق...";
             btn.disabled = true;
 
-            globalGeneratedOrderId = 'FOR-' + Math.floor(1000 + Math.random() * 9000);
+            activeOrderId = 'FOR-' + Math.floor(1000 + Math.random() * 9000);
 
             const orderData = {
-                orderId: globalGeneratedOrderId,
+                orderId: activeOrderId,
                 clientName: name,
                 clientPhone: phone,
                 storeName: sName,
@@ -248,32 +274,72 @@
                 lng: selectedLng,
                 distance: calculatedDistance.toFixed(2),
                 cost: Math.round(calculatedDistance * basePricePerKm),
-                status: 'pending_supervisor', // موجه لمشرف التسويق
-                assignedDriver: '',
+                status: 'pending_supervisor', // الحالة الأولية بانتظار المشرف
+                driverName: '',
+                driverPhone: '',
                 createdAt: new Date().toISOString()
             };
 
-            // 1. التخزين المحلي الآمن لظهوره الفوري لدى المشرف
-            let localPending = JSON.parse(localStorage.getItem('foru_pending_supervisor_orders') || '[]');
-            localPending.push(orderData);
-            localStorage.setItem('foru_pending_supervisor_orders', JSON.stringify(localPending));
+            // تخزين الطلب في LocalStorage ليتمكن المشرف والمناديب من رؤيته وتحديثه
+            let allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
+            allOrders.push(orderData);
+            localStorage.setItem('foru_all_orders', JSON.stringify(allOrders));
 
-            // 2. محاولة الحفظ في فايربيس بالسلفية
+            // محاولة الحفظ في فايربيس في الخلفية
             try {
-                addDoc(collection(db, "orders"), orderData).catch(err => {
-                    console.log("تخزين محلي لتجاوز السيرفر:", err);
-                });
-            } catch (e) {
-                console.log("تجاوز السيرفر");
-            }
+                addDoc(collection(db, "orders"), orderData).catch(err => console.log("تخزين محلي لتجاوز السيرفر"));
+            } catch (e) {}
 
-            // 3. إظهار النافذة المنبثقة الاحترافية (Modal) بدلاً من رسالة المتصفح
-            document.getElementById('modalOrderId').innerText = `رقم الطلب: ${globalGeneratedOrderId}`;
-            document.getElementById('successModal').classList.remove('hidden');
+            // تحويل واجهة الصفحة لعرض قسم التتبع المباشر فوراً
+            document.getElementById('orderFormSection').classList.add('hidden');
+            document.getElementById('orderTrackingSection').classList.remove('hidden');
+            document.getElementById('trackOrderIdDisplay').innerText = `رقم الطلب: ${activeOrderId}`;
+
+            // بدء المراقبة والتحديث التلقائي لحالة المندوب
+            startLiveTracking();
         }
 
-        window.redirectToTrack = function() {
-            window.location.href = `track.html?order=${globalGeneratedOrderId}`;
+        function startLiveTracking() {
+            if(trackingInterval) clearInterval(trackingInterval);
+
+            trackingInterval = setInterval(() => {
+                let allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
+                const currentOrder = allOrders.find(o => o.orderId === activeOrderId);
+
+                if(currentOrder) {
+                    const badge = document.getElementById('trackStatusBadge');
+                    const driverNameEl = document.getElementById('driverNameText');
+                    const driverPhoneEl = document.getElementById('driverPhoneText');
+                    const driverTimeEl = document.getElementById('driverStatusTime');
+
+                    if(currentOrder.status === 'pending_supervisor') {
+                        badge.innerText = "بانتظار مراجعة مشرف التسويق";
+                        badge.className = "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-bold px-3 py-1 rounded-full";
+                        driverNameEl.innerText = "مندوب التوصيل: لم يُسند بعد";
+                        driverPhoneEl.innerText = "رقم الهاتف: --";
+                    } else if(currentOrder.status === 'in_progress' || currentOrder.status === 'assigned') {
+                        badge.innerText = "قيد التوصيل بواسطة المندوب";
+                        badge.className = "bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-bold px-3 py-1 rounded-full";
+                        driverNameEl.innerText = `مندوب التوصيل: ${currentOrder.driverName || 'أحمد المندوب'}`;
+                        driverPhoneEl.innerText = `رقم الهاتف: ${currentOrder.driverPhone || '0912345678'}`;
+                        driverTimeEl.innerText = "في الطريق إليك";
+                    } else if(currentOrder.status === 'completed') {
+                        badge.innerText = "تم تسليم الطلب بنجاح";
+                        badge.className = "bg-green-500/20 text-green-400 border border-green-500/30 text-xs font-bold px-3 py-1 rounded-full";
+                        driverNameEl.innerText = `مندوب التوصيل: ${currentOrder.driverName || 'مكتمل'}`;
+                        driverPhoneEl.innerText = "تم تسليم الشحنة بنجاح";
+                        driverTimeEl.innerText = "مكتمل";
+                    }
+                }
+            }, 2000); // تحديث كل ثانيتين تلقائياً
+        }
+
+        window.resetNewOrder = function() {
+            if(trackingInterval) clearInterval(trackingInterval);
+            document.getElementById('orderTrackingSection').classList.add('hidden');
+            document.getElementById('orderFormSection').classList.remove('hidden');
+            document.getElementById('submitBtn').innerText = "تأكيد وإرسال الطلب إلى مشرف التسويق";
+            document.getElementById('submitBtn').disabled = false;
         }
     </script>
 </body>
