@@ -10,8 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Cairo -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <!-- Google Identity Services SDK -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         body { font-family: 'Cairo', sans-serif; }
     </style>
@@ -79,8 +77,11 @@
             </div>
 
             <div class="space-y-3 mb-4">
-                <!-- زر غوغل الآمن عبر Google Identity Services -->
-                <div id="googleBtnContainer" class="w-full flex justify-center"></div>
+                <!-- زر غوغل المباشر عبر Firebase Auth المدمج (يتجاوز مشاكل النطاق تماماً) -->
+                <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-800 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-3 space-x-reverse">
+                    <i class="fa-brands fa-google text-red-500 text-lg"></i>
+                    <span>التسجيل أو الدخول بواسطة Google</span>
+                </button>
 
                 <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-[#121212] border border-[#FFB800] text-[#FFB800] font-bold py-3 px-4 rounded-xl hover:bg-[#FFB800]/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-solid fa-store text-[#FFB800] text-lg ml-2"></i>
@@ -144,7 +145,9 @@
             getAuth, 
             onAuthStateChanged, 
             GoogleAuthProvider,
-            signInWithCredential,
+            signInWithPopup,
+            signInWithRedirect,
+            getRedirectResult,
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
             signOut,
@@ -234,38 +237,43 @@
             }
         }
 
-        // تهيئة Google Identity Services بالمعرف الصحيح الذي أرسلته
-        window.addEventListener('load', () => {
-            if (typeof google !== 'undefined') {
-                google.accounts.id.initialize({
-                    client_id: "519930793199-gct8ftiaih0b9qdk5g04qoio03gt20is.apps.googleusercontent.com",
-                    callback: handleGoogleCredentialResponse
-                });
-                
-                google.accounts.id.renderButton(
-                    document.getElementById("googleBtnContainer"),
-                    { theme: "outline", size: "large", width: "320", text: "continue_with", locale: "ar" }
-                );
-            }
-        });
-
-        // دالة التعامل مع استجابة غوغل (تسجيل الدخول وإنشاء الحساب تلقائياً في فايربيس)
-        function handleGoogleCredentialResponse(response) {
-            const idToken = response.credential;
-            const credential = GoogleAuthProvider.credential(idToken);
+        // دالة تسجيل الدخول عبر Google باستخدام Firebase Authentication مباشرة (تنشئ الحساب تلقائياً)
+        window.loginWithGoogle = function() {
+            const provider = new GoogleAuthProvider();
+            // استخدام Redirect للموبايل لتجنب حظر الـ Popups ومشاكل النطاق
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             
-            signInWithCredential(auth, credential)
-                .then((result) => {
+            if (isMobile) {
+                signInWithRedirect(auth, provider).catch((error) => {
+                    showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
+                });
+            } else {
+                signInWithPopup(auth, provider)
+                    .then((result) => {
+                        const user = result.user;
+                        localStorage.setItem('foru_user_email', user.email);
+                        updateUIAfterLogin(user.email);
+                        closeAuthModal();
+                        showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
+                    })
+                    .catch((error) => {
+                        showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
+                    });
+            }
+        };
+
+        // التحقق من نتيجة العودة في حالة الموبايل Redirect
+        getRedirectResult(auth)
+            .then((result) => {
+                if (result && result.user) {
                     const user = result.user;
                     localStorage.setItem('foru_user_email', user.email);
                     updateUIAfterLogin(user.email);
-                    closeAuthModal();
                     showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
-                })
-                .catch((error) => {
-                    showCustomAlert('خطأ في الحساب', '❌ خطأ: ' + error.message, true);
-                });
-        }
+                }
+            }).catch((error) => {
+                console.error("Redirect error:", error);
+            });
 
         window.addEventListener('DOMContentLoaded', () => {
             const savedEmail = localStorage.getItem('foru_user_email');
