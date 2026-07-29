@@ -47,7 +47,7 @@
     <main class="flex-grow flex items-center justify-center px-6 py-12">
         <div class="max-w-md w-full">
             
-            <!-- نافذة تسجيل الدخول مباشرة في المنتصف (تحت) -->
+            <!-- نافذة تسجيل الدخول / حساب المستخدم في المنتصف -->
             <div class="bg-brandCard border border-gray-800 rounded-3xl p-8 shadow-2xl relative">
                 
                 <div class="text-center mb-6">
@@ -55,55 +55,62 @@
                     <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة تسجيل الدخول المناسبة</p>
                 </div>
 
-                <!-- خيارات التسجيل السريع (غوغل) -->
-                <div class="space-y-3 mb-4">
-                    <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
-                        <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
-                        <span>التسجيل عبر حساب غوغل</span>
-                    </button>
+                <!-- حاوية تسجيل الدخول (تختفي بعد الدخول) -->
+                <div id="loginSection">
+                    <!-- خيارات التسجيل السريع (غوغل) -->
+                    <div class="space-y-3 mb-4">
+                        <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
+                            <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
+                            <span>التسجيل عبر حساب غوغل</span>
+                        </button>
+                    </div>
+
+                    <div class="relative flex py-2 items-center">
+                        <div class="flex-grow border-t border-gray-700"></div>
+                        <span class="flex-shrink mx-4 text-gray-500 text-xs">أو بالبريد الإلكتروني</span>
+                        <div class="flex-grow border-t border-gray-700"></div>
+                    </div>
+
+                    <!-- الطريقة التقليدية (البريد الإلكتروني وكلمة المرور) -->
+                    <form id="authForm" class="space-y-4 mt-3" onsubmit="handleEmailAuth(event)" autocomplete="off">
+                        <input type="text" style="display:none" name="fakeusernameremembered">
+                        <input type="password" style="display:none" name="fakepasswordremembered">
+
+                        <div id="nameFieldContainer" class="hidden">
+                            <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
+                            <input type="text" id="fullName" autocomplete="off" spellcheck="false" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="محمد أحمد">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">البريد الإلكتروني</label>
+                            <input type="email" id="email" required autocomplete="off" spellcheck="false" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="name@foru.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">كلمة المرور</label>
+                            <input type="password" id="password" required autocomplete="new-password" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="••••••••">
+                        </div>
+                        <button type="submit" id="submitBtnText" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-2">
+                            دخول بالنظام
+                        </button>
+                    </form>
+
+                    <!-- التبديل بين الدخول وإنشاء الحساب للبريد -->
+                    <div class="text-center mt-5 text-sm text-gray-400">
+                        <span id="switchPrompt">ليس لديك حساب؟</span>
+                        <button type="button" onclick="toggleAuthMode()" id="switchBtnText" class="text-brandYellow font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
+                    </div>
                 </div>
 
-                <div class="relative flex py-2 items-center">
-                    <div class="flex-grow border-t border-gray-700"></div>
-                    <span class="flex-shrink mx-4 text-gray-500 text-xs">أو بالبريد الإلكتروني</span>
-                    <div class="flex-grow border-t border-gray-700"></div>
-                </div>
-
-                <!-- الطريقة التقليدية (البريد الإلكتروني وكلمة المرور) -->
-                <form id="authForm" class="space-y-4 mt-3" onsubmit="handleEmailAuth(event)" autocomplete="off">
-                    <input type="text" style="display:none" name="fakeusernameremembered">
-                    <input type="password" style="display:none" name="fakepasswordremembered">
-
-                    <div id="nameFieldContainer" class="hidden">
-                        <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
-                        <input type="text" id="fullName" autocomplete="off" spellcheck="false" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="محمد أحمد">
+                <!-- حالة المستخدم بعد تسجيل الدخول (تظهر فقط بعد الدخول) -->
+                <div id="userProfileDisplay" class="hidden flex-col items-center space-y-4 py-2">
+                    <div class="w-16 h-16 bg-brandYellow/10 border border-brandYellow/30 rounded-2xl flex items-center justify-center text-brandYellow text-2xl font-bold">
+                        <i class="fa-solid fa-user-check"></i>
                     </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">البريد الإلكتروني</label>
-                        <input type="email" id="email" required autocomplete="off" spellcheck="false" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="name@foru.com">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">كلمة المرور</label>
-                        <input type="password" id="password" required autocomplete="new-password" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="••••••••">
-                    </div>
-                    <button type="submit" id="submitBtnText" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-2">
-                        دخول بالنظام
-                    </button>
-                </form>
-
-                <!-- التبديل بين الدخول وإنشاء الحساب للبريد -->
-                <div class="text-center mt-5 text-sm text-gray-400">
-                    <span id="switchPrompt">ليس لديك حساب؟</span>
-                    <button type="button" onclick="toggleAuthMode()" id="switchBtnText" class="text-brandYellow font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
-                </div>
-
-                <!-- حالة المستخدم بعد تسجيل الدخول (تظهر مكان النموذج عند الدخول) -->
-                <div id="userProfileDisplay" class="hidden flex-col items-center space-y-4 py-4">
-                    <span id="userEmailSpan" class="text-sm text-brandYellow font-semibold"></span>
-                    <button onclick="logoutUser()" class="w-full bg-red-500/20 border border-red-500/50 text-red-400 text-sm font-bold py-3 rounded-xl hover:bg-red-500/30 transition">
+                    <span id="userEmailSpan" class="text-sm text-brandYellow font-semibold text-center break-all"></span>
+                    <button onclick="logoutUser()" class="w-full bg-red-500/20 border border-red-500/50 text-red-400 text-sm font-bold py-3 rounded-xl hover:bg-red-500/30 transition shadow">
                         تسجيل الخروج
                     </button>
                 </div>
+
             </div>
 
         </div>
@@ -140,7 +147,6 @@
                         const user = result.user;
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(user.email);
-                        alert('✅ تم تسجيل الدخول عبر غوغل بنجاح!');
                     }
                 })
                 .catch((error) => {
@@ -161,13 +167,14 @@
         });
 
         function updateUIAfterLogin(identifier) {
-            document.getElementById('authForm').classList.add('hidden');
-            document.getElementById('switchPrompt').parentElement.classList.add('hidden');
-            document.querySelector('.space-y-3.mb-4').classList.add('hidden');
-            document.querySelector('.relative.flex.py-2.items-center').classList.add('hidden');
+            // إخفاء نموذج تسجيل الدخول بالكامل
+            document.getElementById('loginSection').classList.add('hidden');
+            
+            // تحديث عناوين البطاقة لتصبح خاصة بحساب المستخدم
             document.getElementById('modalTitle').innerText = 'حسابي';
             document.getElementById('modalSubtitle').innerText = 'تم تسجيل الدخول بنجاح';
 
+            // إظهار بطاقة معلومات المستخدم وزر الخروج
             const profileDisplay = document.getElementById('userProfileDisplay');
             profileDisplay.classList.remove('hidden');
             profileDisplay.classList.add('flex');
@@ -219,7 +226,6 @@
                         const user = userCredential.user;
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(user.email);
-                        alert('✅ تم إنشاء الحساب وتسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
                         alert('❌ خطأ في إنشاء الحساب: ' + error.message);
@@ -230,7 +236,6 @@
                         const user = userCredential.user;
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(user.email);
-                        alert('✅ تم تسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
                         alert('❌ خطأ في البريد أو كلمة المرور: ' + error.message);
