@@ -189,7 +189,7 @@
                         name: displayName,
                         email: user.email,
                         phone: user.phoneNumber || 'غير مسجل',
-                        role: 'عميل', // تعيين الصلاحية الافتراضية كـ "عميل" فقط لكل مسجل جديد
+                        role: 'عميل', // تعيين الصلاحية الافتراضية كـ "عميل" فور تسجيل المستخدم
                         createdAt: new Date().toISOString()
                     });
                 } else {
@@ -399,7 +399,7 @@
                     <button id="centerActionBtn" onclick="openAuthModal('login')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
                         <i class="fa-solid fa-box-open ml-2"></i> ابدأ الآن / تسجيل الدخول
                     </button>
-                    <button onclick="registerAsStore()" class="w-full bg-brandCard border border-brandYellow text-brandYellow font-bold py-3.5 px-6 rounded-2xl hover:bg-brandYellow/10 transition shadow-lg flex items-center justify-center text-sm sm:hidden">
+                    <button onclick="registerAsStore()" class="w-full bg-[#1E1E1E] border border-[#FFB800] text-[#FFB800] font-bold py-3.5 px-6 rounded-2xl hover:bg-[#FFB800]/10 transition shadow-lg flex items-center justify-center text-sm sm:hidden">
                         <i class="fa-solid fa-store ml-2"></i> التسجيل كمتجر
                     </button>
                 `;
