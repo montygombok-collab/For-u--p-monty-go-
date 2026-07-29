@@ -20,12 +20,13 @@
     <!-- شاشة التحميل لمنع وميض الصفحة أثناء فحص الصلاحية -->
     <div id="loadingOverlay" class="fixed inset-0 bg-[#121212] z-50 flex flex-col items-center justify-center space-y-4 transition-opacity duration-300">
         <div class="w-16 h-16 border-4 border-[#FFB800]/20 border-t-[#FFB800] rounded-full animate-spin"></div>
-        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحقق من الحساب والتوجيه...</p>
+        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحقق من الحساب...</p>
     </div>
 
     <!-- الهيدر العلوي -->
     <header class="p-4 sm:p-6 flex justify-between items-center border-b border-gray-800/60">
         <div class="flex items-center space-x-2 space-x-reverse">
+            <!-- معلومات المستخدم تظهر عند تسجيل الدخول -->
             <div id="userProfileDisplay" class="hidden items-center space-x-2 space-x-reverse bg-[#1E1E1E] border border-gray-800 px-3 py-1.5 rounded-xl shadow-lg">
                 <i class="fa-solid fa-circle-user text-[#FFB800] text-lg"></i>
                 <span id="userNameSpan" class="text-xs text-white font-semibold"></span>
@@ -37,7 +38,7 @@
 
         <div class="flex space-x-2 space-x-reverse items-center">
             <div id="authButtonsContainer" class="flex space-x-2 space-x-reverse">
-                <button onclick="openAuthModal('login')" class="bg-[#1E1E1E] border border-gray-700 text-[#FFB800] text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-800 transition shadow-md flex items-center">
+                <button id="loginHeaderBtn" onclick="openAuthModal('login')" class="bg-[#1E1E1E] border border-gray-700 text-[#FFB800] text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-800 transition shadow-md flex items-center">
                     <i class="fa-solid fa-right-to-bracket ml-2"></i> تسجيل الدخول
                 </button>
                 <button onclick="registerAsStore()" class="bg-[#FFB800] text-[#121212] text-sm font-bold px-4 py-2 rounded-xl hover:bg-yellow-400 transition shadow-lg hidden sm:flex items-center">
@@ -47,7 +48,7 @@
         </div>
     </header>
 
-    <!-- المحتوى الرئيسي (لن يظهر إلا إذا كان المستخدم غير مسجل دخول فعلياً) -->
+    <!-- المحتوى الرئيسي -->
     <main class="flex-grow flex items-center justify-center px-6">
         <div class="max-w-md w-full text-center flex flex-col items-center">
             
@@ -65,15 +66,31 @@
                 اطلب توصيل لطلباتك واعرض بضاعتك ومنتجاتك  
             </p>
 
+            <!-- الأزرار الرئيسية (تتغير بناءً على حالة تسجيل الدخول) -->
             <div class="w-full flex flex-col space-y-3">
                 <div id="centerActionContainer" class="flex flex-col space-y-3">
-                    <button id="centerActionBtn" onclick="openAuthModal('login')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
+                    <!-- الحالة الافتراضية قبل الدخول -->
+                    <button id="mainAuthActionBtn" onclick="openAuthModal('login')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
                         <i class="fa-solid fa-box-open ml-2"></i> ابدأ الآن / تسجيل الدخول
                     </button>
-                    <button onclick="registerAsStore()" class="w-full bg-[#1E1E1E] border border-[#FFB800] text-[#FFB800] font-bold py-3.5 px-6 rounded-2xl hover:bg-[#FFB800]/10 transition shadow-lg flex items-center justify-center text-sm sm:hidden">
-                        <i class="fa-solid fa-store ml-2"></i> التسجيل كمتجر
+                </div>
+
+                <!-- أزرار الخدمات (اطلب الآن، السوق، تتبع طلب) - تظهر بعد تسجيل الدخول -->
+                <div id="loggedServicesContainer" class="hidden flex flex-col space-y-3 w-full">
+                    <button onclick="window.location.href='order.html'" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-cart-shopping ml-2"></i> اطلب الآن
+                    </button>
+                    <button onclick="window.location.href='market.html'" class="w-full bg-[#1E1E1E] border border-[#FFB800] text-[#FFB800] font-bold py-3.5 px-6 rounded-2xl hover:bg-[#FFB800]/10 transition shadow-lg flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-store ml-2"></i> السوق والمنتجات
+                    </button>
+                    <button onclick="window.location.href='tracking.html'" class="w-full bg-[#1E1E1E] border border-gray-700 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-gray-800 transition shadow-lg flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-location-crosshairs ml-2"></i> تتبع طلبك
                     </button>
                 </div>
+
+                <button onclick="registerAsStore()" class="w-full bg-[#1E1E1E] border border-[#FFB800] text-[#FFB800] font-bold py-3.5 px-6 rounded-2xl hover:bg-[#FFB800]/10 transition shadow-lg flex items-center justify-center text-sm sm:hidden">
+                    <i class="fa-solid fa-store ml-2"></i> التسجيل كمتجر
+                </button>
             </div>
 
         </div>
@@ -141,7 +158,7 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs ومنطق التوجيه السليم -->
+    <!-- Firebase SDKs ومنطق إدارة واجهة المستخدم بعد الدخول -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
@@ -178,8 +195,8 @@
 
         let currentMode = 'login';
 
-        // دالة التوجيه الصحيحة حسب الأدوار المطلوبة بدقة
-        async function redirectUserByRole(user, customName = '') {
+        // دالة تحديث الواجهة لتظهر أزرار الخدمات (اطلب الآن، السوق، تتبع طلب) وإخفاء أزرار الدخول
+        async function handleUserSessionUI(user, customName = '') {
             try {
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
@@ -192,7 +209,6 @@
                     role = userData.role || 'عميل';
                     userName = userData.name || userName;
                 } else {
-                    // الحساب الجديد يتم تسجيله افتراضياً كـ "عميل" وحفظه في Firestore
                     await setDoc(userRef, {
                         uid: user.uid,
                         name: userName,
@@ -207,17 +223,29 @@
                 localStorage.setItem('foru_user_email', user.email);
                 localStorage.setItem('foru_user_role', role);
 
-                // التوجيه الفوري للصفحة المخصصة حسب الصلاحية:
-                if (role === 'مدير النظام' || role === 'مشرف طلبات' || role === 'مسؤول دعم' || role === 'admin' || role === 'supervisor' || role === 'support') {
-                    window.location.href = 'dashboard.html';
-                } else if (role === 'مندوب توصيل' || role === 'driver') {
-                    window.location.href = 'driver.html';
-                } else {
-                    // العميل يتوجه إلى customer.html فوراً
-                    window.location.href = 'customer.html';
+                // إظهار اسم المستخدم وبروفايله في الهيدر
+                document.getElementById('userNameSpan').innerText = userName;
+                document.getElementById('userProfileDisplay').classList.remove('hidden');
+                document.getElementById('userProfileDisplay').classList.add('flex');
+                document.getElementById('loginHeaderBtn').style.display = 'none';
+
+                // إخفاء زر ابدأ الآن القديم وإظهار خيارات الخدمات المطلوبة
+                document.getElementById('mainAuthActionBtn').style.display = 'none';
+                document.getElementById('loggedServicesContainer').classList.remove('hidden');
+                document.getElementById('loggedServicesContainer').classList.add('flex');
+
+                // إغلاق نافذة تسجيل الدخول إن كانت مفتوحة
+                document.getElementById('authModal').classList.remove('flex');
+                document.getElementById('authModal').classList.add('hidden');
+
+                // إزالة شاشة التحميل
+                const loader = document.getElementById('loadingOverlay');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 300);
                 }
             } catch (error) {
-                console.error("خطأ في توجيه المستخدم:", error);
+                console.error("خطأ في جلب بيانات المستخدم:", error);
                 const loader = document.getElementById('loadingOverlay');
                 if(loader) loader.remove();
             }
@@ -273,7 +301,7 @@
                 title.innerText = 'تسجيل الدخول';
                 nameField.classList.add('hidden');
                 submitBtn.innerText = 'دخول بالنظام';
-                switchPrompt.innerText='ليس لديك حساب؟';
+                switchPrompt.innerText = 'ليس لديك حساب؟';
                 switchBtn.innerText = 'إنشاء حساب جديد';
             }
         }
@@ -283,11 +311,11 @@
             window.location.href = 'store-dashboard.html';
         };
 
-        // معالجة النتيجة بعد العودة من تسجيل دخول Google
+        // معالجة العودة بعد تسجيل الدخول عبر Google Redirect
         getRedirectResult(auth)
             .then(async (result) => {
                 if (result && result.user) {
-                    await redirectUserByRole(result.user);
+                    await handleUserSessionUI(result.user);
                 }
             })
             .catch((error) => {
@@ -295,12 +323,11 @@
                 showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
             });
 
-        // المراقبة التلقائية: إذا وجد مستخدم مسجل مسبقاً، يوجهه فوراً ولا يعرض صفحة الترحيب
+        // مراقبة حالة تسجيل الدخول وتحديث الواجهة مباشرة
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                await redirectUserByRole(user);
+                await handleUserSessionUI(user);
             } else {
-                // إذا لم يكن مسجلاً، نقوم بإخفاء شاشة التحميل ليعمل الموقع كصفحة ترحيب عادية
                 const loader = document.getElementById('loadingOverlay');
                 if(loader) {
                     loader.style.opacity = '0';
@@ -325,7 +352,7 @@
             if (currentMode === 'register') {
                 createUserWithEmailAndPassword(auth, email, password)
                     .then(async (userCredential) => {
-                        await redirectUserByRole(userCredential.user, customNameInput);
+                        await handleUserSessionUI(userCredential.user, customNameInput);
                     })
                     .catch((error) => {
                         showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.message, true);
@@ -333,7 +360,7 @@
             } else {
                 signInWithEmailAndPassword(auth, email, password)
                     .then(async (userCredential) => {
-                        await redirectUserByRole(userCredential.user);
+                        await handleUserSessionUI(userCredential.user);
                     })
                     .catch((error) => {
                         showCustomAlert('خطأ في الدخول', '❌ البريد غير مسجل أو كلمة المرور خاطئة.', true);
