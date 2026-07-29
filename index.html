@@ -141,7 +141,7 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs ومنطق التوجيه المصحح -->
+    <!-- Firebase SDKs ومنطق التوجيه الدقيق حسب الصلاحيات -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
@@ -206,13 +206,23 @@
                 localStorage.setItem('foru_user_email', user.email);
                 localStorage.setItem('foru_user_role', role);
 
-                // التوجيه الفوري حسب الصلاحية المطلوبة
+                // التوجيه الدقيق حسب الصلاحية بناءً على طلبك:
                 if (role === 'مدير النظام' || role === 'مشرف طلبات' || role === 'مسؤول دعم' || role === 'admin' || role === 'supervisor' || role === 'support') {
                     window.location.href = 'dashboard.html';
                 } else if (role === 'مندوب توصيل' || role === 'driver') {
                     window.location.href = 'driver.html';
                 } else {
-                    window.location.href = 'customer.html';
+                    // العميل يبقى أو يعود إلى index.html (تجنباً لحلقة التوجيه اللانهائية، نتأكد ألا تكون الصفحة الحالية index.html بالفعل إلا إذا لزم الأمر، أو نوجهه لـ index.html صراحة)
+                    if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/' && window.location.pathname !== '') {
+                        window.location.href = 'index.html';
+                    } else {
+                        // إذا كان في الصفحة الرئيسية بالفعل، نخفي شاشة التحميل ليظهر محتوى العميل
+                        const loader = document.getElementById('loadingOverlay');
+                        if(loader) {
+                            loader.style.opacity = '0';
+                            setTimeout(() => loader.remove(), 300);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error("خطأ في توجيه المستخدم:", error);
@@ -284,10 +294,8 @@
         // المراقبة التلقائية لحالة الدخول
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // إذا تم الكشف عن مستخدم مسجل دخول سابقاً أو حالياً
                 await redirectUserByRole(user);
             } else {
-                // إزالة شاشة التحميل إذا لم يكن مسجلاً
                 const loader = document.getElementById('loadingOverlay');
                 if(loader) {
                     loader.style.opacity = '0';
@@ -296,13 +304,11 @@
             }
         });
 
-        // تصحيح دالة تسجيل الدخول بـ Google لتمرير المستخدم المستلم مباشرة لدالة التوجيه
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
             signInWithPopup(auth, provider)
                 .then(async (result) => {
-                    const user = result.user;
-                    await redirectUserByRole(user);
+                    await redirectUserByRole(result.user);
                 })
                 .catch((error) => {
                     showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
