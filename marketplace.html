@@ -92,14 +92,14 @@
         </div>
     </div>
 
-    <!-- نافذة التنبيهات -->
+    <!-- نافذة التنبيهات المخصصة -->
     <div id="customAlertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
             <div id="alertIconContainer" class="w-14 h-14 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-[#FFB800] text-xl">
                 <i class="fa-solid fa-circle-check"></i>
             </div>
             <h4 id="alertTitle" class="text-base font-bold mb-1">تنبيه النظام</h4>
-            <p id="alertMessage" class="text-gray-300 text-xs mb-5 leading-relaxed">رسالة...</p>
+            <p id="alertMessage" class="text-gray-300 text-xs mb-5 leading-relaxed whitespace-pre-line">رسالة...</p>
             <button onclick="closeCustomAlert()" class="w-full bg-[#FFB800] text-[#121212] font-bold py-2.5 rounded-xl hover:bg-yellow-400 transition text-xs">
                 حسنًا
             </button>
@@ -109,7 +109,7 @@
     <!-- كود الجافاسكريبت والربط الحقيقي بـ Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addFromServer, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
@@ -135,7 +135,7 @@
             }
         });
 
-        // جلب المنتجات الحقيقية من قاعدة بيانات Firestore (مجموعة products أو المتاجر)
+        // جلب المنتجات الحقيقية من قاعدة بيانات Firestore (مجموعة products) والتخزين المحلي
         async function fetchMarketProducts() {
             const grid = document.getElementById('marketProductsGrid');
             try {
@@ -145,18 +145,21 @@
                     allProductsList.push({ id: doc.id, ...doc.data() });
                 });
 
-                // إذا لم توجد منتجات في السيرفر، نجلب الاحتياطي من الـ LocalStorage للتوافق
-                if (allProductsList.length === 0) {
-                    const localStored = localStorage.getItem('foru_store_products');
-                    if (localStored) {
-                        allProductsList = JSON.parse(localStored);
-                    }
+                // دمج أو جلب المنتجات من التخزين المحلي لضمان ظهور المنتجات المضافة فوراً
+                const localStored = localStorage.getItem('foru_store_products');
+                if (localStored) {
+                    const localProducts = JSON.parse(localStored);
+                    // دمج فريد يعتمد على المعرف أو الاسم
+                    localProducts.forEach(lp => {
+                        if (!allProductsList.some(p => p.name === lp.name)) {
+                            allProductsList.push(lp);
+                        }
+                    });
                 }
 
                 renderProducts(allProductsList);
             } catch (error) {
                 console.error("Error fetching products: ", error);
-                // الرجوع للتخزين المحلي في حال عدم الاتصال المؤقت
                 const localStored = localStorage.getItem('foru_store_products');
                 allProductsList = localStored ? JSON.parse(localStored) : [];
                 renderProducts(allProductsList);
@@ -179,7 +182,7 @@
                 <div class="bg-[#1E1E1E] border border-gray-800 rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between transition hover:border-[#FFB800]/50">
                     <div>
                         <div class="h-40 bg-gray-800 relative overflow-hidden">
-                            <img src="${product.image || 'image.jpg'}" alt="${product.name}" class="w-full h-full object-cover" onerror="this.src='image.jpg'">
+                            <img src="${product.image || 'https://via.placeholder.com/150'}" alt="${product.name}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/150'">
                             <span class="absolute top-2 right-2 bg-black/70 backdrop-blur-md text-[#FFB800] text-[10px] font-bold px-2.5 py-1 rounded-lg border border-[#FFB800]/20">
                                 <i class="fa-solid fa-store ml-1"></i> ${product.store || 'متجر معتمد'}
                             </span>
@@ -210,7 +213,7 @@
 
         window.openOrderModalFromIndex = function(product) {
             selectedProductForOrder = product;
-            document.getElementById('modalProductName').innerText = `المنتج: ${product.name} - السعر: ${product.price} ج.س`;
+            document.getElementById('modalProductName').innerText = `المنتج: ${product.name} - السعر: ${product.price} ج.س (${product.store || 'متجر معتمد'})`;
             const modal = document.getElementById('orderModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -241,13 +244,11 @@
             };
 
             try {
-                // محاولة حفظ الطلب في قاعدة البيانات الحقيقية Firestore
                 await addDoc(collection(db, "orders"), newOrder);
             } catch (e) {
                 console.log("Firestore offline, saving locally.");
             }
 
-            // حفظ احتياطي في التخزين المحلي لصفحة التتبع
             let existingOrders = JSON.parse(localStorage.getItem('foru_store_orders') || '[]');
             existingOrders.push(newOrder);
             localStorage.setItem('foru_store_orders', JSON.stringify(existingOrders));
