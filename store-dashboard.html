@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For-U | لوحة إدارة المتجر</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#121212] text-white min-h-screen flex flex-col selection:bg-[#FFB800] selection:text-[#121212]">
+
+    <!-- الهيدر العلوي -->
+    <header class="bg-[#1E1E1E] border-b border-gray-800 p-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <img id="headerStoreLogo" src="https://via.placeholder.com/150" alt="شعار المتجر" class="w-10 h-10 rounded-full object-cover border border-[#FFB800]">
+            <div>
+                <h1 id="headerStoreName" class="font-bold text-sm">اسم المتجر</h1>
+                <span class="text-xs text-gray-400">لوحة تحكم التاجر</span>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <a href="index.html" class="bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs px-3 py-2 rounded-xl transition flex items-center">
+                <i class="fa-solid fa-house ml-1"></i> الرئيسية
+            </a>
+            <button onclick="logoutStore()" class="bg-red-500/20 text-red-400 border border-red-500/30 text-xs px-3 py-2 rounded-xl hover:bg-red-500/30 transition flex items-center">
+                <i class="fa-solid fa-right-from-bracket ml-1"></i> خروج
+            </button>
+        </div>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-grow p-4 sm:p-6 max-w-6xl mx-auto w-full space-y-6">
+        
+        <!-- قسم إعدادات المتجر وبياناته -->
+        <section class="bg-[#1E1E1E] border border-gray-800 rounded-2xl p-5 shadow-lg">
+            <h2 class="text-lg font-bold text-[#FFB800] mb-4 flex items-center">
+                <i class="fa-solid fa-store ml-2"></i> بيانات وإعدادات المتجر
+            </h2>
+            <form id="storeSettingsForm" onsubmit="saveStoreSettings(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">اسم المتجر</label>
+                    <input type="text" id="storeNameInput" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="مثال: متجر السعادة">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">رابط صورة اللوغو (صورة فعلية)</label>
+                    <input type="url" id="storeLogoInput" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="https://example.com/logo.jpg">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">رقم هاتف المتجر</label>
+                    <input type="text" id="storePhoneInput" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="0912345678">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">البريد الإلكتروني</label>
+                    <input type="email" id="storeEmailInput" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="store@foru.com">
+                </div>
+                <div class="sm:col-span-2 lg:col-span-4 flex justify-end">
+                    <button type="submit" class="bg-[#FFB800] text-[#121212] font-bold px-5 py-2.5 rounded-xl hover:bg-yellow-400 transition text-sm shadow-md">
+                        <i class="fa-solid fa-floppy-disk ml-1"></i> حفظ إعدادات المتجر
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- شبكة الأقسام: إضافة منتجات + الطلبات الواردة -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- قسم إضافة بضاعة/منتج جديد -->
+            <section class="bg-[#1E1E1E] border border-gray-800 rounded-2xl p-5 shadow-lg lg:col-span-1">
+                <h2 class="text-lg font-bold text-[#FFB800] mb-4 flex items-center">
+                    <i class="fa-solid fa-cart-plus ml-2"></i> إضافة منتج جديد
+                </h2>
+                <form id="addProductForm" onsubmit="addNewProduct(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">اسم المنتج</label>
+                        <input type="text" id="prodName" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="اسم المنتج">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">السعر ($)</label>
+                            <input type="number" id="prodPrice" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="10">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">الكمية بالمخزن</label>
+                            <input type="number" id="prodStock" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="50">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">رابط صورة المنتج (صورة فعلية)</label>
+                        <input type="url" id="prodImage" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="https://example.com/item.jpg">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">معلومات عن المنتج</label>
+                        <textarea id="prodDesc" rows="2" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="تفاصيل ومعلومات عن المنتج..."></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-[#FFB800] text-[#121212] font-bold py-2.5 rounded-xl hover:bg-yellow-400 transition text-sm shadow-md">
+                        <i class="fa-solid fa-plus ml-1"></i> إضافة للمخزون
+                    </button>
+                </form>
+
+                <!-- قائمة المنتجات الحالية -->
+                <div class="mt-6 border-t border-gray-800 pt-4">
+                    <h3 class="font-bold text-sm text-gray-300 mb-3">منتجات المتجر الحالية:</h3>
+                    <div id="storeProductsList" class="space-y-2 max-h-48 overflow-y-auto">
+                        <!-- تظهر هنا المنتجات المضافة ديناميكياً -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- قسم الطلبات الواردة للمناديب (غير منجزة) -->
+            <section class="bg-[#1E1E1E] border border-gray-800 rounded-2xl p-5 shadow-lg lg:col-span-2">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-[#FFB800] flex items-center">
+                        <i class="fa-solid fa-truck-fast ml-2"></i> الطلبات الواردة (غير منجزة)
+                    </h2>
+                    <span class="bg-red-500/20 text-red-400 text-xs px-2.5 py-1 rounded-full border border-red-500/30">تتوجه مباشرة للمناديب</span>
+                </div>
+                
+                <div id="storeOrdersContainer" class="space-y-3">
+                    <div class="bg-[#121212] border border-gray-800 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                        <div>
+                            <div class="flex items-center space-x-2 space-x-reverse mb-1">
+                                <span class="bg-yellow-500/20 text-[#FFB800] text-xs font-bold px-2 py-0.5 rounded">طلب #1042</span>
+                                <span class="text-xs text-gray-400">العميل: أحمد محمد</span>
+                            </div>
+                            <p class="text-xs text-gray-300">المنتج: وجبة برجر دجاج (الكمية: 1)</p>
+                            <p class="text-xs text-gray-500 mt-1"><i class="fa-solid fa-location-dot text-[#FFB800] ml-1"></i> الموقع: الخرطوم، امدرمان</p>
+                        </div>
+                        <div class="flex space-x-2 space-x-reverse w-full sm:w-auto">
+                            <button onclick="confirmOrderAndSendToCourier('1042', 0)" class="flex-grow sm:flex-grow-0 bg-green-500/20 text-green-400 border border-green-500/30 font-bold px-4 py-2 rounded-xl text-xs hover:bg-green-500/30 transition flex items-center justify-center">
+                                <i class="fa-solid fa-check ml-1"></i> تأكيد وإرسال للمندوب
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- سكربت إدارة المتجر -->
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStoreData();
+            loadProducts();
+        });
+
+        function saveStoreSettings(event) {
+            event.preventDefault();
+            const name = document.getElementById('storeNameInput').value;
+            const logo = document.getElementById('storeLogoInput').value;
+            const phone = document.getElementById('storePhoneInput').value;
+            const email = document.getElementById('storeEmailInput').value;
+
+            localStorage.setItem('foru_store_name', name);
+            localStorage.setItem('foru_store_logo', logo);
+            localStorage.setItem('foru_store_phone', phone);
+            localStorage.setItem('foru_store_email', email);
+
+            loadStoreData();
+            alert("✅ تم حفظ إعدادات المتجر بنجاح!");
+        }
+
+        function loadStoreData() {
+            const name = localStorage.getItem('foru_store_name') || "متجر افتراضي";
+            const logo = localStorage.getItem('foru_store_logo') || "https://via.placeholder.com/150";
+            const phone = localStorage.getItem('foru_store_phone') || "0900000000";
+            const email = localStorage.getItem('foru_store_email') || "store@foru.com";
+
+            document.getElementById('headerStoreName').innerText = name;
+            document.getElementById('headerStoreLogo').src = logo;
+
+            document.getElementById('storeNameInput').value = name !== "متجر افتراضي" ? name : "";
+            document.getElementById('storeLogoInput').value = logo !== "https://via.placeholder.com/150" ? logo : "";
+            document.getElementById('storePhoneInput').value = phone !== "0900000000" ? phone : "";
+            document.getElementById('storeEmailInput').value = email !== "store@foru.com" ? email : "";
+        }
+
+        function addNewProduct(event) {
+            event.preventDefault();
+            const name = document.getElementById('prodName').value;
+            const price = document.getElementById('prodPrice').value;
+            const stock = parseInt(document.getElementById('prodStock').value);
+            const image = document.getElementById('prodImage').value;
+            const desc = document.getElementById('prodDesc').value;
+
+            let products = JSON.parse(localStorage.getItem('foru_store_products') || '[]');
+            const newProduct = { id: Date.now(), name, price, stock, image, desc };
+            
+            products.push(newProduct);
+            localStorage.setItem('foru_store_products', JSON.stringify(products));
+
+            document.getElementById('addProductForm').reset();
+            loadProducts();
+            alert("✅ تم إضافة المنتج بنجاح إلى مخزون المتجر!");
+        }
+
+        function loadProducts() {
+            const productsListContainer = document.getElementById('storeProductsList');
+            let products = JSON.parse(localStorage.getItem('foru_store_products') || '[]');
+
+            if (products.length === 0) {
+                productsListContainer.innerHTML = '<p class="text-xs text-gray-500 text-center py-2">لا توجد منتجات مضافة بعد.</p>';
+                return;
+            }
+
+            productsListContainer.innerHTML = '';
+            products.forEach(prod => {
+                productsListContainer.innerHTML += `
+                    <div class="bg-[#121212] border border-gray-800 p-2.5 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <img src="${prod.image}" alt="${prod.name}" class="w-10 h-10 rounded-lg object-cover">
+                            <div>
+                                <h4 class="text-xs font-bold text-white">${prod.name}</h4>
+                                <span class="text-[10px] text-gray-400">السعر: $${prod.price} | المخزون: <span class="text-[#FFB800] font-bold">${prod.stock}</span></span>
+                            </div>
+                        </div>
+                        <button onclick="deleteProduct(${prod.id})" class="text-red-400 hover:text-red-300 text-xs p-1">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteProduct(id) {
+            let products = JSON.parse(localStorage.getItem('foru_store_products') || '[]');
+            products = products.filter(p => p.id !== id);
+            localStorage.setItem('foru_store_products', JSON.stringify(products));
+            loadProducts();
+        }
+
+        function confirmOrderAndSendToCourier(orderId, productIndex = 0) {
+            let products = JSON.parse(localStorage.getItem('foru_store_products') || '[]');
+            if(products.length > 0 && products[productIndex]) {
+                if(products[productIndex].stock > 0) {
+                    products[productIndex].stock -= 1; // خصم تلقائي من المخزون بعد تأكيد الطلب
+                    localStorage.setItem('foru_store_products', JSON.stringify(products));
+                    loadProducts();
+                }
+            }
+
+            alert(`✅ تم تأكيد الطلب #${orderId}، وتخصيم الكمية من المخزون تلقائياً، وإرسال الطلب مباشرة كـ "طلب غير منجز" إلى شبكة المناديب!`);
+        }
+
+        function logoutStore() {
+            localStorage.removeItem('selectedAccountType');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
