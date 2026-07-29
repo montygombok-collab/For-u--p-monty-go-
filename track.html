@@ -2,179 +2,164 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>For-U | تتبع الطلب والمندوب لحظياً</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تتبع الطلب | For-U</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <!-- مكتبة الخرائط Leaflet CSS -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandYellow: '#FFB800',
+                        brandDark: '#121212',
+                        brandCard: '#1E1E1E'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Leaflet CSS للخرائط -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Cairo', sans-serif; }
-        #map { height: 280px; width: 100%; border-radius: 1.25rem; z-index: 1; }
-        /* تعديل تصميم أداة التكبير والتصغير للخريطة لتتناسب مع الوضع الليلي */
-        .leaflet-control-zoom a { background-color: #1E1E1E !important; color: #FFB800 !important; border-color: #374151 !important; }
+        #map { height: 350px; width: 100%; border-radius: 1rem; }
     </style>
 </head>
-<body class="bg-[#121212] text-white min-h-screen flex flex-col justify-between selection:bg-[#FFB800] selection:text-[#121212]">
+<body class="bg-brandDark text-white min-h-screen flex flex-col justify-between">
 
-    <!-- الهيدر العلوي -->
-    <header class="p-4 sm:p-6 flex justify-between items-center border-b border-gray-800/60">
-        <div class="flex items-center space-x-2 space-x-reverse">
-            <a href="index.html" class="bg-[#1E1E1E] border border-gray-700 text-[#FFB800] text-xs font-bold px-3 py-2 rounded-xl hover:bg-gray-800 transition flex items-center shadow">
-                <i class="fa-solid fa-arrow-right ml-1"></i> الرئيسية
-            </a>
+    <!-- الهيدر -->
+    <header class="p-4 md:p-6 flex justify-between items-center border-b border-gray-800">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <div class="bg-brandYellow text-brandDark font-black text-xl px-3 py-1 rounded-xl">4U</div>
+            <h1 class="text-lg font-bold">تتبع الطلب السحابي</h1>
         </div>
-        <h1 class="text-sm font-bold text-gray-300">تتبع الطلب والمندوب</h1>
+        <a href="index.html" class="text-gray-400 hover:text-white text-sm">
+            <i class="fa-solid fa-house ml-1"></i> الرئيسية
+        </a>
     </header>
 
     <!-- المحتوى الرئيسي -->
-    <main class="flex-grow flex flex-col items-center p-4 max-w-md mx-auto w-full space-y-4">
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl space-y-6">
         
-        <div class="text-center w-full">
-            <h2 class="text-xl font-black mb-1">حركة المندوب على الخريطة</h2>
-            <p class="text-xs text-gray-400">تتبع خط سير الموتور لحظة بلحظة حتى وصول الطلب</p>
-        </div>
-
-        <!-- بطاقة البحث أو رقم الطلب -->
-        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-4 w-full shadow-xl space-y-3">
-            <div class="flex space-x-2 space-x-reverse">
-                <input type="text" id="orderIdInput" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="رقم الطلب (مثال: #FOR-9821)">
-                <button onclick="searchOrder()" class="bg-[#FFB800] text-[#121212] font-bold px-4 py-2 rounded-xl hover:bg-yellow-400 transition shadow text-xs">
-                    تتبع
-                </button>
+        <!-- معلومات حالة الطلب -->
+        <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                <div>
+                    <span class="text-xs text-gray-400">رقم الطلب:</span>
+                    <h2 id="displayOrderId" class="text-xl font-black text-brandYellow">---</h2>
+                </div>
+                <div id="displayStatus" class="bg-yellow-500/10 text-brandYellow px-3 py-1.5 rounded-xl text-xs font-bold border border-yellow-500/20">
+                    جاري البحث في السحابة...
+                </div>
             </div>
-            
-            <button onclick="getMyLocation()" class="w-full bg-[#121212] border border-[#FFB800]/50 text-[#FFB800] text-xs font-bold py-2.5 px-3 rounded-xl hover:bg-[#FFB800]/10 transition flex items-center justify-center space-x-2 space-x-reverse">
-                <i class="fa-solid fa-crosshairs text-sm ml-1"></i>
-                <span>تحديث موقعي الحالي عبر الـ GPS</span>
-            </button>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm pt-2">
+                <div class="bg-brandDark p-3.5 rounded-2xl border border-gray-800">
+                    <span class="text-xs text-gray-400 block mb-1">اسم العميل:</span>
+                    <span id="displayClientName" class="font-bold text-white">---</span>
+                </div>
+                <div class="bg-brandDark p-3.5 rounded-2xl border border-gray-800">
+                    <span class="text-xs text-gray-400 block mb-1">التكلفة الإجمالية:</span>
+                    <span id="displayCost" class="font-bold text-brandYellow">---</span>
+                </div>
+                <div class="bg-brandDark p-3.5 rounded-2xl border border-gray-800">
+                    <span class="text-xs text-gray-400 block mb-1">المندوب المسؤول:</span>
+                    <span id="displayDriver" class="font-bold text-blue-400">لم يُسند بعد</span>
+                </div>
+            </div>
         </div>
 
-        <!-- خريطة تتبع المندوب (الموتور) -->
-        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-3 w-full shadow-2xl">
+        <!-- الخريطة -->
+        <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
+            <h2 class="text-lg font-bold flex items-center">
+                <i class="fa-solid fa-map-location-dot text-brandYellow ml-2"></i> موقع تسليم الطلب المحدد
+            </h2>
             <div id="map"></div>
-        </div>
-
-        <!-- تفاصيل حالة الطلب والمندوب -->
-        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-4 w-full shadow-xl space-y-2.5 text-xs">
-            <div class="flex justify-between items-center border-b border-gray-800 pb-2">
-                <span class="text-gray-400">حالة التوصيل:</span>
-                <span class="bg-yellow-500/20 text-[#FFB800] border border-[#FFB800]/40 font-bold px-2.5 py-1 rounded-full">المندوب في الطريق إليك 🛵</span>
-            </div>
-            <div class="flex justify-between text-gray-300"><span>رقم الطلب:</span> <span id="displayOrderId" class="font-bold text-white">#FOR-000</span></div>
-            <div class="flex justify-between text-gray-300"><span>اسم السائق (المندوب):</span> <span class="font-bold text-[#FFB800]">محمد خالد (موتور)</span></div>
-            <div class="flex justify-between text-gray-300"><span>الوقت المقدر للوصول:</span> <span class="font-bold text-green-400">10 دقائق</span></div>
         </div>
 
     </main>
 
-    <!-- نافذة التنبيهات المخصصة -->
-    <div id="customAlertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
-            <div id="alertIconContainer" class="w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl">
-                <i class="fa-solid fa-circle-check"></i>
-            </div>
-            <h4 id="alertTitle" class="text-xl font-bold mb-2">تنبيه النظام</h4>
-            <p id="alertMessage" class="text-gray-300 text-sm mb-6 leading-relaxed">رسالة...</p>
-            <button onclick="closeCustomAlert()" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg">
-                حسنًا
-            </button>
-        </div>
-    </div>
+    <!-- الفوتر -->
+    <footer class="p-4 text-center border-t border-gray-800 text-gray-500 text-sm">
+        جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
+    </footer>
 
-    <!-- مكتبة الخرائط Leaflet JS -->
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        function showCustomAlert(title, message, isError = false) {
-            document.getElementById('alertTitle').innerText = title;
-            document.getElementById('alertMessage').innerText = message;
-            const iconContainer = document.getElementById('alertIconContainer');
-            if (isError) {
-                iconContainer.className = "w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-red-400 text-2xl";
-                iconContainer.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-            } else {
-                iconContainer.className = "w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl";
-                iconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-            }
-            const alertModal = document.getElementById('customAlertModal');
-            alertModal.classList.remove('hidden');
-            alertModal.classList.add('flex');
-        }
 
-        function closeCustomAlert() {
-            const alertModal = document.getElementById('customAlertModal');
-            alertModal.classList.remove('flex');
-            alertModal.classList.add('hidden');
-        }
+    <!-- Firebase وسكريبت التتبع -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // تهيئة الخريطة وتحديد موقع افتراضي (مثال وسط الخرطوم/أم درمان)
-        let map = L.map('map').setView([15.5007, 32.5599], 14);
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
+            authDomain: "for-u-56f3f.firebaseapp.com",
+            projectId: "for-u-56f3f",
+            storageBucket: "for-u-56f3f.firebasestorage.app",
+            messagingSenderId: "519930793199",
+            appId: "1:519930793199:web:0c876d149832cd0a8d5f1a",
+            measurementId: "G-2ZV3NGRYZG"
+        };
 
-        // استخدام طبقة خريطة داكنة متناسقة مع تصميم التطبيق
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; For-U Logistics',
-            maxZoom: 19
-        }).addTo(map);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        // أيقونة مخصصة للموتور 🛵
-        const motorIcon = L.divIcon({
-            html: '<div style="background-color: #FFB800; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px rgba(255,184,0,0.8); border: 2px solid #121212;"><i class="fa-solid fa-motorcycle" style="color: #121212; font-size: 16px;"></i></div>',
-            className: 'custom-motor-icon',
-            iconSize: [36, 36],
-            iconAnchor: [18, 18]
-        });
+        // تهيئة الخريطة مبدئياً
+        const map = L.map('map').setView([15.5007, 32.5599], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+        let marker = null;
 
-        // إضافة مؤشر الموتور على الخريطة
-        let motorMarker = L.marker([15.5007, 32.5599], { icon: motorIcon }).addTo(map)
-            .bindPopup("<b>المندوب في الطريق إليك</b>").openPopup();
-
-        // محاكاة تحرك الموتور على الخريطة تلقائياً
-        let latMove = 15.5007;
-        let lngMove = 32.5599;
-        setInterval(() => {
-            latMove += (Math.random() - 0.4) * 0.001;
-            lngMove += (Math.random() - 0.5) * 0.001;
-            motorMarker.setLatLng([latMove, lngMove]);
-            map.panTo([latMove, lngMove], { animate: true });
-        }, 4000);
-
-        // جلب رقم الطلب من الرابط إن وُجد (مثلاً track.html?order=#FOR-123)
-        window.addEventListener('DOMContentLoaded', () => {
+        async function fetchOrderDetails() {
             const urlParams = new URLSearchParams(window.location.search);
-            const orderParam = urlParams.get('order');
-            if(orderParam) {
-                document.getElementById('orderIdInput').value = orderParam;
-                document.getElementById('displayOrderId').innerText = orderParam;
-            }
-        });
+            const orderIdQuery = urlParams.get('order');
 
-        function searchOrder() {
-            const val = document.getElementById('orderIdInput').value.trim();
-            if(val) {
-                document.getElementById('displayOrderId').innerText = val;
-                showCustomAlert('تحديث', '🔍 تم تحميل بيانات مسار الطلب بنجاح.');
-            } else {
-                showCustomAlert('تنبيه', 'الرجاء إدخال رقم الطلب أولاً.', true);
-            }
-        }
-
-        // زر الـ GPS لتحديد موقع العميل الحالي
-        function getMyLocation() {
-            if (!navigator.geolocation) {
-                showCustomAlert('خطأ', 'المتصفح لا يدعم تحديد الموقع', true);
+            if (!orderIdQuery) {
+                document.getElementById('displayStatus').innerText = 'رقم الطلب غير متوفر في الرابط';
                 return;
             }
-            navigator.geolocation.getCurrentPosition((position) => {
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
-                map.setView([userLat, userLng], 15);
-                L.marker([userLat, userLng]).addTo(map).bindPopup("موقعك الحالي").openPopup();
-                showCustomAlert('تم', '📍 تم تحديث خريطتك وموقعك بنجاح.');
-            }, () => {
-                showCustomAlert('خطأ', 'تعذر الوصول لموقعك الجغرافي، تأكد من تفعيل الـ GPS.', true);
-            });
+
+            document.getElementById('displayOrderId').innerText = orderIdQuery;
+
+            try {
+                // البحث عن الطلب في مجموعة orders عبر حقل orderId
+                const q = query(collection(db, "orders"), where("orderId", "==", orderIdQuery));
+                const querySnapshot = await getDocs(q);
+
+                if (querySnapshot.empty) {
+                    document.getElementById('displayStatus').innerText = 'لم يتم العثور على الطلب في السحابة';
+                    return;
+                }
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    document.getElementById('displayClientName').innerText = data.clientName || '---';
+                    document.getElementById('displayCost').innerText = (data.cost ? data.cost.toLocaleString() : '0') + ' جنيه';
+                    document.getElementById('displayStatus').innerText = data.status || 'جديد';
+                    document.getElementById('displayDriver').innerText = data.assignedDriver || 'لم يُسند بعد';
+
+                    if (data.lat && data.lng) {
+                        map.setView([data.lat, data.lng], 15);
+                        if (marker) {
+                            marker.setLatLng([data.lat, data.lng]);
+                        } else {
+                            marker = L.marker([data.lat, data.lng]).addTo(map);
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("خطأ في جلب تفاصيل التتبع:", error);
+                document.getElementById('displayStatus').innerText = 'خطأ في الاتصال بالسحابة';
+            }
         }
+
+        window.addEventListener('DOMContentLoaded', fetchOrderDetails);
     </script>
 </body>
 </html>
