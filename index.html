@@ -175,7 +175,7 @@
 
         let currentMode = 'login';
 
-        // دالة حفظ المستخدم في قاعدة البيانات بصلاحية "عميل عادي" افتراضياً
+        // دالة حفظ المستخدم في قاعدة البيانات بصلاحية "عميل" افتراضياً
         async function saveUserToFirestore(user, customName = '') {
             try {
                 const userRef = doc(db, "users", user.uid);
@@ -189,7 +189,7 @@
                         name: displayName,
                         email: user.email,
                         phone: user.phoneNumber || 'غير مسجل',
-                        role: 'عميل عادي', // تعيين الصلاحية الافتراضية كعميل عادي لجميع المسجلين الجدد
+                        role: 'عميل', // تعيين الصلاحية الافتراضية كـ "عميل" فقط لكل مسجل جديد
                         createdAt: new Date().toISOString()
                     });
                 } else {
@@ -336,7 +336,7 @@
                     localStorage.setItem('foru_user_name', displayName);
                     localStorage.setItem('foru_user_email', user.email);
                     updateUIAfterLogin(displayName);
-                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً كعميل عادي بنجاح!');
+                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً كـ (عميل) بنجاح!');
                 })
                 .catch((error) => {
                     showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
@@ -360,7 +360,7 @@
                         localStorage.setItem('foru_user_name', displayName);
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(displayName);
-                        showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب كعميل عادي وتسجيل الدخول بنجاح!');
+                        showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب كـ (عميل) وتسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
                         showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.message, true);
@@ -399,7 +399,7 @@
                     <button id="centerActionBtn" onclick="openAuthModal('login')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
                         <i class="fa-solid fa-box-open ml-2"></i> ابدأ الآن / تسجيل الدخول
                     </button>
-                    <button onclick="registerAsStore()" class="w-full bg-[#1E1E1E] border border-[#FFB800] text-[#FFB800] font-bold py-3.5 px-6 rounded-2xl hover:bg-[#FFB800]/10 transition shadow-lg flex items-center justify-center text-sm sm:hidden">
+                    <button onclick="registerAsStore()" class="w-full bg-brandCard border border-brandYellow text-brandYellow font-bold py-3.5 px-6 rounded-2xl hover:bg-brandYellow/10 transition shadow-lg flex items-center justify-center text-sm sm:hidden">
                         <i class="fa-solid fa-store ml-2"></i> التسجيل كمتجر
                     </button>
                 `;
