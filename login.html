@@ -8,7 +8,6 @@
     <!-- استيراد مكتبة Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -20,7 +19,6 @@
         :root {
             --brandYellow: #FFB800;
             --dark: #0f111a;
-            --light: #f0f3f9;
             --radius: 16px;
         }
 
@@ -131,10 +129,9 @@
     <div class="login-card">
         <div class="login-header">
             <h2>تسجيل الدخول</h2>
-            <p id="sub-title">اختر نوع الحساب وأدخل بياناتك للمتابعة</p>
+            <p>اختر نوع الحساب وأدخل بياناتك للمتابعة</p>
         </div>
 
-        <!-- نموذج تسجيل الدخول المباشر -->
         <div class="form-group">
             <label for="accountType"><i class="fas fa-user-tag text-yellow-400"></i> نوع الحساب</label>
             <select id="accountType" class="cursor-pointer">
@@ -164,7 +161,6 @@
         const firebaseConfig = {
             apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
             authDomain: "for-u-56f3f.firebaseapp.com",
-            databaseURL: "https://for-u-56f3f-default-rtdb.firebaseio.com",
             projectId: "for-u-56f3f",
             storageBucket: "for-u-56f3f.firebasestorage.app",
             messagingSenderId: "519930793199",
@@ -188,7 +184,7 @@
             firebase.auth().signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
                     const user = userCredential.user;
-                    localStorage.setItem('sudanPlayUser', user.uid);
+                    localStorage.setItem('forUUser', user.uid);
                     localStorage.setItem('selectedAccountType', accountType);
                     
                     alert("تم تسجيل الدخول بنجاح!");
@@ -198,7 +194,6 @@
                         localStorage.removeItem('redirectAfterLogin');
                         window.location.href = targetPage;
                     } else {
-                        // التوجيه بناءً على اختيار نوع الحساب
                         if (accountType === 'store') {
                             window.location.href = 'store-dashboard.html';
                         } else {
