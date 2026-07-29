@@ -95,18 +95,12 @@
                 <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة تسجيل الدخول المناسبة</p>
             </div>
 
-            <!-- خيارات التسجيل السريع (غوغل + سودان بلاي) -->
+            <!-- خيارات التسجيل السريع (غوغل فقط) -->
             <div class="space-y-3 mb-4">
                 <!-- 1. طريقة حساب غوغل -->
                 <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
                     <span>التسجيل عبر حساب غوغل</span>
-                </button>
-
-                <!-- 2. التوجيه المباشر لصفحة تسجيل الدخول المخصصة لـ Sudan Play مع تمرير رابط العودة -->
-                <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-brandDark border border-brandYellow text-brandYellow font-bold py-3 px-4 rounded-xl hover:bg-brandYellow/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
-                    <i class="fa-solid fa-store text-brandYellow text-lg ml-2"></i>
-                    <span>تسجيل الدخول برقم تعريف سودان بلاي</span>
                 </button>
             </div>
 
@@ -116,7 +110,7 @@
                 <div class="flex-grow border-t border-gray-700"></div>
             </div>
 
-            <!-- 3. الطريقة التقليدية (البريد الإلكتروني وكلمة المرور) -->
+            <!-- 2. الطريقة التقليدية (البريد الإلكتروني وكلمة المرور) -->
             <form id="authForm" class="space-y-4 mt-3" onsubmit="handleEmailAuth(event)">
                 <div id="nameFieldContainer" class="hidden">
                     <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
@@ -168,28 +162,18 @@
         }
         const auth = firebase.auth();
 
-        // فحص بيانات العودة (Redirect) بعد تسجيل الدخول الناجح أو التحقق من الجلسة المخزنة
+        // فحص بيانات الجلسة المخزنة
         window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const userEmailFromRedirect = urlParams.get('email') || urlParams.get('sudan_play_id');
-
-            if (userEmailFromRedirect) {
-                // حفظ البيانات محلياً لتثبيت الجلسة في فور يو[cite: 1]
-                localStorage.setItem('foru_user_email', userEmailFromRedirect);
-                updateUIAfterLogin(userEmailFromRedirect);
-                // تنظيف البارامترات من رابط الصفحة
-                window.history.replaceState({}, document.title, window.location.pathname);
+            const savedEmail = localStorage.getItem('foru_user_email');
+            if (savedEmail) {
+                updateUIAfterLogin(savedEmail);
             } else {
-                const savedEmail = localStorage.getItem('foru_user_email');
-                if (savedEmail) {
-                    updateUIAfterLogin(savedEmail);
-                } else {
-                    auth.onAuthStateChanged(user => {
-                        if (user) {
-                            updateUIAfterLogin(user.email);
-                        }
-                    });
-                }
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        localStorage.setItem('foru_user_email', user.email);
+                        updateUIAfterLogin(user.email);
+                    }
+                });
             }
         });
 
@@ -256,17 +240,7 @@
                 });
         }
 
-        // 2. التوجيه لصفحة تسجيل الدخول الخاصة بسودان بلاي مع حفظ رابط صفحة "فور يو" الحالية للعودة إليها لاحقاً
-        function loginWithSudanPlay() {
-            // حفظ الرابط الحالي في الذاكرة ليتم العودة إليه
-            const currentUrl = window.location.href.split('?')[0];
-            localStorage.setItem('redirectAfterLogin', currentUrl);
-            
-            // الانتقال لملف تسجيل الدخول الخاص بـ سودان بلاي (login.html)
-            window.location.href = 'login.html';
-        }
-
-        // 3. تسجيل الدخول أو إنشاء حساب بالبريد الإلكتروني وكلمة المرور
+        // 2. تسجيل الدخول أو إنشاء حساب بالبريد الإلكتروني وكلمة المرور
         function handleEmailAuth(event) {
             event.preventDefault();
             const email = document.getElementById('email').value;
