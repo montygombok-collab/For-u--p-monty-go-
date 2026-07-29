@@ -17,10 +17,10 @@
 </head>
 <body class="bg-[#121212] text-white h-screen flex flex-col justify-between selection:bg-[#FFB800] selection:text-[#121212]">
 
-    <!-- شاشة التحميل الخفية لتفقد الصلاحية وتوجيه المستخدم في الخلفية دون وميض -->
+    <!-- شاشة التحميل لمنع وميض الصفحة أثناء فحص الصلاحية -->
     <div id="loadingOverlay" class="fixed inset-0 bg-[#121212] z-50 flex flex-col items-center justify-center space-y-4 transition-opacity duration-300">
         <div class="w-16 h-16 border-4 border-[#FFB800]/20 border-t-[#FFB800] rounded-full animate-spin"></div>
-        <p class="text-brandYellow font-bold text-sm tracking-wide animate-pulse">جاري التحميل وتوجيهك للنظام...</p>
+        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحقق من الحساب والتوجيه...</p>
     </div>
 
     <!-- الهيدر العلوي -->
@@ -47,7 +47,7 @@
         </div>
     </header>
 
-    <!-- المحتوى الرئيسي -->
+    <!-- المحتوى الرئيسي (لن يظهر إلا إذا كان المستخدم غير مسجل دخول فعلياً) -->
     <main class="flex-grow flex items-center justify-center px-6">
         <div class="max-w-md w-full text-center flex flex-col items-center">
             
@@ -141,7 +141,7 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs ومنطق إعادة التوجيه الفعال -->
+    <!-- Firebase SDKs ومنطق التوجيه السليم -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
@@ -178,7 +178,7 @@
 
         let currentMode = 'login';
 
-        // دالة التوجيه الدقيق حسب دور المستخدم في قاعدة البيانات
+        // دالة التوجيه الصحيحة حسب الأدوار المطلوبة بدقة
         async function redirectUserByRole(user, customName = '') {
             try {
                 const userRef = doc(db, "users", user.uid);
@@ -192,7 +192,7 @@
                     role = userData.role || 'عميل';
                     userName = userData.name || userName;
                 } else {
-                    // إذا كان الحساب جديداً لأول مرة، يتم تسجيله افتراضياً كـ "عميل"
+                    // الحساب الجديد يتم تسجيله افتراضياً كـ "عميل" وحفظه في Firestore
                     await setDoc(userRef, {
                         uid: user.uid,
                         name: userName,
@@ -207,22 +207,14 @@
                 localStorage.setItem('foru_user_email', user.email);
                 localStorage.setItem('foru_user_role', role);
 
-                // التوجيه المباشر حسب دور المستخدم بناءً على طلبك:
+                // التوجيه الفوري للصفحة المخصصة حسب الصلاحية:
                 if (role === 'مدير النظام' || role === 'مشرف طلبات' || role === 'مسؤول دعم' || role === 'admin' || role === 'supervisor' || role === 'support') {
                     window.location.href = 'dashboard.html';
                 } else if (role === 'مندوب توصيل' || role === 'driver') {
                     window.location.href = 'driver.html';
                 } else {
-                    // العميل يتوجه إلى index.html (أو يتم إخفاء اللودر إذا كان في الصفحة الرئيسية بالفعل)
-                    if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/' && window.location.pathname !== '') {
-                        window.location.href = 'index.html';
-                    } else {
-                        const loader = document.getElementById('loadingOverlay');
-                        if(loader) {
-                            loader.style.opacity = '0';
-                            setTimeout(() => loader.remove(), 300);
-                        }
-                    }
+                    // العميل يتوجه إلى customer.html فوراً
+                    window.location.href = 'customer.html';
                 }
             } catch (error) {
                 console.error("خطأ في توجيه المستخدم:", error);
@@ -281,7 +273,7 @@
                 title.innerText = 'تسجيل الدخول';
                 nameField.classList.add('hidden');
                 submitBtn.innerText = 'دخول بالنظام';
-                switchPrompt.innerText = 'ليس لديك حساب؟';
+                switchPrompt.innerText='ليس لديك حساب؟';
                 switchBtn.innerText = 'إنشاء حساب جديد';
             }
         }
@@ -291,7 +283,7 @@
             window.location.href = 'store-dashboard.html';
         };
 
-        // معالجة نتيجة العودة بعد تسجيل الدخول بـ Google Redirect
+        // معالجة النتيجة بعد العودة من تسجيل دخول Google
         getRedirectResult(auth)
             .then(async (result) => {
                 if (result && result.user) {
@@ -303,12 +295,12 @@
                 showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
             });
 
-        // المراقبة التلقائية لحالة الدخول التقليدية
+        // المراقبة التلقائية: إذا وجد مستخدم مسجل مسبقاً، يوجهه فوراً ولا يعرض صفحة الترحيب
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // إذا لم يتم معالجته عبر Redirect مسبقاً، يتم توجيهه هنا أيضاً
                 await redirectUserByRole(user);
             } else {
+                // إذا لم يكن مسجلاً، نقوم بإخفاء شاشة التحميل ليعمل الموقع كصفحة ترحيب عادية
                 const loader = document.getElementById('loadingOverlay');
                 if(loader) {
                     loader.style.opacity = '0';
@@ -317,7 +309,6 @@
             }
         });
 
-        // استخدام نظام إعادة التوجيه (Redirect) لتجاوز مشاكل النوافذ المنبثقة
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
             signInWithRedirect(auth, provider).catch((error) => {
