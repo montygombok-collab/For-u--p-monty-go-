@@ -74,12 +74,12 @@
             
             <div class="text-center mb-6">
                 <img src="image.jpg" alt="For-U Logo" class="w-16 h-16 object-cover mx-auto rounded-2xl mb-3 shadow-lg border border-[#FFB800]/30">
-                <h3 id="modalTitle" class="text-2xl font-bold">تسجيل الدخول / إنشاء حساب</h3>
-                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة الدخول وسيتم إنشاء حسابك تلقائياً</p>
+                <h3 id="modalTitle" class="text-2xl font-bold">تسجيل الدخول</h3>
+                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة تسجيل الدخول المناسبة</p>
             </div>
 
             <div class="space-y-3 mb-4">
-                <!-- زر غوغل الآمن عبر Google Identity Services -->
+                <!-- زر غوغل عبر Google Identity Services -->
                 <div id="googleBtnContainer" class="w-full flex justify-center"></div>
 
                 <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-[#121212] border border-[#FFB800] text-[#FFB800] font-bold py-3 px-4 rounded-xl hover:bg-[#FFB800]/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
@@ -220,7 +220,7 @@
             const switchBtn = document.getElementById('switchBtnText');
 
             if (currentMode === 'register') {
-                title.innerText = 'إنشاء حساب جديد';
+                title.innerText = 'إنشاء حساب بالبريد';
                 nameField.classList.remove('hidden');
                 submitBtn.innerText = 'تسجيل الحساب';
                 switchPrompt.innerText = 'لديك حساب بالفعل؟';
@@ -234,22 +234,21 @@
             }
         }
 
-        // تهيئة Google Identity Services (تأكد من وضع الـ Web Client ID الخاص بمشروعك في client_id)
+        // تهيئة Google Identity Services مع وضع معرف العميل (Client ID) الصحيح هنا
         window.addEventListener('load', () => {
             if (typeof google !== 'undefined') {
                 google.accounts.id.initialize({
-                    client_id: "519930793199-YOUR_WEB_CLIENT_ID.apps.googleusercontent.com", // استبدل هذا المعرف بالمعرف الفعلي من لوحة تحكم فايربيس
+                    client_id: "519930793199-519930793199.apps.googleusercontent.com", // استبدل هذا المعرف بالمعرف الفعلي لـ Web Client ID من لوحة تحكم فايربيس
                     callback: handleGoogleCredentialResponse
                 });
                 
                 google.accounts.id.renderButton(
                     document.getElementById("googleBtnContainer"),
-                    { theme: "outline", size: "large", width: "320", text: "continue_with", locale: "ar" }
+                    { theme: "outline", size: "large", width: "320", text: "signin_with", locale: "ar" }
                 );
             }
         });
 
-        // دالة التعامل مع استجابة غوغل (إنشاء الحساب تلقائياً أو تسجيل الدخول إذا كان موجوداً)
         function handleGoogleCredentialResponse(response) {
             const idToken = response.credential;
             const credential = GoogleAuthProvider.credential(idToken);
@@ -260,10 +259,10 @@
                     localStorage.setItem('foru_user_email', user.email);
                     updateUIAfterLogin(user.email);
                     closeAuthModal();
-                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
+                    showCustomAlert('نجاح العملية', '✅ تم تسجيل الدخول عبر حساب غوغل بنجاح!');
                 })
                 .catch((error) => {
-                    showCustomAlert('خطأ في الحساب', '❌ خطأ: ' + error.message, true);
+                    showCustomAlert('خطأ في المصادقة', '❌ خطأ: ' + error.message, true);
                 });
         }
 
@@ -295,7 +294,6 @@
             window.location.href = `${sudanPlayAuthUrl}?redirect_uri=${encodeURIComponent(currentRedirectUrl)}`;
         };
 
-        // نظام البريد الإلكتروني (إنشاء حساب تلقائي إذا اختار المستخدم إنشاء حساب، أو الدخول مباشرة)
         window.handleEmailAuth = function(event) {
             event.preventDefault();
             const email = document.getElementById('email').value;
@@ -308,7 +306,7 @@
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(user.email);
                         closeAuthModal();
-                        showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب الجديد وتسجيل الدخول بنجاح!');
+                        showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب وتسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
                         showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.message, true);
@@ -323,7 +321,7 @@
                         showCustomAlert('نجاح الدخول', '✅ تم تسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
-                        showCustomAlert('خطأ في الدخول', '❌ البريد غير مسجل أو كلمة المرور خاطئة، يرجى إنشاء حساب.', true);
+                        showCustomAlert('خطأ في الدخول', '❌ خطأ في البريد أو كلمة المرور: ' + error.message, true);
                     });
             }
         };
