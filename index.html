@@ -2,81 +2,87 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>For-U | فور يو - توصيل طلباتك بسرعة وأمان</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
-        body { 
-            font-family: 'Cairo', sans-serif; 
-            overflow: hidden; 
-            height: 100vh;
-        }
+        body { font-family: 'Cairo', sans-serif; }
     </style>
 </head>
-<body class="bg-[#121212] text-white h-screen flex flex-col justify-between selection:bg-[#FFB800] selection:text-[#121212]">
+<body class="bg-[#121212] text-white min-h-screen flex flex-col justify-between">
 
-    <!-- المحتوى الرئيسي في منتصف الشاشة -->
-    <main class="flex-grow flex items-center justify-center px-6">
-        <div class="max-w-md w-full text-center flex flex-col items-center">
-            
-            <!-- الشعار في المنتصف -->
-            <div class="mb-6 flex flex-col items-center">
-                <img src="image.jpg" alt="For-U Logo" class="w-24 h-24 object-cover rounded-2xl shadow-2xl border-2 border-[#FFB800]/40 mb-4 animate-pulse">
-                <h1 class="text-3xl font-black tracking-wider mb-1">فور يو <span class="text-[#FFB800] text-lg">For-U</span></h1>
+    <!-- الهيدر / الشعار -->
+    <header class="p-6 flex justify-between items-center border-b border-gray-800">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <img src="image.jpg" alt="For-U Logo" class="w-12 h-12 object-cover rounded-xl shadow-lg border border-[#FFB800]/30">
+            <div>
+                <h1 class="text-xl font-bold tracking-wider">فور يو <span class="text-[#FFB800] text-sm">For-U</span></h1>
                 <p class="text-xs text-gray-400">توصيل طلباتك بسرعة وأمان</p>
             </div>
-
+        </div>
+        <div class="flex space-x-2 space-x-reverse items-center">
             <!-- قسم عرض البريد وحالة تسجيل الدخول -->
-            <div id="userProfileDisplay" class="hidden w-full flex-col items-center space-y-3 bg-[#1E1E1E] border border-gray-800 p-4 rounded-2xl shadow-xl mb-4 transition-all duration-300">
-                <div class="flex items-center space-x-2 space-x-reverse">
-                    <i class="fa-solid fa-circle-user text-[#FFB800] text-2xl"></i>
-                    <span id="userEmailSpan" class="text-sm text-white font-semibold"></span>
-                </div>
-                <div class="flex space-x-2 space-x-reverse w-full">
-                    <a href="customer.html" class="flex-grow bg-[#FFB800] text-[#121212] font-bold text-sm py-2.5 rounded-xl hover:bg-yellow-400 transition shadow text-center flex items-center justify-center">
-                        <i class="fa-solid fa-box-open ml-2"></i> اطلب الآن
-                    </a>
-                    <button onclick="logoutUser()" class="bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold px-4 py-2.5 rounded-xl hover:bg-red-500/30 transition">
-                        خروج
-                    </button>
-                </div>
+            <div id="userProfileDisplay" class="hidden items-center space-x-2 space-x-reverse bg-[#1E1E1E] border border-gray-800 px-3 py-1.5 rounded-xl">
+                <i class="fa-solid fa-circle-user text-[#FFB800] text-lg"></i>
+                <span id="userEmailSpan" class="text-xs text-white font-semibold"></span>
+                <button onclick="logoutUser()" class="bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold px-2.5 py-1 rounded-lg hover:bg-red-500/30 transition mr-2">
+                    خروج
+                </button>
             </div>
-
-            <!-- أزرار الدخول وإنشاء الحساب -->
-            <div id="authButtonsContainer" class="flex flex-col space-y-3 w-full">
-                <button onclick="openAuthModal('login')" class="w-full bg-[#1E1E1E] border border-gray-700 text-[#FFB800] font-bold py-3.5 px-6 rounded-2xl hover:bg-gray-800 transition shadow-lg flex items-center justify-center text-base">
+            <!-- أزرار الدخول العادية -->
+            <div id="authButtonsContainer" class="flex space-x-2 space-x-reverse">
+                <button onclick="openAuthModal('login')" class="bg-[#1E1E1E] border border-gray-700 text-[#FFB800] text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-800 transition shadow-md flex items-center">
                     <i class="fa-solid fa-right-to-bracket ml-2"></i> تسجيل الدخول
                 </button>
-                <button onclick="openAuthModal('register')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-base">
-                    <i class="fa-solid fa-user-plus ml-2"></i> إنشاء حساب جديد
+                <button onclick="openAuthModal('register')" class="bg-[#FFB800] text-[#121212] text-sm font-bold px-4 py-2 rounded-xl hover:bg-yellow-400 transition shadow-md hidden sm:flex items-center">
+                    <i class="fa-solid fa-user-plus ml-2"></i> إنشاء حساب
                 </button>
             </div>
+        </div>
+    </header>
 
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-grow flex items-center justify-center px-6 py-12">
+        <div class="max-w-4xl mx-auto text-center">
+            <span class="bg-[#FFB800]/10 text-[#FFB800] text-sm font-semibold px-4 py-1.5 rounded-full border border-[#FFB800]/20 inline-block mb-6">
+                🚀 النظام اللوجستعي الذكي والمتكامل
+            </span>
+            <h2 class="text-4xl md:text-6xl font-black mb-6 leading-tight">
+                أسرع طريقة لإدارة وتوصيل <span class="text-[#FFB800]">طلباتك بكل أمان</span>
+            </h2>
+            <p class="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">
+                منصة متكاملة تربط العملاء، المسوقين، والمناديب، مع نظام تتبع جغرافي ذكي وإدارة دقيقة للمخازن والماليات.
+            </p>
+            <div class="flex justify-center">
+                <a href="customer.html" class="bg-[#FFB800] text-[#121212] font-bold text-lg px-10 py-4 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center">
+                    <i class="fa-solid fa-box-open ml-2"></i> اطلب توصيل طلبك الآن
+                </a>
+            </div>
         </div>
     </main>
 
     <!-- نافذة المصادقة -->
     <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-md w-full relative shadow-2xl">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-8 max-w-md w-full relative shadow-2xl">
             <button onclick="closeAuthModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white text-xl">
                 <i class="fa-solid fa-xmark"></i>
             </button>
             
-            <div class="text-center mb-5">
-                <img src="image.jpg" alt="For-U Logo" class="w-14 h-14 object-cover mx-auto rounded-xl mb-2 shadow-lg border border-[#FFB800]/30">
-                <h3 id="modalTitle" class="text-xl font-bold">تسجيل الدخول / إنشاء حساب</h3>
+            <div class="text-center mb-6">
+                <img src="image.jpg" alt="For-U Logo" class="w-16 h-16 object-cover mx-auto rounded-2xl mb-3 shadow-lg border border-[#FFB800]/30">
+                <h3 id="modalTitle" class="text-2xl font-bold">تسجيل الدخول / إنشاء حساب</h3>
                 <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة الدخول وسيتم إنشاء حسابك تلقائياً</p>
             </div>
 
-            <div class="space-y-3 mb-3">
-                <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-800 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-3 space-x-reverse text-sm">
+            <div class="space-y-3 mb-4">
+                <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-800 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-3 space-x-reverse">
                     <i class="fa-brands fa-google text-red-500 text-lg"></i>
-                    <span>المتابعة بواسطة Google</span>
+                    <span>التسجيل أو الدخول بواسطة Google</span>
                 </button>
 
-                <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-[#121212] border border-[#FFB800] text-[#FFB800] font-bold py-3 px-4 rounded-xl hover:bg-[#FFB800]/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse text-sm">
+                <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-[#121212] border border-[#FFB800] text-[#FFB800] font-bold py-3 px-4 rounded-xl hover:bg-[#FFB800]/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-solid fa-store text-[#FFB800] text-lg ml-2"></i>
                     <span>التسجيل عبر حساب سودان بلاي</span>
                 </button>
@@ -88,25 +94,25 @@
                 <div class="flex-grow border-t border-gray-700"></div>
             </div>
 
-            <form id="authForm" class="space-y-3 mt-2" onsubmit="handleEmailAuth(event)">
+            <form id="authForm" class="space-y-4 mt-3" onsubmit="handleEmailAuth(event)">
                 <div id="nameFieldContainer" class="hidden">
-                    <label class="block text-xs text-gray-300 mb-1">الاسم الكامل</label>
-                    <input type="text" id="fullName" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="محمد أحمد">
+                    <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
+                    <input type="text" id="fullName" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#FFB800] outline-none transition" placeholder="محمد أحمد">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-300 mb-1">البريد الإلكتروني</label>
-                    <input type="email" id="email" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="name@foru.com">
+                    <label class="block text-sm text-gray-300 mb-1">البريد الإلكتروني</label>
+                    <input type="email" id="email" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#FFB800] outline-none transition" placeholder="name@foru.com">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-300 mb-1">كلمة المرور</label>
-                    <input type="password" id="password" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="••••••••">
+                    <label class="block text-sm text-gray-300 mb-1">كلمة المرور</label>
+                    <input type="password" id="password" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#FFB800] outline-none transition" placeholder="••••••••">
                 </div>
-                <button type="submit" id="submitBtnText" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-1 text-sm">
+                <button type="submit" id="submitBtnText" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-2">
                     دخول بالنظام
                 </button>
             </form>
 
-            <div class="text-center mt-4 text-xs text-gray-400">
+            <div class="text-center mt-5 text-sm text-gray-400">
                 <span id="switchPrompt">ليس لديك حساب؟</span>
                 <button type="button" onclick="toggleAuthMode()" id="switchBtnText" class="text-[#FFB800] font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
             </div>
@@ -126,6 +132,10 @@
             </button>
         </div>
     </div>
+
+    <footer class="p-6 text-center border-t border-gray-800 text-gray-500 text-sm">
+        جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
+    </footer>
 
     <!-- Firebase SDKs -->
     <script type="module">
@@ -226,7 +236,7 @@
             }
         }
 
-        // الفحص المباشر عند التحميل
+        // 1. الفحص الفوري للذاكرة المحلية
         window.addEventListener('DOMContentLoaded', () => {
             const savedEmail = localStorage.getItem('foru_user_email');
             if (savedEmail) {
@@ -234,19 +244,20 @@
             }
         });
 
-        // التقاط نتيجة إعادة التوجيه وتحديث الواجهة فوراً وعرض رسالة نجاح واضحة
+        // 2. معالجة نتيجة إعادة التوجيه للموبايل عند العودة
         getRedirectResult(auth)
             .then((result) => {
                 if (result && result.user) {
                     const user = result.user;
                     localStorage.setItem('foru_user_email', user.email);
                     updateUIAfterLogin(user.email);
-                    closeAuthModal();
+                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
                 }
             }).catch((error) => {
                 console.error("Redirect error:", error);
             });
 
+        // 3. مراقبة فايربيس
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 localStorage.setItem('foru_user_email', user.email);
@@ -262,11 +273,11 @@
             document.getElementById('userEmailSpan').innerText = email;
         }
 
+        // 4. اختيار ذكي وآمن: Redirect للموبايل لتجنب الحظر، و Popup للكمبيوتر
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-            // إظهار تنبيه بسيط للمستخدم بأن الصفحة جاري تحويلها لغوغل لتجنب شعور التوقف
             if (isMobile) {
                 signInWithRedirect(auth, provider).catch((error) => {
                     showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
@@ -282,6 +293,7 @@
                     })
                     .catch((error) => {
                         if (error.code === 'auth/popup-blocked') {
+                            // إذا تم حظر النافذة المنبثقة على الكمبيوتر، نتحول تلقائياً إلى Redirect
                             signInWithRedirect(auth, provider);
                         } else {
                             showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
