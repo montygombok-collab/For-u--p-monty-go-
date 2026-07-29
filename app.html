@@ -48,11 +48,11 @@
         <div id="driverView" class="space-y-6">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
                 <h2 class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-motorcycle ml-2"></i> الطلبات المسندة إليك ومواقع التوصيل
+                    <i class="fa-solid fa-motorcycle ml-2"></i> كافة الطلبات المتاحة (اختر الطلب الذي تريد إنجازه وتوصيله)
                 </h2>
                 <div class="space-y-6" id="driverOrdersList">
                     <div class="bg-brandDark border border-gray-700 p-4 rounded-2xl text-center text-gray-400">
-                        جاري جلب الطلبات الميدانية والخرائط...
+                        جاري جلب كافة الطلبات والخرائط...
                     </div>
                 </div>
             </div>
@@ -75,7 +75,7 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- ربط Firebase والتحقق من الصلاحية وجلب الطلبات مع الخرائط -->
+    <!-- ربط Firebase والتحقق من الصلاحية وجلب كافة الطلبات -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -111,7 +111,7 @@
             modal.classList.add('hidden');
         }
 
-        // التحقق من حالة تسجيل الدخول وصلاحية المستخدم
+        // التحقق من الصلاحية وصلاحية المندوب
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
@@ -132,7 +132,7 @@
                         }
 
                         document.getElementById('userRoleSubtitle').innerText = `المندوب: ${currentDriverName} (صلاحية: مندوب توصيل)`;
-                        fetchAssignedOrders();
+                        fetchAllAvailableOrders();
                     } else {
                         showCustomAlert('خطأ', 'لم يتم العثور على بيانات الحساب.');
                         window.location.href = 'index.html';
@@ -145,59 +145,66 @@
             }
         });
 
-        // جلب الطلبات المسندة وعرض تفاصيلها مع خريطة الموقع وزر التسليم
-        async function fetchAssignedOrders() {
+        // جلب كافة الطلبات غير المنجزة ليختار منها المندوب
+        async function fetchAllAvailableOrders() {
             try {
                 const querySnapshot = await getDocs(collection(db, "orders"));
                 const ordersListContainer = document.getElementById('driverOrdersList');
                 ordersListContainer.innerHTML = '';
 
-                let assignedOrders = [];
+                let availableOrders = [];
                 querySnapshot.forEach((docSnap) => {
                     const orderData = docSnap.data();
-                    if (orderData.assignedDriver === currentDriverName && orderData.status !== 'منجز') {
-                        assignedOrders.push({ id: docSnap.id, ...orderData });
+                    // إحضار الطلبات التي لم يتم إنجازها بعد لكي تظهر لكل المناديب ليختاروا منها
+                    if (orderData.status !== 'منجز') {
+                        availableOrders.push({ id: docSnap.id, ...orderData });
                     }
                 });
 
-                if (assignedOrders.length === 0) {
+                if (availableOrders.length === 0) {
                     ordersListContainer.innerHTML = `
                         <div class="bg-brandDark border border-gray-700 p-6 rounded-2xl text-center text-gray-400">
                             <i class="fa-solid fa-box-open text-3xl mb-2 text-gray-500"></i>
-                            <p>لا توجد طلبات توصيل مسندة إليك حالياً من قِبل المشرفين.</p>
+                            <p>لا توجد طلبات متاحة للتوصيل حالياً في النظام.</p>
                         </div>
                     `;
                     return;
                 }
 
-                assignedOrders.forEach(order => {
-                    // تحديد موقع الخريطة بناءً على عنوان العميل أو افتراضياً الخرطوم لو غير مكتوب
+                availableOrders.forEach(order => {
                     const deliveryLocation = order.address || order.location || 'Khartoum, Sudan';
                     const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(deliveryLocation)}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
+                    const isAssignedToMe = order.assignedDriver === currentDriverName;
 
                     ordersListContainer.innerHTML += `
-                        <div class="bg-brandDark border border-gray-700 p-5 rounded-2xl space-y-4">
+                        <div class="bg-brandDark border ${isAssignedToMe ? 'border-brandYellow' : 'border-gray-700'} p-5 rounded-2xl space-y-4 shadow-md">
                             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <div class="space-y-1">
-                                    <span class="bg-yellow-500/10 text-brandYellow text-xs px-2.5 py-1 rounded-lg border border-yellow-500/20 font-bold">${order.status || 'قيد التوصيل'}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-yellow-500/10 text-brandYellow text-xs px-2.5 py-1 rounded-lg border border-yellow-500/20 font-bold">${order.status || 'قيد الانتظار'}</span>
+                                        ${isAssignedToMe ? '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded border border-emerald-500/30 font-bold">مسند إليك</span>' : ''}
+                                    </div>
                                     <h3 class="font-bold text-base mt-2">عميل: ${order.clientName || 'غير متوفر'}</h3>
-                                    <p class="text-xs text-gray-400">الوصف: ${order.description || 'توصيل طلب سحابي'}</p>
+                                    <p class="text-xs text-gray-400">الوصف: ${order.description || 'طلب توصيل سحابي'}</p>
                                     <p class="text-xs text-gray-400">العنوان: <span class="text-white">${deliveryLocation}</span></p>
                                     <p class="text-xs text-gray-400">رقم الهاتف: <span class="text-white font-bold">${order.clientPhone || 'غير متوفر'}</span></p>
                                     <p class="text-xs text-brandYellow font-semibold">المبلغ المطلوب تحصيله: ${(order.cost || 0).toLocaleString()} جنيه</p>
                                 </div>
                                 
-                                <div class="w-full md:w-auto flex flex-col gap-2">
-                                    <button onclick="updateOrderStatus('${order.id}')" class="bg-green-600 hover:bg-green-500 text-white text-sm font-bold px-5 py-3 rounded-xl transition shadow-lg flex items-center justify-center">
-                                        <i class="fa-solid fa-check ml-2"></i> تم التسليم / إنجاز الطلب
+                                <div class="w-full md:w-auto flex flex-col gap-2 min-w-[160px]">
+                                    <button onclick="claimOrder('${order.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
+                                        <i class="fa-solid fa-hand ml-1.5"></i> اختيار / أنا سأقوم به
+                                    </button>
+                                    <button onclick="updateOrderStatus('${order.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
+                                        <i class="fa-solid fa-check ml-1.5"></i> تم التسليم / إنجاز
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- قسم خريطة العميل المفترض الوصول إليه -->
+                            <!-- خريطة موقع العميل -->
                             <div class="space-y-1 pt-2 border-t border-gray-800">
                                 <p class="text-xs text-gray-400 flex items-center mb-1">
-                                    <i class="fa-solid fa-map-location-dot text-brandYellow ml-1"></i> موقع العميل على الخريطة:
+                                    <i class="fa-solid fa-map-location-dot text-brandYellow ml-1"></i> خريطة موقع العميل المفترض الوصول إليه:
                                 </p>
                                 <div class="w-full h-40 rounded-xl overflow-hidden border border-gray-700">
                                     <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="${mapSrc}"></iframe>
@@ -213,6 +220,21 @@
             }
         }
 
+        // اختيار المندوب للطلب وتسجيل اسمه عليه
+        window.claimOrder = async function(orderId) {
+            try {
+                await updateDoc(doc(db, "orders", orderId), {
+                    assignedDriver: currentDriverName,
+                    status: 'قيد التوصيل'
+                });
+                showCustomAlert('تم الاختيار', 'تم تسجيل هذا الطلب باسمك بنجاح.');
+                fetchAllAvailableOrders();
+            } catch (err) {
+                console.error(err);
+                showCustomAlert('خطأ', 'فشل اختيار الطلب.');
+            }
+        }
+
         // تحديث حالة الطلب إلى "منجز"
         window.updateOrderStatus = async function(orderId) {
             try {
@@ -220,7 +242,7 @@
                     status: 'منجز'
                 });
                 showCustomAlert('تم بنجاح', 'تم تحديث حالة الطلب إلى (منجز) بنجاح.');
-                fetchAssignedOrders();
+                fetchAllAvailableOrders();
             } catch (err) {
                 console.error(err);
                 showCustomAlert('خطأ', 'فشل تحديث حالة الطلب.');
