@@ -108,6 +108,17 @@
             background: #e5a600;
         }
 
+        .btn-store-register {
+            background: transparent;
+            color: var(--brandYellow);
+            border: 2px solid var(--brandYellow);
+            margin-top: 10px;
+        }
+
+        .btn-store-register:hover {
+            background: rgba(255, 184, 0, 0.1);
+        }
+
         .back-home {
             text-align: center;
             margin-top: 20px;
@@ -150,7 +161,13 @@
             <input type="password" id="password" placeholder="أدخل كلمة المرور">
         </div>
 
+        <!-- زر تسجيل الدخول الأساسي -->
         <button type="button" class="btn-action btn-brand-yellow" onclick="executeFirebaseLogin()">تسجيل الدخول</button>
+
+        <!-- زر التسجيل كمتجر الموجه لإدارة المتجر -->
+        <button type="button" class="btn-action btn-store-register" onclick="registerAsStore()">
+            <i class="fas fa-store ml-1"></i> التسجيل كمتجر
+        </button>
 
         <div class="back-home">
             <a href="index.html"><i class="fas fa-store"></i> العودة إلى المنصة الرئيسية</a>
@@ -204,6 +221,12 @@
                 .catch((error) => {
                     alert('خطأ في تسجيل الدخول: ' + error.message);
                 });
+        }
+
+        // دالة التوجيه المباشر لإدارة المتجر عند الضغط على زر التسجيل كمتجر
+        function registerAsStore() {
+            localStorage.setItem('selectedAccountType', 'store');
+            window.location.href = 'store-dashboard.html';
         }
     </script>
 </body>
