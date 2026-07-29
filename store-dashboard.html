@@ -127,7 +127,21 @@
         </div>
     </main>
 
-    <!-- سكربت إدارة المتجر والربط بـ Firebase وتحويل الملفات لصور حقيقية -->
+    <!-- نافذة التنبيه المخصصة الاحترافية (Custom Alert Modal) -->
+    <div id="customAlertModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center shadow-2xl">
+            <div id="alertIconContainer" class="w-14 h-14 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-[#FFB800] text-xl">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h3 id="alertTitle" class="text-base font-bold mb-1 text-white">تنبيه النظام</h3>
+            <p id="alertMessage" class="text-gray-300 text-xs mb-5 leading-relaxed whitespace-pre-line">رسالة التنبيه...</p>
+            <button onclick="closeCustomAlert()" class="w-full bg-[#FFB800] text-[#121212] font-bold py-2.5 rounded-xl hover:bg-yellow-400 transition text-xs shadow">
+                حسناً
+            </button>
+        </div>
+    </div>
+
+    <!-- سكربت إدارة المتجر والربط بـ Firebase والتنبيهات المخصصة -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -151,7 +165,31 @@
             await loadIncomingOrders();
         });
 
-        // دالة مساعدة لقراءة الملف المرفوع وتحويله إلى Base64 لعرضه وحفظه مباشرة
+        // دالة إظهار التنبيه الاحترافي المخصص بدلاً من alert()
+        window.showAlert = function(title, message, isSuccess = true) {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            
+            const iconContainer = document.getElementById('alertIconContainer');
+            if (isSuccess) {
+                iconContainer.className = "w-14 h-14 bg-green-500/10 border border-green-500/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-green-400 text-xl";
+                iconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            } else {
+                iconContainer.className = "w-14 h-14 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-red-400 text-xl";
+                iconContainer.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+            }
+
+            const modal = document.getElementById('customAlertModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        };
+
+        window.closeCustomAlert = function() {
+            const modal = document.getElementById('customAlertModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        };
+
         function convertFileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -179,7 +217,7 @@
             localStorage.setItem('foru_store_email', email);
 
             loadStoreData();
-            alert("✅ تم حفظ إعدادات المتجر بنجاح!");
+            showAlert("نجاح الإعدادات", "✅ تم حفظ إعدادات المتجر بنجاح!");
         };
 
         function loadStoreData() {
@@ -224,7 +262,7 @@
 
             document.getElementById('addProductForm').reset();
             await loadProducts();
-            alert("✅ تم رفع الصورة وإضافة المنتج بنجاح إلى المخزون والسوق العام!");
+            showAlert("تمت الإضافة بنجاح", "✅ تم رفع الصورة وإضافة المنتج بنجاح\nإلى المخزون والسوق العام!");
         };
 
         async function loadProducts() {
@@ -321,7 +359,7 @@
         }
 
         window.confirmOrderAndSendToCourier = function(orderId) {
-            alert(`✅ تم تأكيد الطلب #${orderId}، وتوجيهه بنجاح إلى شبكة المناديب والتوصيل!`);
+            showAlert("تم تأكيد الطلب", `✅ تم تأكيد الطلب #${orderId}،\nوتوجيهه بنجاح إلى شبكة المناديب والتوصيل!`);
         };
 
         window.logoutStore = function() {
