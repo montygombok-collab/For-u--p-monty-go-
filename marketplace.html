@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>فور يو | سوق المتاجر العامة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#121212] text-white min-h-screen flex flex-col justify-between selection:bg-[#FFB800] selection:text-[#121212]">
+
+    <!-- الهيدر العلوي -->
+    <header class="p-4 sm:p-6 flex justify-between items-center border-b border-gray-800/60 bg-[#121212]/80 backdrop-blur-md sticky top-0 z-45">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <a href="index.html" class="w-10 h-10 bg-[#1E1E1E] border border-gray-800 rounded-xl flex items-center justify-center text-[#FFB800] hover:bg-gray-800 transition">
+                <i class="fa-solid fa-arrow-right"></i>
+            </a>
+            <div>
+                <h1 class="text-lg font-black tracking-wider">سوق فور يو <span class="text-[#FFB800] text-xs">Marketplace</span></h1>
+                <p class="text-[11px] text-gray-400">تصفح منتجات المتاجر واطلب فوراً</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 space-x-reverse">
+            <a href="track.html" class="bg-[#1E1E1E] border border-gray-700 text-[#FFB800] text-xs font-bold px-3 py-2 rounded-xl hover:bg-gray-800 transition flex items-center shadow">
+                <i class="fa-solid fa-location-crosshairs ml-1.5"></i> تتبع الطلب
+            </a>
+        </div>
+    </header>
+
+    <!-- المحتوى الرئيسي (عرض منتجات المتاجر) -->
+    <main class="flex-grow p-4 sm:p-6 max-w-6xl mx-auto w-full">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+            <div>
+                <h2 class="text-xl font-bold">المنتجات المتاحة حالياً</h2>
+                <p class="text-xs text-gray-400">جميع السلع المرفوعة مباشرة من حسابات المتاجر المسجلة</p>
+            </div>
+            <div class="w-full sm:w-auto">
+                <input type="text" id="searchMarketInput" onkeyup="filterMarketProducts()" placeholder="ابحث عن منتج أو متجر..." class="w-full sm:w-64 bg-[#1E1E1E] border border-gray-800 rounded-xl px-4 py-2 text-xs text-white focus:border-[#FFB800] outline-none transition">
+            </div>
+        </div>
+
+        <!-- شبكة المنتجات -->
+        <div id="marketProductsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- يتم تعبئة المنتجات ديناميكياً من الجافاسكريبت -->
+            <div class="col-span-full text-center py-20 text-gray-500">
+                <i class="fa-solid fa-spinner fa-spin text-3xl text-[#FFB800] mb-3"></i>
+                <p class="text-xs">جاري تحميل منتجات المتاجر...</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- الفوتر السفلي السريع -->
+    <footer class="p-4 border-t border-gray-800/60 bg-[#1E1E1E] text-center text-xs text-gray-400">
+        <p>فور يو (For-U) - نصلك قبل ما تطلب &copy; 2026</p>
+    </footer>
+
+    <!-- نافذة تأكيد الطلب -->
+    <div id="orderModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-md w-full relative shadow-2xl">
+            <h3 class="text-lg font-bold mb-1 text-[#FFB800]">إتمام طلب المنتج</h3>
+            <p id="modalProductName" class="text-xs text-gray-300 mb-4 font-semibold"></p>
+            
+            <form id="checkoutForm" onsubmit="submitOrder(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">اسم المستلم</label>
+                    <input type="text" id="orderCustomerName" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FFB800] outline-none" placeholder="اسمك الكامل">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">رقم الهاتـف</label>
+                    <input type="tel" id="orderCustomerPhone" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FFB800] outline-none" placeholder="0912345678">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">عنوان التوصيل بالتفصيل</label>
+                    <textarea id="orderCustomerAddress" required rows="2" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FFB800] outline-none" placeholder="المدينة، الحي، شارع..."></textarea>
+                </div>
+                
+                <div class="flex space-x-2 space-x-reverse pt-2">
+                    <button type="submit" class="flex-grow bg-[#FFB800] text-[#121212] font-bold py-2.5 rounded-xl hover:bg-yellow-400 transition text-xs shadow">
+                        تأكيد وإرسال الطلب
+                    </button>
+                    <button type="button" onclick="closeOrderModal()" class="bg-gray-800 text-gray-300 font-bold px-4 py-2.5 rounded-xl hover:bg-gray-700 transition text-xs">
+                        إلغاء
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة التنبيهات -->
+    <div id="customAlertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
+            <div id="alertIconContainer" class="w-14 h-14 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-3 text-[#FFB800] text-xl">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h4 id="alertTitle" class="text-base font-bold mb-1">تنبيه النظام</h4>
+            <p id="alertMessage" class="text-gray-300 text-xs mb-5 leading-relaxed">رسالة...</p>
+            <button onclick="closeCustomAlert()" class="w-full bg-[#FFB800] text-[#121212] font-bold py-2.5 rounded-xl hover:bg-yellow-400 transition text-xs">
+                حسنًا
+            </button>
+        </div>
+    </div>
+
+    <!-- جافاسكريبت لجلب المنتجات والتعامل مع الطلبات -->
+    <script>
+        let selectedProductForOrder = null;
+        let allProductsList = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMarketplaceProducts();
+        });
+
+        // جلب المنتجات المخزنة من المتاجر (مربوطة بالتخزين المحلي أو قاعدة البيانات المشتركة من store-dashboard.html)
+        function loadMarketplaceProducts() {
+            const grid = document.getElementById('marketProductsGrid');
+            
+            // يتم جلب البيانات المحفوظة عادة من لوحة تحكم المتجر (store-dashboard)
+            // افتراض مفتاح التخزين: 'foru_store_products'
+            const storedProducts = localStorage.getItem('foru_store_products');
+            
+            if (storedProducts) {
+                allProductsList = JSON.parse(storedProducts);
+            } else {
+                // بيانات تجريبية في حال لم يتم إضافة منتجات حقيقية بعد
+                allProductsList = [
+                    { id: 1, name: 'وجبة برجر دبل تشيز', price: '4500', store: 'مطعم السعادة', desc: 'وجبة برجر لحم طازجة مع الجبن والبطاطس', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60' },
+                    { id: 2, name: 'ساعة يد ذكية حديثة', price: '18000', store: 'متجر الإلكترونيات الذكية', desc: 'ساعة مقاومة للماء وتتصل بالهاتف عبر البلوتوث', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60' }
+                ];
+            }
+
+            renderProducts(allProductsList);
+        }
+
+        function renderProducts(products) {
+            const grid = document.getElementById('marketProductsGrid');
+            if (products.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-16 text-gray-400">
+                        <i class="fa-solid fa-box-open text-4xl text-gray-600 mb-2"></i>
+                        <p class="text-xs">لا توجد منتجات مضافة حالياً من المتاجر.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = products.map(product => `
+                <div class="bg-[#1E1E1E] border border-gray-800 rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between transition hover:border-[#FFB800]/50">
+                    <div>
+                        <div class="h-40 bg-gray-800 relative overflow-hidden">
+                            <img src="${product.image || 'image.jpg'}" alt="${product.name}" class="w-full h-full object-cover" onerror="this.src='image.jpg'">
+                            <span class="absolute top-2 right-2 bg-black/70 backdrop-blur-md text-[#FFB800] text-[10px] font-bold px-2.5 py-1 rounded-lg border border-[#FFB800]/20">
+                                <i class="fa-solid fa-store ml-1"></i> ${product.store || 'متجر معتمد'}
+                            </span>
+                        </div>
+                        <div class="p-3">
+                            <h3 class="font-bold text-sm mb-1 text-white truncate">${product.name}</h3>
+                            <p class="text-gray-400 text-[11px] mb-3 line-clamp-2">${product.desc || 'لا توجد تفاصيل إضافية عن المنتج.'}</p>
+                        </div>
+                    </div>
+                    <div class="p-3 pt-0 flex items-center justify-between border-t border-gray-800/60 mt-2">
+                        <span class="text-[#FFB800] font-black text-xs">${product.price} ج.س</span>
+                        <button onclick='openOrderModal(${JSON.stringify(product)})' class="bg-[#FFB800] text-[#121212] font-bold px-3 py-1.5 rounded-xl hover:bg-yellow-400 transition text-xs shadow flex items-center">
+                            <i class="fa-solid fa-cart-shopping ml-1"></i> اطلب الآن
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterMarketProducts() {
+            const query = document.getElementById('searchMarketInput').value.toLowerCase();
+            const filtered = allProductsList.filter(p => 
+                p.name.toLowerCase().includes(query) || 
+                (p.store && p.store.toLowerCase().includes(query))
+            );
+            renderProducts(filtered);
+        }
+
+        function openOrderModal(product) {
+            selectedProductForOrder = product;
+            document.getElementById('modalProductName').innerText = `المنتج: ${product.name} - السعر: ${product.price} ج.س`;
+            
+            // تعبئة بيانات المستخدم تلقائياً إذا كانت مخزنة مسبقاً
+            const savedName = localStorage.getItem('foru_user_name');
+            if(savedName) document.getElementById('orderCustomerName').value = savedName;
+
+            const modal = document.getElementById('orderModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeOrderModal() {
+            const modal = document.getElementById('orderModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        function submitOrder(event) {
+            event.preventDefault();
+            const name = document.getElementById('orderCustomerName').value;
+            const phone = document.getElementById('orderCustomerPhone').value;
+            const address = document.getElementById('orderCustomerAddress').value;
+
+            const newOrder = {
+                id: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
+                productName: selectedProductForOrder.name,
+                productPrice: selectedProductForOrder.price,
+                storeName: selectedProductForOrder.store || 'متجر عام',
+                customerName: name,
+                customerPhone: phone,
+                customerAddress: address,
+                status: 'قيد المراجعة',
+                date: new Date().toLocaleString()
+            };
+
+            // حفظ الطلب في قائمة الطلبات العامة ليتمكن التاجر أو نظام التتبع من رؤيته
+            let existingOrders = JSON.parse(localStorage.getItem('foru_store_orders') || '[]');
+            existingOrders.push(newOrder);
+            localStorage.setItem('foru_store_orders', JSON.stringify(existingOrders));
+
+            closeOrderModal();
+            showCustomAlert('نجاح الطلب', `✅ تم إرسال طلبك بنجاح!\nرقم الطلب: ${newOrder.id}\nيمكنك متابعة حالة الطلب من صفحة التتبع.`);
+        }
+
+        function showCustomAlert(title, message) {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            const modal = document.getElementById('customAlertModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeCustomAlert() {
+            const modal = document.getElementById('customAlertModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+            // تحويل المستخدم لصفحة التتبع بعد إتمام الطلب بنجاح
+            window.location.href = 'track.html';
+        }
+    </script>
+</body>
+</html>
