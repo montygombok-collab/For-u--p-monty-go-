@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Cairo -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Google Identity Services SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         body { font-family: 'Cairo', sans-serif; }
     </style>
@@ -81,10 +83,8 @@
 
             <!-- خيارات التسجيل السريع -->
             <div class="space-y-3 mb-4">
-                <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-900 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
-                    <i class="fa-brands fa-google text-red-500 text-lg ml-2"></i>
-                    <span>التسجيل عبر حساب غوغل</span>
-                </button>
+                <!-- زر غوغل المحدث عبر Google Identity Services المتوافق كلياً مع الهواتف -->
+                <div id="googleBtnContainer" class="w-full flex justify-center"></div>
 
                 <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-[#121212] border border-[#FFB800] text-[#FFB800] font-bold py-3 px-4 rounded-xl hover:bg-[#FFB800]/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
                     <i class="fa-solid fa-store text-[#FFB800] text-lg ml-2"></i>
@@ -148,9 +148,8 @@
         import { 
             getAuth, 
             onAuthStateChanged, 
-            signInWithRedirect,
-            getRedirectResult,
-            GoogleAuthProvider, 
+            GoogleAuthProvider,
+            signInWithCredential,
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
             signOut,
@@ -242,20 +241,41 @@
             }
         }
 
-        // معالجة نتيجة إعادة التوجيه ورصد حالة المستخدم الحية
-        window.addEventListener('DOMContentLoaded', () => {
-            getRedirectResult(auth)
+        // تهيئة Google Identity Services لتسجيل الدخول الآمن والمتوافق مع الموبايل
+        window.addEventListener('load', () => {
+            if (typeof google !== 'undefined') {
+                google.accounts.id.initialize({
+                    client_id: "519930793199-web.apps.googleusercontent.com", // ضع Client ID الخاص بك هنا أو استبدله بـ Web Client ID الفعلي من فايربيس
+                    callback: handleGoogleCredentialResponse
+                });
+                
+                // يمكنك ربط الزر التلقائي أو عرضه داخل الحاوية
+                google.accounts.id.renderButton(
+                    document.getElementById("googleBtnContainer"),
+                    { theme: "outline", size: "large", width: "320", text: "signin_with", locale: "ar" }
+                );
+            }
+        });
+
+        function handleGoogleCredentialResponse(response) {
+            const idToken = response.credential;
+            const credential = GoogleAuthProvider.credential(idToken);
+            
+            signInWithCredential(auth, credential)
                 .then((result) => {
-                    if (result && result.user) {
-                        const user = result.user;
-                        localStorage.setItem('foru_user_email', user.email);
-                        updateUIAfterLogin(user.email);
-                    }
+                    const user = result.user;
+                    localStorage.setItem('foru_user_email', user.email);
+                    updateUIAfterLogin(user.email);
+                    closeAuthModal();
+                    showCustomAlert('نجاح العملية', '✅ تم تسجيل الدخول عبر حساب غوغل بنجاح!');
                 })
                 .catch((error) => {
-                    console.error("Redirect error:", error);
+                    showCustomAlert('خطأ في المصادقة', '❌ خطأ: ' + error.message, true);
                 });
+        }
 
+        // فحص البريد المخزن أو حالة الدخول عند التحميل
+        window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const userEmailFromRedirect = urlParams.get('email');
 
@@ -271,12 +291,10 @@
             }
         });
 
-        // مراقب دائم لحالة المصادقة لتحديث الواجهة فوراً بمجرد عودة المستخدم وتسجيله
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 localStorage.setItem('foru_user_email', user.email);
                 updateUIAfterLogin(user.email);
-                closeAuthModal();
             }
         });
 
@@ -287,14 +305,6 @@
             profileDisplay.classList.add('flex');
             document.getElementById('userEmailSpan').innerText = email;
         }
-
-        window.loginWithGoogle = function() {
-            const provider = new GoogleAuthProvider();
-            provider.setCustomParameters({
-                prompt: 'select_account'
-            });
-            signInWithRedirect(auth, provider);
-        };
 
         window.loginWithSudanPlay = function() {
             const sudanPlayAuthUrl = "https://sudan-play.vercel.app/index.html"; 
