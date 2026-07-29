@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>For-U | فور يو - توصيل طلباتك بسرعة وأمان</title>
+    <title>For-U  فور يو   نصلك قبل ما تطلب </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -48,18 +48,18 @@
         <div class="max-w-md w-full text-center flex flex-col items-center">
             
             <span class="bg-[#FFB800]/10 text-[#FFB800] text-xs font-semibold px-3 py-1 rounded-full border border-[#FFB800]/20 inline-block mb-3">
-                🚀 النظام اللوجستعي الذكي والمتكامل
+
             </span>
 
             <!-- الشعار والعنوان في المنتصف -->
             <div class="mb-4 flex flex-col items-center">
                 <img src="image.jpg" alt="For-U Logo" class="w-20 h-20 object-cover rounded-2xl shadow-2xl border-2 border-[#FFB800]/40 mb-3 animate-pulse">
-                <h1 class="text-3xl font-black tracking-wider mb-1">فور يو <span class="text-[#FFB800] text-base">For-U</span></h1>
+                <h1 class="text-3xl font-black tracking-wider mb-1">فور يو <span class="text-[#FFB800] text-base">FOR-U</span></h1>
                 <p class="text-xs text-gray-400">توصيل طلباتك بسرعة وأمان</p>
             </div>
 
             <p class="text-gray-400 text-sm mb-6 max-w-sm leading-relaxed">
-                منصة متكاملة تربط العملاء، المسوقين، والمناديب، مع نظام تتبع جغرافي ذكي وإدارة دقيقة.
+اطلب طلباتك واعرض  بضاعتك ومنتجاتك 
             </p>
 
             <!-- زر البدء أو اطلب الآن في المنتصف -->
@@ -77,32 +77,26 @@
         </div>
     </main>
 
-    <!-- نافذة المصادقة (تظهر تلقائياً عند الدخول إذا لم يكن المستخدم مسجلاً) -->
+    <!-- نافذة المصادقة -->
     <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-md w-full relative shadow-2xl">
-            <!-- ملاحظة: تم إزالة زر الإغلاق (X) الإجباري هنا لضمان إتمام تسجيل الدخول أولاً -->
             
             <div class="text-center mb-5">
                 <img src="image.jpg" alt="For-U Logo" class="w-14 h-14 object-cover mx-auto rounded-xl mb-2 shadow-lg border border-[#FFB800]/30">
                 <h3 id="modalTitle" class="text-xl font-bold">تسجيل الدخول / إنشاء حساب</h3>
-                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">يرجى تسجيل الدخول والمضي قدماً لمتابعة استخدام النظام</p>
+                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">يرجى تسجيل الدخول والمضي قدماً </p>
             </div>
 
             <div class="space-y-3 mb-3">
                 <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-800 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-3 space-x-reverse text-sm">
                     <i class="fa-brands fa-google text-red-500 text-lg"></i>
-                    <span>التسجيل أو الدخول بواسطة Google</span>
-                </button>
-
-                <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-[#121212] border border-[#FFB800] text-[#FFB800] font-bold py-3 px-4 rounded-xl hover:bg-[#FFB800]/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse text-sm">
-                    <i class="fa-solid fa-store text-[#FFB800] text-lg ml-2"></i>
-                    <span>التسجيل عبر حساب سودان بلاي</span>
+                    <span>التسجيل أو  بواسطة Google</span>
                 </button>
             </div>
 
             <div class="relative flex py-2 items-center">
                 <div class="flex-grow border-t border-gray-700"></div>
-                <span class="flex-shrink mx-4 text-gray-500 text-xs">أو بالبريد الإلكتروني</span>
+                <span class="flex-shrink mx-4 text-gray-500 text-xs">سجل بالبريد الإلكتروني</span>
                 <div class="flex-grow border-t border-gray-700"></div>
             </div>
 
@@ -120,7 +114,7 @@
                     <input type="password" id="password" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="••••••••">
                 </div>
                 <button type="submit" id="submitBtnText" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-1 text-sm">
-                    دخول بالنظام
+                    دخول 
                 </button>
             </form>
 
@@ -210,7 +204,6 @@
         };
 
         window.closeAuthModal = function() {
-            // مغلقة لمنع التخطي إذا لم يكن المستخدم مسجلاً
             const savedEmail = localStorage.getItem('foru_user_email');
             if(!savedEmail) {
                 showCustomAlert('تنبيه مطلوب', '⚠️ يجب تسجيل الدخول أو إنشاء حساب أولاً للمضي قدماً في النظام.', true);
@@ -259,7 +252,6 @@
             if (savedEmail) {
                 updateUIAfterLogin(savedName || savedEmail);
             } else {
-                // إظهار نافذة تسجيل الدخول فوراً تلقائياً عند فتح الصفحة لأول مرة
                 openAuthModal('login');
             }
         });
@@ -274,21 +266,17 @@
         });
 
         function updateUIAfterLogin(displayName) {
-            // إخفاء أزرار تسجيل الدخول من الهيدر
             document.getElementById('authButtonsContainer').classList.add('hidden');
             
-            // إظهار البروفايل بالاسم في الهيدر
             const profileDisplay = document.getElementById('userProfileDisplay');
             profileDisplay.classList.remove('hidden');
             profileDisplay.classList.add('flex');
             document.getElementById('userNameSpan').innerText = displayName;
 
-            // إغلاق نافذة المصادقة تلقائياً بعد نجاح الدخول
             const modal = document.getElementById('authModal');
             modal.classList.remove('flex');
             modal.classList.add('hidden');
 
-            // استبدال زر "ابدأ الآن / تسجيل الدخول" في المنتصف
             const centerContainer = document.getElementById('centerActionContainer');
             centerContainer.innerHTML = `
                 <a href="customer.html" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
@@ -319,12 +307,6 @@
                 });
         };
 
-        window.loginWithSudanPlay = function() {
-            const sudanPlayAuthUrl = "https://sudan-play.vercel.app/index.html"; 
-            const currentRedirectUrl = window.location.href.split('?')[0];
-            window.location.href = `${sudanPlayAuthUrl}?redirect_uri=${encodeURIComponent(currentRedirectUrl)}`;
-        };
-
         window.handleEmailAuth = function(event) {
             event.preventDefault();
             const email = document.getElementById('email').value;
@@ -339,7 +321,7 @@
                         localStorage.setItem('foru_user_name', displayName);
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(displayName);
-                        showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب الجديد وتسجيل الدخول بنجاح!');
+                        showCustomAlert("نجاح التسجيل', '✅ تم إنشاء الحساب الجديد وتسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
                         showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.message, true);
@@ -365,13 +347,11 @@
                 localStorage.removeItem('foru_user_name');
                 localStorage.removeItem('foru_user_email');
                 
-                // إعادة إظهار أزرار الدخول في الهيدر
                 const profileDisplay = document.getElementById('userProfileDisplay');
                 profileDisplay.classList.remove('flex');
                 profileDisplay.classList.add('hidden');
                 document.getElementById('authButtonsContainer').classList.remove('hidden');
 
-                // إعادة زر "ابدأ الآن / تسجيل الدخول" الأساسي في المنتصف
                 const centerContainer = document.getElementById('centerActionContainer');
                 centerContainer.innerHTML = `
                     <button id="centerActionBtn" onclick="openAuthModal('login')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
@@ -383,7 +363,6 @@
                 `;
 
                 showCustomAlert('تسجيل الخروج', '👋 تم تسجيل الخروج بنجاح');
-                // إعادة فتح نافذة الدخول إجبارياً بعد تسجيل الخروج
                 openAuthModal('login');
             });
         };
