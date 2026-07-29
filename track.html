@@ -46,40 +46,56 @@
     <!-- المحتوى الرئيسي -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl space-y-6">
         
-        <!-- معلومات حالة الطلب -->
-        <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
-            <div class="flex justify-between items-center border-b border-gray-700 pb-3">
-                <div>
-                    <span class="text-xs text-gray-400">رقم الطلب:</span>
-                    <h2 id="displayOrderId" class="text-xl font-black text-brandYellow">---</h2>
-                </div>
-                <div id="displayStatus" class="bg-yellow-500/10 text-brandYellow px-3 py-1.5 rounded-xl text-xs font-bold border border-yellow-500/20">
-                    جاري البحث في السحابة...
-                </div>
+        <!-- رسالة عدم وجود طلبات (تظهر عند عدم توفر طلب) -->
+        <div id="noOrdersBox" class="hidden bg-brandCard border border-gray-800 p-10 rounded-3xl shadow-xl text-center space-y-4">
+            <div class="w-16 h-16 bg-brandYellow/10 text-brandYellow rounded-full flex items-center justify-center mx-auto text-2xl border border-brandYellow/20">
+                <i class="fa-solid fa-box-open"></i>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm pt-2">
-                <div class="bg-brandDark p-3.5 rounded-2xl border border-gray-800">
-                    <span class="text-xs text-gray-400 block mb-1">اسم العميل:</span>
-                    <span id="displayClientName" class="font-bold text-white">---</span>
-                </div>
-                <div class="bg-brandDark p-3.5 rounded-2xl border border-gray-800">
-                    <span class="text-xs text-gray-400 block mb-1">التكلفة الإجمالية:</span>
-                    <span id="displayCost" class="font-bold text-brandYellow">---</span>
-                </div>
-                <div class="bg-brandDark p-3.5 rounded-2xl border border-gray-800">
-                    <span class="text-xs text-gray-400 block mb-1">المندوب المسؤول:</span>
-                    <span id="displayDriver" class="font-bold text-blue-400">لم يُسند بعد</span>
-                </div>
+            <h2 class="text-xl font-bold text-white">لا يوجد طلبات لتتبعها</h2>
+            <p class="text-sm text-gray-400">لم يتم العثور على أي طلب نشط مرتبط بهذا الرابط أو في سجل المتصفح.</p>
+            <div class="pt-2">
+                <a href="customer.html" class="inline-block bg-brandYellow text-brandDark font-bold px-6 py-3 rounded-xl hover:bg-yellow-400 transition text-sm">
+                    إنشاء طلب توصيل جديد
+                </a>
             </div>
         </div>
 
-        <!-- الخريطة -->
-        <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
-            <h2 class="text-lg font-bold flex items-center">
-                <i class="fa-solid fa-map-location-dot text-brandYellow ml-2"></i> موقع تسليم الطلب المحدد
-            </h2>
-            <div id="map"></div>
+        <!-- قسم معلومات حالة الطلب (يظهر عند وجود طلب) -->
+        <div id="orderContentBox" class="space-y-6">
+            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
+                <div class="flex justify-between items-center border-b border-gray-700 pb-3">
+                    <div>
+                        <span class="text-xs text-gray-400">رقم الطلب:</span>
+                        <h2 id="displayOrderId" class="text-xl font-black text-brandYellow">---</h2>
+                    </div>
+                    <div id="displayStatus" class="bg-yellow-500/10 text-brandYellow px-3 py-1.5 rounded-xl text-xs font-bold border border-yellow-500/20">
+                        جاري جلب البيانات...
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm pt-2">
+                    <div class="bg-brandDark p-3.5 rounded-2xl border border-gray-800">
+                        <span class="text-xs text-gray-400 block mb-1">اسم العميل:</span>
+                        <span id="displayClientName" class="font-bold text-white">---</span>
+                    </div>
+                    <div class="bg-brandDark p-3.5 rounded-2xl border border-gray-800">
+                        <span class="text-xs text-gray-400 block mb-1">التكلفة الإجمالية:</span>
+                        <span id="displayCost" class="font-bold text-brandYellow">---</span>
+                    </div>
+                    <div class="bg-brandDark p-3.5 rounded-2xl border border-gray-800">
+                        <span class="text-xs text-gray-400 block mb-1">المندوب المسؤول:</span>
+                        <span id="displayDriver" class="font-bold text-blue-400">لم يُسند بعد</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- الخريطة -->
+            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
+                <h2 class="text-lg font-bold flex items-center">
+                    <i class="fa-solid fa-map-location-dot text-brandYellow ml-2"></i> موقع تسليم الطلب المحدد
+                </h2>
+                <div id="map"></div>
+            </div>
         </div>
 
     </main>
@@ -115,47 +131,75 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
         let marker = null;
 
+        function renderOrderData(data) {
+            document.getElementById('displayOrderId').innerText = data.orderId || '---';
+            document.getElementById('displayClientName').innerText = data.clientName || '---';
+            document.getElementById('displayCost').innerText = (data.cost ? data.cost.toLocaleString() : '0') + ' جنيه';
+            document.getElementById('displayStatus').innerText = data.status === 'pending_supervisor' ? 'بانتظار مراجعة المشرف' : (data.status || 'قيد المعالجة');
+            
+            const driverName = data.driverName || data.assignedDriver;
+            document.getElementById('displayDriver').innerText = driverName ? `${driverName} (${data.driverPhone || ''})` : 'لم يُسند بعد';
+
+            if (data.lat && data.lng) {
+                map.setView([data.lat, data.lng], 15);
+                if (marker) {
+                    marker.setLatLng([data.lat, data.lng]);
+                } else {
+                    marker = L.marker([data.lat, data.lng]).addTo(map);
+                }
+            }
+
+            document.getElementById('orderContentBox').classList.remove('hidden');
+            document.getElementById('noOrdersBox').classList.add('hidden');
+        }
+
         async function fetchOrderDetails() {
             const urlParams = new URLSearchParams(window.location.search);
             const orderIdQuery = urlParams.get('order');
 
             if (!orderIdQuery) {
-                document.getElementById('displayStatus').innerText = 'رقم الطلب غير متوفر في الرابط';
-                return;
-            }
-
-            document.getElementById('displayOrderId').innerText = orderIdQuery;
-
-            try {
-                // البحث عن الطلب في مجموعة orders عبر حقل orderId
-                const q = query(collection(db, "orders"), where("orderId", "==", orderIdQuery));
-                const querySnapshot = await getDocs(q);
-
-                if (querySnapshot.empty) {
-                    document.getElementById('displayStatus').innerText = 'لم يتم العثور على الطلب في السحابة';
+                // فحص التخزين المحلي إذا لم يوجد رقم في الرابط
+                let allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
+                if (allOrders.length > 0) {
+                    // عرض أحدث طلب موجود محلياً
+                    renderOrderData(allOrders[allOrders.length - 1]);
                     return;
                 }
 
-                querySnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    document.getElementById('displayClientName').innerText = data.clientName || '---';
-                    document.getElementById('displayCost').innerText = (data.cost ? data.cost.toLocaleString() : '0') + ' جنيه';
-                    document.getElementById('displayStatus').innerText = data.status || 'جديد';
-                    document.getElementById('displayDriver').innerText = data.assignedDriver || 'لم يُسند بعد';
+                // إذا ماف طلبات نهائياً
+                document.getElementById('orderContentBox').classList.add('hidden');
+                document.getElementById('noOrdersBox').classList.remove('hidden');
+                return;
+            }
 
-                    if (data.lat && data.lng) {
-                        map.setView([data.lat, data.lng], 15);
-                        if (marker) {
-                            marker.setLatLng([data.lat, data.lng]);
-                        } else {
-                            marker = L.marker([data.lat, data.lng]).addTo(map);
-                        }
-                    }
-                });
+            // 1. البحث في التخزين المحلي أولاً لسرعة العرض
+            let allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
+            const localOrder = allOrders.find(o => o.orderId === orderIdQuery);
+
+            if (localOrder) {
+                renderOrderData(localOrder);
+            }
+
+            // 2. البحث في السحابة (Firebase) للتحديث الفوري
+            try {
+                const q = query(collection(db, "orders"), where("orderId", "==", orderIdQuery));
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    querySnapshot.forEach((docSnap) => {
+                        renderOrderData(docSnap.data());
+                    });
+                } else if (!localOrder) {
+                    document.getElementById('orderContentBox').classList.add('hidden');
+                    document.getElementById('noOrdersBox').classList.remove('hidden');
+                }
 
             } catch (error) {
                 console.error("خطأ في جلب تفاصيل التتبع:", error);
-                document.getElementById('displayStatus').innerText = 'خطأ في الاتصال بالسحابة';
+                if (!localOrder) {
+                    document.getElementById('orderContentBox').classList.add('hidden');
+                    document.getElementById('noOrdersBox').classList.remove('hidden');
+                }
             }
         }
 
