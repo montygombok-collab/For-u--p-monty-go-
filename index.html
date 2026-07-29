@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>For-U | فور يو - توصيل طلباتك بسرعة وأمان</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts Cairo -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Cairo', sans-serif; }
@@ -26,12 +23,15 @@
             </div>
         </div>
         <div class="flex space-x-2 space-x-reverse items-center">
-            <div id="userProfileDisplay" class="hidden items-center space-x-2 space-x-reverse">
-                <span id="userEmailSpan" class="text-xs text-[#FFB800] font-semibold"></span>
-                <button onclick="logoutUser()" class="bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-red-500/30 transition">
+            <!-- قسم عرض البريد وحالة تسجيل الدخول -->
+            <div id="userProfileDisplay" class="hidden items-center space-x-2 space-x-reverse bg-[#1E1E1E] border border-gray-800 px-3 py-1.5 rounded-xl">
+                <i class="fa-solid fa-circle-user text-[#FFB800] text-lg"></i>
+                <span id="userEmailSpan" class="text-xs text-white font-semibold"></span>
+                <button onclick="logoutUser()" class="bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold px-2.5 py-1 rounded-lg hover:bg-red-500/30 transition mr-2">
                     خروج
                 </button>
             </div>
+            <!-- أزرار الدخول العادية -->
             <div id="authButtonsContainer" class="flex space-x-2 space-x-reverse">
                 <button onclick="openAuthModal('login')" class="bg-[#1E1E1E] border border-gray-700 text-[#FFB800] text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-800 transition shadow-md flex items-center">
                     <i class="fa-solid fa-right-to-bracket ml-2"></i> تسجيل الدخول
@@ -77,7 +77,6 @@
             </div>
 
             <div class="space-y-3 mb-4">
-                <!-- زر غوغل المباشر عبر Firebase Auth المدمج (يتجاوز مشاكل النطاق تماماً) -->
                 <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-800 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-3 space-x-reverse">
                     <i class="fa-brands fa-google text-red-500 text-lg"></i>
                     <span>التسجيل أو الدخول بواسطة Google</span>
@@ -237,10 +236,17 @@
             }
         }
 
-        // دالة تسجيل الدخول عبر Google باستخدام Firebase Authentication مباشرة (تنشئ الحساب تلقائياً)
+        // فحص الذاكرة المحلية فوراً عند فتح الصفحة لضمان ظهور البريد مباشرة
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedEmail = localStorage.getItem('foru_user_email');
+            if (savedEmail) {
+                updateUIAfterLogin(savedEmail);
+            }
+        });
+
+        // دالة تسجيل الدخول عبر Google وتحديث الواجهة فوراً
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
-            // استخدام Redirect للموبايل لتجنب حظر الـ Popups ومشاكل النطاق
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             
             if (isMobile) {
@@ -262,7 +268,7 @@
             }
         };
 
-        // التحقق من نتيجة العودة في حالة الموبايل Redirect
+        // معالجة نتيجة العودة للموبايل
         getRedirectResult(auth)
             .then((result) => {
                 if (result && result.user) {
@@ -275,13 +281,7 @@
                 console.error("Redirect error:", error);
             });
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedEmail = localStorage.getItem('foru_user_email');
-            if (savedEmail) {
-                updateUIAfterLogin(savedEmail);
-            }
-        });
-
+        // مراقبة حالة المصادقة من فايربيس
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 localStorage.setItem('foru_user_email', user.email);
