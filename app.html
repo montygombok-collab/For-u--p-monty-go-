@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة عمليات الميدان | For-U</title>
+    <title>لوحة عمليات الميدان - مناديب التوصيل | For-U</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -34,120 +34,188 @@
         <div class="flex items-center space-x-3 space-x-reverse">
             <div class="bg-brandYellow text-brandDark font-black text-xl px-3 py-1 rounded-xl">4U</div>
             <div>
-                <h1 id="panelTitle" class="text-lg font-bold">لوحة العمليات الميدانية</h1>
-                <p id="userRoleSubtitle" class="text-xs text-brandYellow">جارٍ تحديد الصلاحية...</p>
+                <h1 id="panelTitle" class="text-lg font-bold">بوابة مناديب التوصيل الميداني</h1>
+                <p id="userRoleSubtitle" class="text-xs text-brandYellow">جارٍ التحقق من الصلاحية...</p>
             </div>
         </div>
-        <button onclick="logout()" class="text-gray-400 hover:text-red-400 text-sm flex items-center">
+        <button onclick="logout()" class="text-gray-400 hover:text-red-400 text-sm flex items-center bg-brandCard border border-gray-700 px-3 py-2 rounded-xl">
             <i class="fa-solid fa-right-from-bracket ml-1"></i> خروج
         </button>
     </header>
 
-    <!-- المحتوى الرئيسي المتغير حسب الصلاحية -->
+    <!-- المحتوى الرئيسي (خاص بالمناديب فقط) -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
-        
-        <!-- واجهة المندوب (Driver View) -->
-        <div id="driverView" class="space-y-6 hidden">
+        <div id="driverView" class="space-y-6">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
-                <h2 class="text-xl font-bold mb-4 flex items-center text-brandYellow">
-                    <i class="fa-solid fa-motorcycle ml-2"></i> الطلبات المسندة إليك للتوصيل
+                <h2 class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
+                    <i class="fa-solid fa-motorcycle ml-2"></i> الطلبات المسندة إليك من المشرفين
                 </h2>
                 <div class="space-y-4" id="driverOrdersList">
-                    <!-- عنصر نموذج لطلب مسند -->
-                    <div class="bg-brandDark border border-gray-700 p-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
-                            <span class="bg-yellow-500/10 text-brandYellow text-xs px-2.5 py-1 rounded-lg border border-yellow-500/20 font-bold">قيد التوصيل</span>
-                            <h3 class="font-bold text-base mt-2">عميل: أحمد محمد</h3>
-                            <p class="text-xs text-gray-400">الوصف: طرد مستندات رسمية (الخرطوم - أمدرمان)</p>
-                            <p class="text-xs text-brandYellow mt-1 font-semibold">المبلغ المطلوب تحصيله: 2,500 جنيه</p>
-                        </div>
-                        <div class="flex gap-2 w-full md:w-auto">
-                            <button onclick="updateOrderStatus('delivered')" class="flex-1 md:flex-none bg-green-600 hover:bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-xl transition">
-                                <i class="fa-solid fa-check ml-1"></i> تم التسليم
-                            </button>
-                        </div>
+                    <div class="bg-brandDark border border-gray-700 p-4 rounded-2xl text-center text-gray-400">
+                        جاري جلب الطلبات الميدانية...
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- واجهة المسوق (Marketer View) -->
-        <div id="marketerView" class="space-y-6 hidden">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl">
-                    <p class="text-xs text-gray-400">إجمالي العملاء المسجلين برمزك</p>
-                    <h3 class="text-2xl font-black text-brandYellow mt-1">14 عميل</h3>
-                </div>
-                <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl">
-                    <p class="text-xs text-gray-400">العمولات المستحقة</p>
-                    <h3 class="text-2xl font-black text-green-400 mt-1">18,500 جنيه</h3>
-                </div>
-            </div>
-
-            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
-                <h2 class="text-xl font-bold border-b border-gray-700 pb-3 flex items-center text-brandYellow">
-                    <i class="fa-solid fa-user-plus ml-2"></i> تسجیل عميل جديد تحت كود التسويق الخاص بك
-                </h2>
-                <div>
-                    <label class="block text-sm text-gray-300 mb-1">اسم العميل</label>
-                    <input type="text" id="mClientName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="اسم العميل الكامل">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-300 mb-1">رقم الهاتف</label>
-                    <input type="tel" id="mClientPhone" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="09xxxxxxxx">
-                </div>
-                <button onclick="registerMarketerClient()" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg">
-                    حفظ العميل وربطه بحسابك
-                </button>
-            </div>
-        </div>
-
     </main>
+
+    <!-- نافذة التنبيهات المخصصة -->
+    <div id="customAlertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-brandCard border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
+            <h4 id="alertTitle" class="text-xl font-bold mb-2 text-brandYellow">تنبيه النظام</h4>
+            <p id="alertMessage" class="text-gray-300 text-sm mb-6 leading-relaxed">رسالة...</p>
+            <button onclick="closeCustomAlert()" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg text-sm">
+                حسنًا
+            </button>
+        </div>
+    </div>
 
     <!-- الفوتر -->
     <footer class="p-4 text-center border-t border-gray-800 text-gray-500 text-sm">
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- سكريبت إدارة واجهة الميدان بناءً على الرابط -->
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const role = urlParams.get('role');
+    <!-- ربط Firebase والتحقق من الصلاحية وجلب الطلبات -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const driverView = document.getElementById('driverView');
-        const marketerView = document.getElementById('marketerView');
-        const userRoleSubtitle = document.getElementById('userRoleSubtitle');
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
+            authDomain: "for-u-56f3f.firebaseapp.com",
+            projectId: "for-u-56f3f",
+            storageBucket: "for-u-56f3f.firebasestorage.app",
+            messagingSenderId: "519930793199",
+            appId: "1:519930793199:web:0c876d149832cd0a8d5f1a",
+            measurementId: "G-2ZV3NGRYZG"
+        };
 
-        if (role === 'driver') {
-            driverView.classList.remove('hidden');
-            userRoleSubtitle.innerText = 'صلاحية: مندوب توصيل ميداني';
-        } else if (role === 'marketer') {
-            marketerView.classList.remove('hidden');
-            userRoleSubtitle.innerText = 'صلاحية: مسوق معتمد';
-        } else {
-            userRoleSubtitle.innerText = 'صلاحية غير متوفرة';
-            alert('صلاحية غير صالحة.');
-            window.location.href = 'index.html';
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentDriverName = '';
+
+        window.showCustomAlert = function(title, message) {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            const modal = document.getElementById('customAlertModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
         }
 
-        function updateOrderStatus(status) {
-            alert('تم تحديث حالة الطلب بنجاح إلى: ' + status);
+        window.closeCustomAlert = function() {
+            const modal = document.getElementById('customAlertModal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
         }
 
-        function registerMarketerClient() {
-            const name = document.getElementById('mClientName').value;
-            const phone = document.getElementById('mClientPhone').value;
-            if(!name || !phone) {
-                alert('الرجاء إدخال بيانات العميل كاملة.');
-                return;
+        // التحقق من حالة تسجيل الدخول وصلاحية المستخدم من قاعدة البيانات
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userRef = doc(db, "users", user.uid);
+                    const userSnap = await getDoc(userRef);
+
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
+                        const role = userData.role || '';
+                        currentDriverName = userData.name || userData.fullName || user.email.split('@')[0];
+
+                        // التحقق هل هو مندوب توصيل أم لا؟
+                        if (role !== 'مندوب توصيل' && role !== 'driver') {
+                            showCustomAlert('غير مصرح', 'عذراً، هذه الصفحة مخصصة لمناديب التوصيل فقط.');
+                            setTimeout(() => {
+                                window.location.href = 'index.html';
+                            }, 2000);
+                            return;
+                        }
+
+                        document.getElementById('userRoleSubtitle').innerText = `المندوب: ${currentDriverName} (صلاحية: مندوب توصيل)`;
+                        fetchAssignedOrders();
+                    } else {
+                        showCustomAlert('خطأ', 'لم يتم العثور على بيانات الحساب.');
+                        window.location.href = 'index.html';
+                    }
+                } catch (err) {
+                    console.error("خطأ في التحقق من الصلاحية:", err);
+                }
+            } else {
+                // إذا لم يكن مسجلاً للدخول، يتم توجيهه للرئيسية
+                window.location.href = 'index.html';
             }
-            alert('تم تسجيل العميل بنجاح تحت حسابك التسويقي.');
-            document.getElementById('mClientName').value = '';
-            document.getElementById('mClientPhone').value = '';
+        });
+
+        // جلب الطلبات المسندة خصيصاً لهذا المندوب من مجموعة orders في Firestore
+        async function fetchAssignedOrders() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "orders"));
+                const ordersListContainer = document.getElementById('driverOrdersList');
+                ordersListContainer.innerHTML = '';
+
+                let assignedOrders = [];
+                querySnapshot.forEach((docSnap) => {
+                    const orderData = docSnap.data();
+                    // مطابقة الطلبات المسندة باسم المندوب الحالي
+                    if (orderData.assignedDriver === currentDriverName && orderData.status !== 'منجز') {
+                        assignedOrders.push({ id: docSnap.id, ...orderData });
+                    }
+                });
+
+                if (assignedOrders.length === 0) {
+                    ordersListContainer.innerHTML = `
+                        <div class="bg-brandDark border border-gray-700 p-6 rounded-2xl text-center text-gray-400">
+                            <i class="fa-solid fa-box-open text-3xl mb-2 text-gray-500"></i>
+                            <p>لا توجد طلبات توصيل مسندة إليك حالياً من قِبل المشرفين.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                assignedOrders.forEach(order => {
+                    ordersListContainer.innerHTML += `
+                        <div class="bg-brandDark border border-gray-700 p-4 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <span class="bg-yellow-500/10 text-brandYellow text-xs px-2.5 py-1 rounded-lg border border-yellow-500/20 font-bold">${order.status || 'قيد التوصيل'}</span>
+                                <h3 class="font-bold text-base mt-2">عميل: ${order.clientName || 'غير متوفر'}</h3>
+                                <p class="text-xs text-gray-400">الوصف: ${order.description || 'توصيل طلب سحابي'}</p>
+                                <p class="text-xs text-gray-400 mt-0.5">رقم الهاتف: <span class="text-white font-bold">${order.clientPhone || 'غير متوفر'}</span></p>
+                                <p class="text-xs text-brandYellow mt-1 font-semibold">المبلغ المطلوب تحصيله: ${(order.cost || 0).toLocaleString()} جنيه</p>
+                            </div>
+                            <div class="flex gap-2 w-full md:w-auto">
+                                <button onclick="updateOrderStatus('${order.id}')" class="flex-1 md:flex-none bg-green-600 hover:bg-green-500 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition shadow-lg">
+                                    <i class="fa-solid fa-check ml-1"></i> تم التسليم / إنجاز
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+            } catch (error) {
+                console.error("خطأ في جلب الطلبات:", error);
+                document.getElementById('driverOrdersList').innerHTML = `<p class="text-center text-red-400">حدث خطأ أثناء تحميل الطلبات.</p>`;
+            }
         }
 
-        function logout() {
-            window.location.href = 'index.html';
+        // تحديث حالة الطلب إلى "منجز" عند الضغط على تم التسليم
+        window.updateOrderStatus = async function(orderId) {
+            try {
+                await updateDoc(doc(db, "orders", orderId), {
+                    status: 'منجز'
+                });
+                showCustomAlert('تم بنجاح', 'تم تحديث حالة الطلب إلى (منجز) بنجاح.');
+                fetchAssignedOrders();
+            } catch (err) {
+                console.error(err);
+                showCustomAlert('خطأ', 'فشل تحديث حالة الطلب.');
+            }
+        }
+
+        window.logout = function() {
+            auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            });
         }
     </script>
 </body>
