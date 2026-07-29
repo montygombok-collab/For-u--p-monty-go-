@@ -60,9 +60,9 @@
         <p>فور يو (For-U) - نصلك قبل ما تطلب &copy; 2026</p>
     </footer>
 
-    <!-- نافذة تأكيد الطلب -->
+    <!-- نافذة تأكيد الطلب مع تحديد الموقع -->
     <div id="orderModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-md w-full relative shadow-2xl">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-md w-full relative shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 class="text-lg font-bold mb-1 text-[#FFB800]">إتمام طلب المنتج</h3>
             <p id="modalProductName" class="text-xs text-gray-300 mb-4 font-semibold"></p>
             
@@ -77,12 +77,25 @@
                 </div>
                 <div>
                     <label class="block text-xs text-gray-300 mb-1">عنوان التوصيل بالتفصيل</label>
-                    <textarea id="orderCustomerAddress" required rows="2" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FFB800] outline-none" placeholder="المدينة، الحي، شارع..."></textarea>
+                    <textarea id="orderCustomerAddress" required rows="2" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-xs text-white focus:border-[#FFB800] outline-none" placeholder="المدينة، الحي، العلامة المميزة..."></textarea>
                 </div>
                 
+                <!-- زر تحديد الموقع الجغرافي الفوري -->
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">الموقع الجغرافي على الخريطة</label>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="detectClientLocation()" class="flex-grow bg-gray-800 hover:bg-gray-700 border border-gray-700 text-[#FFB800] font-bold py-2 px-3 rounded-xl transition text-xs flex items-center justify-center">
+                            <i class="fa-solid fa-location-crosshairs ml-1.5"></i> <span id="locationBtnText">تحديد موقعي الحالي تلقائياً</span>
+                        </button>
+                    </div>
+                    <input type="hidden" id="orderLat">
+                    <input type="hidden" id="orderLng">
+                    <p id="locationStatus" class="text-[10px] text-gray-400 mt-1">لم يتم تحديد الموقع بعد (اختياري لكن مفضل لسرعة التوصيل)</p>
+                </div>
+
                 <div class="flex space-x-2 space-x-reverse pt-2">
                     <button type="submit" class="flex-grow bg-[#FFB800] text-[#121212] font-bold py-2.5 rounded-xl hover:bg-yellow-400 transition text-xs shadow">
-                        تأكيد وإرسال الطلب
+                        تأكيد وإرسال الطلب للمشرف
                     </button>
                     <button type="button" onclick="closeOrderModal()" class="bg-gray-800 text-gray-300 font-bold px-4 py-2.5 rounded-xl hover:bg-gray-700 transition text-xs">
                         إلغاء
@@ -135,7 +148,6 @@
             }
         });
 
-        // جلب المنتجات الحقيقية من قاعدة بيانات Firestore (مجموعة products) والتخزين المحلي
         async function fetchMarketProducts() {
             const grid = document.getElementById('marketProductsGrid');
             try {
@@ -145,11 +157,9 @@
                     allProductsList.push({ id: doc.id, ...doc.data() });
                 });
 
-                // دمج أو جلب المنتجات من التخزين المحلي لضمان ظهور المنتجات المضافة فوراً
                 const localStored = localStorage.getItem('foru_store_products');
                 if (localStored) {
                     const localProducts = JSON.parse(localStored);
-                    // دمج فريد يعتمد على المعرف أو الاسم
                     localProducts.forEach(lp => {
                         if (!allProductsList.some(p => p.name === lp.name)) {
                             allProductsList.push(lp);
@@ -159,7 +169,6 @@
 
                 renderProducts(allProductsList);
             } catch (error) {
-                console.error("Error fetching products: ", error);
                 const localStored = localStorage.getItem('foru_store_products');
                 allProductsList = localStored ? JSON.parse(localStored) : [];
                 renderProducts(allProductsList);
@@ -214,6 +223,11 @@
         window.openOrderModalFromIndex = function(product) {
             selectedProductForOrder = product;
             document.getElementById('modalProductName').innerText = `المنتج: ${product.name} - السعر: ${product.price} ج.س (${product.store || 'متجر معتمد'})`;
+            document.getElementById('orderLat').value = "";
+            document.getElementById('orderLng').value = "";
+            document.getElementById('locationStatus').innerText = "لم يتم تحديد الموقع بعد (اختياري لكن مفضل لسرعة التوصيل)";
+            document.getElementById('locationBtnText').innerText = "تحديد موقعي الحالي تلقائياً";
+            
             const modal = document.getElementById('orderModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -225,11 +239,43 @@
             modal.classList.add('hidden');
         };
 
+        // دالة تحديد موقع العميل جغرافياً
+        window.detectClientLocation = function() {
+            const statusText = document.getElementById('locationStatus');
+            const btnText = document.getElementById('locationBtnText');
+            
+            if (!navigator.geolocation) {
+                statusText.innerText = "متصفحك لا يدعم تحديد الموقع الجغرافي.";
+                return;
+            }
+
+            btnText.innerText = "جاري تحديد الموقع...";
+            statusText.innerText = "يرجى السماح للمتصفح بالوصول إلى موقعك...";
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    document.getElementById('orderLat').value = lat;
+                    document.getElementById('orderLng').value = lng;
+                    btnText.innerText = "تم تحديث الموقع بنجاح ✓";
+                    statusText.innerHTML = `<span class="text-green-400">تم تحديد الإحداثيات بنجاح (خط العرض: ${lat.toFixed(4)}, خط الطول: ${lng.toFixed(4)})</span>`;
+                },
+                (error) => {
+                    btnText.innerText = "إعادة المحاولة";
+                    statusText.innerHTML = `<span class="text-red-400">تعذر تحديد الموقع. تأكد من تفعيل خدمة الموقع في جهازك.</span>`;
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        };
+
         window.submitOrder = async function(event) {
             event.preventDefault();
             const name = document.getElementById('orderCustomerName').value;
             const phone = document.getElementById('orderCustomerPhone').value;
             const address = document.getElementById('orderCustomerAddress').value;
+            const lat = document.getElementById('orderLat').value || null;
+            const lng = document.getElementById('orderLng').value || null;
 
             const newOrder = {
                 id: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
@@ -239,6 +285,8 @@
                 customerName: name,
                 customerPhone: phone,
                 customerAddress: address,
+                customerLat: lat,
+                customerLng: lng,
                 status: 'قيد المراجعة',
                 date: new Date().toLocaleString()
             };
@@ -254,7 +302,7 @@
             localStorage.setItem('foru_store_orders', JSON.stringify(existingOrders));
 
             closeOrderModal();
-            showCustomAlert('نجاح الطلب', `✅ تم إرسال طلبك بنجاح!\nرقم الطلب: ${newOrder.id}\nسيتم تحويلك لصفحة التتبع الآن.`);
+            showCustomAlert('نجاح الطلب', `✅ تم إرسال طلبك وموقعك بنجاح!\nرقم الطلب: ${newOrder.id}\nسيتم تحويلك لصفحة التتبع الآن.`);
         };
 
         function showCustomAlert(title, message) {
