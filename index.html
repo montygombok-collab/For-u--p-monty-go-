@@ -170,7 +170,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
-        // ضبط نظام الحفظ محلياً لتفادي مشاكل الجلسة
         setPersistence(auth, browserLocalPersistence).catch((error) => {
             console.error("Auth persistence error:", error);
         });
@@ -273,9 +272,13 @@
             document.getElementById('userEmailSpan').innerText = email;
         }
 
-        // العودة لاستخدام signInWithPopup بشكل سليم وآمن
+        // إعداد مزود غوغل مع إضافة معاملات لغة وتجاوز قيود الجلسة على الموبايل
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
+            provider.setCustomParameters({
+                prompt: 'select_account'
+            });
+            
             signInWithPopup(auth, provider)
                 .then((result) => {
                     const user = result.user;
