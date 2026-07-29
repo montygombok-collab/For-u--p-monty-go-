@@ -46,8 +46,8 @@
                     <input type="text" id="storeNameInput" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="مثال: متجر السعادة">
                 </div>
                 <div>
-                    <label class="block text-xs text-gray-400 mb-1">رابط صورة اللوغو (صورة فعلية)</label>
-                    <input type="url" id="storeLogoInput" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="https://example.com/logo.jpg">
+                    <label class="block text-xs text-gray-400 mb-1">شعار المتجر (رفع ملف صورة)</label>
+                    <input type="file" id="storeLogoFile" accept="image/*" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-1.5 text-xs text-gray-300 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#FFB800] file:text-[#121212] hover:file:bg-yellow-400 outline-none">
                 </div>
                 <div>
                     <label class="block text-xs text-gray-400 mb-1">رقم هاتف المتجر</label>
@@ -89,8 +89,8 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">رابط صورة المنتج (صورة فعلية)</label>
-                        <input type="url" id="prodImage" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2 text-sm text-white focus:border-[#FFB800] outline-none" placeholder="https://example.com/item.jpg">
+                        <label class="block text-xs text-gray-400 mb-1">صورة المنتج (رفع ملف)</label>
+                        <input type="file" id="prodImageFile" accept="image/*" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-1.5 text-xs text-gray-300 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#FFB800] file:text-[#121212] hover:file:bg-yellow-400 outline-none">
                     </div>
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">معلومات عن المنتج</label>
@@ -120,7 +120,6 @@
                 </div>
                 
                 <div id="storeOrdersContainer" class="space-y-3 max-h-[450px] overflow-y-auto">
-                    <!-- يتم جلب الطلبات الواردة هنا ديناميكياً -->
                     <div class="text-center py-10 text-gray-500 text-xs">جاري تحميل الطلبات الواردة...</div>
                 </div>
             </section>
@@ -128,7 +127,7 @@
         </div>
     </main>
 
-    <!-- سكربت إدارة المتجر والربط الحقيقي بـ Firebase والتخزين المشترك -->
+    <!-- سكربت إدارة المتجر والربط بـ Firebase وتحويل الملفات لصور حقيقية -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
@@ -152,15 +151,30 @@
             await loadIncomingOrders();
         });
 
-        window.saveStoreSettings = function(event) {
+        // دالة مساعدة لقراءة الملف المرفوع وتحويله إلى Base64 لعرضه وحفظه مباشرة
+        function convertFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        window.saveStoreSettings = async function(event) {
             event.preventDefault();
             const name = document.getElementById('storeNameInput').value;
-            const logo = document.getElementById('storeLogoInput').value;
             const phone = document.getElementById('storePhoneInput').value;
             const email = document.getElementById('storeEmailInput').value;
+            const logoFile = document.getElementById('storeLogoFile').files[0];
+
+            let logoUrl = localStorage.getItem('foru_store_logo') || "https://via.placeholder.com/150";
+            if (logoFile) {
+                logoUrl = await convertFileToBase64(logoFile);
+            }
 
             localStorage.setItem('foru_store_name', name);
-            localStorage.setItem('foru_store_logo', logo);
+            localStorage.setItem('foru_store_logo', logoUrl);
             localStorage.setItem('foru_store_phone', phone);
             localStorage.setItem('foru_store_email', email);
 
@@ -178,7 +192,6 @@
             document.getElementById('headerStoreLogo').src = logo;
 
             document.getElementById('storeNameInput').value = name !== "متجر افتراضي" ? name : "";
-            document.getElementById('storeLogoInput').value = logo !== "https://via.placeholder.com/150" ? logo : "";
             document.getElementById('storePhoneInput').value = phone !== "0900000000" ? phone : "";
             document.getElementById('storeEmailInput').value = email !== "store@foru.com" ? email : "";
         }
@@ -188,27 +201,30 @@
             const name = document.getElementById('prodName').value;
             const price = document.getElementById('prodPrice').value;
             const stock = parseInt(document.getElementById('prodStock').value);
-            const image = document.getElementById('prodImage').value;
             const desc = document.getElementById('prodDesc').value;
+            const imageFile = document.getElementById('prodImageFile').files[0];
             const storeName = localStorage.getItem('foru_store_name') || 'متجر معتمد';
 
-            const newProduct = { name, price, stock, image, desc, store: storeName, createdAt: Date.now() };
+            let imageUrl = "https://via.placeholder.com/150";
+            if (imageFile) {
+                imageUrl = await convertFileToBase64(imageFile);
+            }
+
+            const newProduct = { name, price, stock, image: imageUrl, desc, store: storeName, createdAt: Date.now() };
 
             try {
-                // حفظ المنتج في قاعدة بيانات Firestore الحقيقية ليظهر مباشرة في marketplace.html
                 await addDoc(collection(db, "products"), newProduct);
             } catch (e) {
                 console.log("Firestore offline, saving locally.");
             }
 
-            // حفظ احتياطي محلي متزامن مع صفحة السوق
             let products = JSON.parse(localStorage.getItem('foru_store_products') || '[]');
             products.push({ id: Date.now(), ...newProduct });
             localStorage.setItem('foru_store_products', JSON.stringify(products));
 
             document.getElementById('addProductForm').reset();
             await loadProducts();
-            alert("✅ تم إضافة المنتج بنجاح إلى المخزون والسوق العام!");
+            alert("✅ تم رفع الصورة وإضافة المنتج بنجاح إلى المخزون والسوق العام!");
         };
 
         async function loadProducts() {
@@ -270,10 +286,7 @@
                 });
             } catch (e) {}
 
-            // دمج الطلبات المحلية أيضاً لضمان ظهور الطلبات المرسلة من السوق العام فوراً
             let localOrders = JSON.parse(localStorage.getItem('foru_store_orders') || '[]');
-            
-            // دمج القائمتين مع إزالة التكرار
             let allOrdersMap = new Map();
             localOrders.forEach(o => allOrdersMap.set(o.id, o));
             orders.forEach(o => allOrdersMap.set(o.id, o));
