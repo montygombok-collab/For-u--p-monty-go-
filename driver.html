@@ -43,7 +43,7 @@
         </button>
     </header>
 
-    <!-- المحتوى الرئيسي (خاص بالمناديب فقط) -->
+    <!-- المحتوى الرئيسي -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <div id="driverView" class="space-y-6">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
@@ -75,7 +75,7 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- ربط Firebase والتحقق من الصلاحية وجلب كافة الطلبات -->
+    <!-- ربط Firebase والمنطق البرمجي -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -111,7 +111,7 @@
             modal.classList.add('hidden');
         }
 
-        // التحقق من الصلاحية وصلاحية المندوب
+        // التحقق من الصلاحية ومسمى المندوب
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
@@ -155,7 +155,6 @@
                 let availableOrders = [];
                 querySnapshot.forEach((docSnap) => {
                     const orderData = docSnap.data();
-                    // إحضار الطلبات التي لم يتم إنجازها بعد لكي تظهر لكل المناديب ليختاروا منها
                     if (orderData.status !== 'منجز') {
                         availableOrders.push({ id: docSnap.id, ...orderData });
                     }
@@ -257,4 +256,3 @@
     </script>
 </body>
 </html>
-```[cite: 6]
