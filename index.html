@@ -141,14 +141,15 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs ومنطق التوجيه الدقيق حسب الصلاحيات -->
+    <!-- Firebase SDKs ومنطق إعادة التوجيه الفعال -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { 
             getAuth, 
             onAuthStateChanged, 
             GoogleAuthProvider,
-            signInWithPopup,
+            signInWithRedirect,
+            getRedirectResult,
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
             signOut,
@@ -177,7 +178,7 @@
 
         let currentMode = 'login';
 
-        // دالة التوجيه الذكي حسب الصلاحية المسجلة في قاعدة البيانات
+        // دالة التوجيه الدقيق حسب دور المستخدم في قاعدة البيانات
         async function redirectUserByRole(user, customName = '') {
             try {
                 const userRef = doc(db, "users", user.uid);
@@ -191,7 +192,7 @@
                     role = userData.role || 'عميل';
                     userName = userData.name || userName;
                 } else {
-                    // إذا كان الحساب جديداً ولم يتم تحديد صلاحيته، يتم حفظه كـ "عميل" افتراضياً
+                    // إذا كان الحساب جديداً لأول مرة، يتم تسجيله افتراضياً كـ "عميل"
                     await setDoc(userRef, {
                         uid: user.uid,
                         name: userName,
@@ -206,17 +207,16 @@
                 localStorage.setItem('foru_user_email', user.email);
                 localStorage.setItem('foru_user_role', role);
 
-                // التوجيه الدقيق حسب الصلاحية بناءً على طلبك:
+                // التوجيه المباشر حسب دور المستخدم بناءً على طلبك:
                 if (role === 'مدير النظام' || role === 'مشرف طلبات' || role === 'مسؤول دعم' || role === 'admin' || role === 'supervisor' || role === 'support') {
                     window.location.href = 'dashboard.html';
                 } else if (role === 'مندوب توصيل' || role === 'driver') {
                     window.location.href = 'driver.html';
                 } else {
-                    // العميل يبقى أو يعود إلى index.html (تجنباً لحلقة التوجيه اللانهائية، نتأكد ألا تكون الصفحة الحالية index.html بالفعل إلا إذا لزم الأمر، أو نوجهه لـ index.html صراحة)
+                    // العميل يتوجه إلى index.html (أو يتم إخفاء اللودر إذا كان في الصفحة الرئيسية بالفعل)
                     if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/' && window.location.pathname !== '') {
                         window.location.href = 'index.html';
                     } else {
-                        // إذا كان في الصفحة الرئيسية بالفعل، نخفي شاشة التحميل ليظهر محتوى العميل
                         const loader = document.getElementById('loadingOverlay');
                         if(loader) {
                             loader.style.opacity = '0';
@@ -291,9 +291,22 @@
             window.location.href = 'store-dashboard.html';
         };
 
-        // المراقبة التلقائية لحالة الدخول
+        // معالجة نتيجة العودة بعد تسجيل الدخول بـ Google Redirect
+        getRedirectResult(auth)
+            .then(async (result) => {
+                if (result && result.user) {
+                    await redirectUserByRole(result.user);
+                }
+            })
+            .catch((error) => {
+                console.error("Google redirect error:", error);
+                showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
+            });
+
+        // المراقبة التلقائية لحالة الدخول التقليدية
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                // إذا لم يتم معالجته عبر Redirect مسبقاً، يتم توجيهه هنا أيضاً
                 await redirectUserByRole(user);
             } else {
                 const loader = document.getElementById('loadingOverlay');
@@ -304,15 +317,12 @@
             }
         });
 
+        // استخدام نظام إعادة التوجيه (Redirect) لتجاوز مشاكل النوافذ المنبثقة
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider)
-                .then(async (result) => {
-                    await redirectUserByRole(result.user);
-                })
-                .catch((error) => {
-                    showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
-                });
+            signInWithRedirect(auth, provider).catch((error) => {
+                showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
+            });
         };
 
         window.handleEmailAuth = function(event) {
