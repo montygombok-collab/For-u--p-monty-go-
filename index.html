@@ -55,7 +55,7 @@
                     <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة تسجيل الدخول المناسبة</p>
                 </div>
 
-                <!-- حاوية تسجيل الدخول (تختفي بعد الدخول) -->
+                <!-- حاوية تسجيل الدخول (تختفي فور تسجيل الدخول) -->
                 <div id="loginSection">
                     <!-- خيارات التسجيل السريع (غوغل) -->
                     <div class="space-y-3 mb-4">
@@ -139,46 +139,62 @@
         }
         const auth = firebase.auth();
 
-        // فحص بيانات الجلسة عند تحميل الصفحة
+        // مراقبة حالة المستخدم بشكل مباشر من فايربيس
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // إذا كان المستخدم مسجل دخول بالفعل، قم بإخفاء نموذج الدخول وإظهار الملف الشخصي مباشرة
+                updateUIAfterLogin(user.email);
+            } else {
+                // إذا لم يكن مسجل دخول، أظهر نموذج الدخول
+                showLoginUI();
+            }
+        });
+
+        // التحقق من نتيجة العودة بعد تسجيل الدخول عبر غوغل (Redirect)
         window.addEventListener('DOMContentLoaded', () => {
             auth.getRedirectResult()
                 .then((result) => {
                     if (result.user) {
-                        const user = result.user;
-                        localStorage.setItem('foru_user_email', user.email);
-                        updateUIAfterLogin(user.email);
+                        updateUIAfterLogin(result.user.email);
                     }
                 })
                 .catch((error) => {
                     console.error('Google Redirect Error:', error);
                 });
-
-            const savedEmail = localStorage.getItem('foru_user_email');
-            if (savedEmail) {
-                updateUIAfterLogin(savedEmail);
-            } else {
-                auth.onAuthStateChanged(user => {
-                    if (user) {
-                        localStorage.setItem('foru_user_email', user.email);
-                        updateUIAfterLogin(user.email);
-                    }
-                });
-            }
         });
 
-        function updateUIAfterLogin(identifier) {
-            // إخفاء نموذج تسجيل الدخول بالكامل
-            document.getElementById('loginSection').classList.add('hidden');
+        function updateUIAfterLogin(email) {
+            // إخفاء حقول تسجيل الدخول بالكامل فوراً
+            const loginSection = document.getElementById('loginSection');
+            if (loginSection) loginSection.style.display = 'none';
             
-            // تحديث عناوين البطاقة لتصبح خاصة بحساب المستخدم
+            // تغيير عنوان البطاقة
             document.getElementById('modalTitle').innerText = 'حسابي';
             document.getElementById('modalSubtitle').innerText = 'تم تسجيل الدخول بنجاح';
 
             // إظهار بطاقة معلومات المستخدم وزر الخروج
             const profileDisplay = document.getElementById('userProfileDisplay');
-            profileDisplay.classList.remove('hidden');
-            profileDisplay.classList.add('flex');
-            document.getElementById('userEmailSpan').innerText = identifier;
+            if (profileDisplay) {
+                profileDisplay.classList.remove('hidden');
+                profileDisplay.classList.add('flex');
+            }
+            
+            const emailSpan = document.getElementById('userEmailSpan');
+            if (emailSpan) emailSpan.innerText = email;
+        }
+
+        function showLoginUI() {
+            const loginSection = document.getElementById('loginSection');
+            if (loginSection) loginSection.style.display = 'block';
+
+            const profileDisplay = document.getElementById('userProfileDisplay');
+            if (profileDisplay) {
+                profileDisplay.classList.remove('flex');
+                profileDisplay.classList.add('hidden');
+            }
+            
+            document.getElementById('modalTitle').innerText = 'تسجيل الدخول';
+            document.getElementById('modalSubtitle').innerText = 'اختر طريقة تسجيل الدخول المناسبة';
         }
 
         function toggleAuthMode() {
@@ -223,9 +239,7 @@
             if (currentMode === 'register') {
                 auth.createUserWithEmailAndPassword(email, password)
                     .then((userCredential) => {
-                        const user = userCredential.user;
-                        localStorage.setItem('foru_user_email', user.email);
-                        updateUIAfterLogin(user.email);
+                        updateUIAfterLogin(userCredential.user.email);
                     })
                     .catch((error) => {
                         alert('❌ خطأ في إنشاء الحساب: ' + error.message);
@@ -233,9 +247,7 @@
             } else {
                 auth.signInWithEmailAndPassword(email, password)
                     .then((userCredential) => {
-                        const user = userCredential.user;
-                        localStorage.setItem('foru_user_email', user.email);
-                        updateUIAfterLogin(user.email);
+                        updateUIAfterLogin(userCredential.user.email);
                     })
                     .catch((error) => {
                         alert('❌ خطأ في البريد أو كلمة المرور: ' + error.message);
@@ -246,8 +258,7 @@
         // تسجيل الخروج
         function logoutUser() {
             auth.signOut().then(() => {
-                localStorage.removeItem('foru_user_email');
-                location.reload();
+                showLoginUI();
             });
         }
     </script>
