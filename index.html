@@ -21,7 +21,6 @@
     <!-- الهيدر / الشعار -->
     <header class="p-6 flex justify-between items-center border-b border-gray-800">
         <div class="flex items-center space-x-3 space-x-reverse">
-            <!-- الشعار المربع -->
             <img src="image.jpg" alt="For-U Logo" class="w-12 h-12 object-cover rounded-xl shadow-lg border border-[#FFB800]/30">
             <div>
                 <h1 class="text-xl font-bold tracking-wider">فور يو <span class="text-[#FFB800] text-sm">For-U</span></h1>
@@ -29,7 +28,6 @@
             </div>
         </div>
         <div class="flex space-x-2 space-x-reverse items-center">
-            <!-- حالة المستخدم بعد تسجيل الدخول -->
             <div id="userProfileDisplay" class="hidden items-center space-x-2 space-x-reverse">
                 <span id="userEmailSpan" class="text-xs text-[#FFB800] font-semibold"></span>
                 <button onclick="logoutUser()" class="bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-red-500/30 transition">
@@ -59,7 +57,6 @@
             <p class="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">
                 منصة متكاملة تربط العملاء، المسوقين، والمناديب، مع نظام تتبع جغرافي ذكي وإدارة دقيقة للمخازن والماليات.
             </p>
-
             <div class="flex justify-center">
                 <a href="customer.html" class="bg-[#FFB800] text-[#121212] font-bold text-lg px-10 py-4 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center">
                     <i class="fa-solid fa-box-open ml-2"></i> اطلب توصيل طلبك الآن
@@ -77,13 +74,12 @@
             
             <div class="text-center mb-6">
                 <img src="image.jpg" alt="For-U Logo" class="w-16 h-16 object-cover mx-auto rounded-2xl mb-3 shadow-lg border border-[#FFB800]/30">
-                <h3 id="modalTitle" class="text-2xl font-bold">تسجيل الدخول</h3>
-                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة تسجيل الدخول المناسبة</p>
+                <h3 id="modalTitle" class="text-2xl font-bold">تسجيل الدخول / إنشاء حساب</h3>
+                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">اختر طريقة الدخول وسيتم إنشاء حسابك تلقائياً</p>
             </div>
 
-            <!-- خيارات التسجيل السريع -->
             <div class="space-y-3 mb-4">
-                <!-- زر غوغل المحدث عبر Google Identity Services المتوافق كلياً مع الهواتف -->
+                <!-- زر غوغل الآمن عبر Google Identity Services -->
                 <div id="googleBtnContainer" class="w-full flex justify-center"></div>
 
                 <button type="button" onclick="loginWithSudanPlay()" class="w-full bg-[#121212] border border-[#FFB800] text-[#FFB800] font-bold py-3 px-4 rounded-xl hover:bg-[#FFB800]/10 transition shadow flex items-center justify-center space-x-2 space-x-reverse">
@@ -123,7 +119,7 @@
         </div>
     </div>
 
-    <!-- نافذة التنبيه الاحترافية المخصصة -->
+    <!-- نافذة التنبيه -->
     <div id="customAlertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
             <div id="alertIconContainer" class="w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl">
@@ -137,7 +133,6 @@
         </div>
     </div>
 
-    <!-- الفوتر -->
     <footer class="p-6 text-center border-t border-gray-800 text-gray-500 text-sm">
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
@@ -179,7 +174,6 @@
         window.showCustomAlert = function(title, message, isError = false) {
             document.getElementById('alertTitle').innerText = title;
             document.getElementById('alertMessage').innerText = message;
-            
             const iconContainer = document.getElementById('alertIconContainer');
             if (isError) {
                 iconContainer.className = "w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-red-400 text-2xl";
@@ -188,7 +182,6 @@
                 iconContainer.className = "w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl";
                 iconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
             }
-
             const alertModal = document.getElementById('customAlertModal');
             alertModal.classList.remove('hidden');
             alertModal.classList.add('flex');
@@ -227,7 +220,7 @@
             const switchBtn = document.getElementById('switchBtnText');
 
             if (currentMode === 'register') {
-                title.innerText = 'إنشاء حساب بالبريد';
+                title.innerText = 'إنشاء حساب جديد';
                 nameField.classList.remove('hidden');
                 submitBtn.innerText = 'تسجيل الحساب';
                 switchPrompt.innerText = 'لديك حساب بالفعل؟';
@@ -241,22 +234,22 @@
             }
         }
 
-        // تهيئة Google Identity Services لتسجيل الدخول الآمن والمتوافق مع الموبايل
+        // تهيئة Google Identity Services (تأكد من وضع الـ Web Client ID الخاص بمشروعك في client_id)
         window.addEventListener('load', () => {
             if (typeof google !== 'undefined') {
                 google.accounts.id.initialize({
-                    client_id: "519930793199-web.apps.googleusercontent.com", // ضع Client ID الخاص بك هنا أو استبدله بـ Web Client ID الفعلي من فايربيس
+                    client_id: "519930793199-YOUR_WEB_CLIENT_ID.apps.googleusercontent.com", // استبدل هذا المعرف بالمعرف الفعلي من لوحة تحكم فايربيس
                     callback: handleGoogleCredentialResponse
                 });
                 
-                // يمكنك ربط الزر التلقائي أو عرضه داخل الحاوية
                 google.accounts.id.renderButton(
                     document.getElementById("googleBtnContainer"),
-                    { theme: "outline", size: "large", width: "320", text: "signin_with", locale: "ar" }
+                    { theme: "outline", size: "large", width: "320", text: "continue_with", locale: "ar" }
                 );
             }
         });
 
+        // دالة التعامل مع استجابة غوغل (إنشاء الحساب تلقائياً أو تسجيل الدخول إذا كان موجوداً)
         function handleGoogleCredentialResponse(response) {
             const idToken = response.credential;
             const credential = GoogleAuthProvider.credential(idToken);
@@ -267,27 +260,17 @@
                     localStorage.setItem('foru_user_email', user.email);
                     updateUIAfterLogin(user.email);
                     closeAuthModal();
-                    showCustomAlert('نجاح العملية', '✅ تم تسجيل الدخول عبر حساب غوغل بنجاح!');
+                    showCustomAlert('نجاح الحساب', '✅ تم تسجيل الدخول وإنشاء الحساب تلقائياً بنجاح!');
                 })
                 .catch((error) => {
-                    showCustomAlert('خطأ في المصادقة', '❌ خطأ: ' + error.message, true);
+                    showCustomAlert('خطأ في الحساب', '❌ خطأ: ' + error.message, true);
                 });
         }
 
-        // فحص البريد المخزن أو حالة الدخول عند التحميل
         window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const userEmailFromRedirect = urlParams.get('email');
-
-            if (userEmailFromRedirect) {
-                localStorage.setItem('foru_user_email', userEmailFromRedirect);
-                updateUIAfterLogin(userEmailFromRedirect);
-                window.history.replaceState({}, document.title, window.location.pathname);
-            } else {
-                const savedEmail = localStorage.getItem('foru_user_email');
-                if (savedEmail) {
-                    updateUIAfterLogin(savedEmail);
-                }
+            const savedEmail = localStorage.getItem('foru_user_email');
+            if (savedEmail) {
+                updateUIAfterLogin(savedEmail);
             }
         });
 
@@ -312,6 +295,7 @@
             window.location.href = `${sudanPlayAuthUrl}?redirect_uri=${encodeURIComponent(currentRedirectUrl)}`;
         };
 
+        // نظام البريد الإلكتروني (إنشاء حساب تلقائي إذا اختار المستخدم إنشاء حساب، أو الدخول مباشرة)
         window.handleEmailAuth = function(event) {
             event.preventDefault();
             const email = document.getElementById('email').value;
@@ -324,7 +308,7 @@
                         localStorage.setItem('foru_user_email', user.email);
                         updateUIAfterLogin(user.email);
                         closeAuthModal();
-                        showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب وتسجيل الدخول بنجاح!');
+                        showCustomAlert('نجاح التسجيل', '✅ تم إنشاء الحساب الجديد وتسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
                         showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.message, true);
@@ -339,7 +323,7 @@
                         showCustomAlert('نجاح الدخول', '✅ تم تسجيل الدخول بنجاح!');
                     })
                     .catch((error) => {
-                        showCustomAlert('خطأ في الدخول', '❌ خطأ في البريد أو كلمة المرور: ' + error.message, true);
+                        showCustomAlert('خطأ في الدخول', '❌ البريد غير مسجل أو كلمة المرور خاطئة، يرجى إنشاء حساب.', true);
                     });
             }
         };
