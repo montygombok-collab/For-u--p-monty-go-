@@ -70,7 +70,7 @@
                 </div>
             </div>
 
-            <!-- قسم إدارة المستخدمين والصلاحيات الجديد -->
+            <!-- قسم إدارة المستخدمين والصلاحيات -->
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-gray-700 pb-3">
                     <h2 class="text-xl font-bold flex items-center text-brandYellow">
@@ -152,9 +152,10 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- ربط Firebase وسكريبت المنطق -->
+    <!-- ربط Firebase المدمج وسكريبت المنطق -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
         import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -167,12 +168,14 @@
             measurementId: "G-2ZV3NGRYZG"
         };
 
+        // تهيئة Firebase وتفعيل الـ Analytics
         const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
         const db = getFirestore(app);
 
         let allOrders = [];
         let allUsers = [];
-        let activeDriverName = "محمود حسن"; // اسم المندوب الافتراضي للمحاكاة
+        let activeDriverName = "محمود حسن";
 
         window.showCustomAlert = function(title, message) {
             document.getElementById('alertTitle').innerText = title;
@@ -214,10 +217,8 @@
             renderViews();
         }
 
-        // جلب الطلبات والمستخدمين من Firestore
         async function fetchCloudData() {
             try {
-                // 1. جلب الطلبات
                 const ordersSnapshot = await getDocs(collection(db, "orders"));
                 allOrders = [];
                 ordersSnapshot.forEach((docSnap) => {
@@ -225,14 +226,12 @@
                 });
                 document.getElementById('totalOrdersCount').innerText = allOrders.length;
 
-                // 2. جلب المستخدمين المسجلين (من مجموعة users أو accounts حسب تخزينك بالسحابة)
                 const usersSnapshot = await getDocs(collection(db, "users"));
                 allUsers = [];
                 usersSnapshot.forEach((docSnap) => {
                     allUsers.push({ id: docSnap.id, ...docSnap.data() });
                 });
 
-                // إذا لم توجد مجموعة users جاهزة بعد، نقوم بإنشاء قائمة تجريبية تفاعلية مستمدة من الطلبات أو افتراضية لضمان عمل واجهة العدد والصلاحيات فوراً
                 if (allUsers.length === 0) {
                     allUsers = [
                         { id: 'u1', name: 'محمود حسن', email: 'mahmoud@foru.com', phone: '0912345678', role: 'مندوب توصيل' },
@@ -245,7 +244,6 @@
                 document.getElementById('totalUsersCount').innerText = allUsers.length;
                 document.getElementById('usersCounterBadge').innerText = `عدد المستخدمين: ${allUsers.length}`;
                 
-                // حساب عدد المناديب النشطين
                 const driversCount = allUsers.filter(u => u.role === 'مندوب توصيل' || u.role === 'driver').length;
                 document.getElementById('totalDriversCount').innerText = driversCount;
 
@@ -260,13 +258,11 @@
             const tbodyUsers = document.getElementById('firestoreUsersTable');
             const driverBox = document.getElementById('driverActiveOrderBox');
             
-            // 1. عرض جدول الطلبات
             tbodyOrders.innerHTML = '';
             if (allOrders.length === 0) {
                 tbodyOrders.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">لا توجد طلبات سحابية واردة حالياً.</td></tr>`;
             } else {
                 allOrders.forEach(order => {
-                    // استخراج أسماء المناديب المتاحين للاختيار في القائمة
                     let driverOptions = `<option value="">اختر المندوب...</option>`;
                     allUsers.filter(u => u.role === 'مندوب توصيل' || u.role === 'driver').forEach(d => {
                         const isSelected = order.assignedDriver === d.name ? 'selected' : '';
@@ -290,7 +286,6 @@
                 });
             }
 
-            // 2. عرض جدول إدارة المستخدمين والصلاحيات
             tbodyUsers.innerHTML = '';
             if (allUsers.length === 0) {
                 tbodyUsers.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">لا توجد حسابات مسجلة.</td></tr>`;
@@ -322,7 +317,6 @@
                 });
             }
 
-            // 3. عرض الطلب للمندوب (قيد الطلب النشط الواحد)
             const driverOrder = allOrders.find(o => o.assignedDriver === activeDriverName && o.status !== 'منجز');
 
             if (driverOrder) {
@@ -346,15 +340,12 @@
             }
         }
 
-        // دالة تحديث صلاحية المستخدم في السحابة
         window.updateUserRoleInCloud = async function(userId, newRole) {
             if(!newRole) return;
             try {
-                // محاولة التحديث في Firestore إذا كان المستخدم مخزناً كـ document حقيقي
                 await updateDoc(doc(db, "users", userId), {
                     role: newRole
                 }).catch(() => {
-                    // إذا لم يكن مخزناً كمستند مستقل، نقوم بتحديث القائمة المحلية كمحاكاة ذكية
                     const targetUser = allUsers.find(u => u.id === userId);
                     if(targetUser) targetUser.role = newRole;
                 });
