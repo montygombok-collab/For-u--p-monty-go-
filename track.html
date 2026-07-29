@@ -46,7 +46,7 @@
     <!-- المحتوى الرئيسي -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl space-y-6">
         
-        <!-- رسالة عدم وجود طلبات (تظهر عند عدم توفر طلب) -->
+        <!-- رسالة عدم وجود طلبات -->
         <div id="noOrdersBox" class="hidden bg-brandCard border border-gray-800 p-10 rounded-3xl shadow-xl text-center space-y-4">
             <div class="w-16 h-16 bg-brandYellow/10 text-brandYellow rounded-full flex items-center justify-center mx-auto text-2xl border border-brandYellow/20">
                 <i class="fa-solid fa-box-open"></i>
@@ -60,8 +60,10 @@
             </div>
         </div>
 
-        <!-- قسم معلومات حالة الطلب (يظهر عند وجود طلب) -->
+        <!-- قسم معلومات وحالة الطلب -->
         <div id="orderContentBox" class="space-y-6">
+            
+            <!-- معلومات عامة ورقم الطلب -->
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-gray-700 pb-3">
                     <div>
@@ -70,6 +72,22 @@
                     </div>
                     <div id="displayStatus" class="bg-yellow-500/10 text-brandYellow px-3 py-1.5 rounded-xl text-xs font-bold border border-yellow-500/20">
                         جاري جلب البيانات...
+                    </div>
+                </div>
+
+                <!-- شريط تقدم خط السير (Timeline) -->
+                <div class="py-4">
+                    <h3 class="text-xs text-gray-400 mb-3">خط سير الشحنة:</h3>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div id="step1" class="bg-brandDark p-3 rounded-xl border border-yellow-500 text-yellow-400 text-xs font-bold transition">
+                            <i class="fa-solid fa-clipboard-check block mb-1 text-base"></i> 1. بانتظار المشرف
+                        </div>
+                        <div id="step2" class="bg-brandDark p-3 rounded-xl border border-gray-800 text-gray-500 text-xs font-bold transition">
+                            <i class="fa-solid fa-motorcycle block mb-1 text-base"></i> 2. قيد التوصيل
+                        </div>
+                        <div id="step3" class="bg-brandDark p-3 rounded-xl border border-gray-800 text-gray-500 text-xs font-bold transition">
+                            <i class="fa-solid fa-box-archive block mb-1 text-base"></i> 3. تم التسليم
+                        </div>
                     </div>
                 </div>
 
@@ -126,17 +144,43 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // تهيئة الخريطة مبدئياً
         const map = L.map('map').setView([15.5007, 32.5599], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
         let marker = null;
+        let trackingInterval = null;
+
+        function updateTimelineUI(status) {
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
+            const step3 = document.getElementById('step3');
+
+            // إعادة ضبط الافتراضي
+            step1.className = "bg-brandDark p-3 rounded-xl border border-gray-800 text-gray-500 text-xs font-bold transition";
+            step2.className = "bg-brandDark p-3 rounded-xl border border-gray-800 text-gray-500 text-xs font-bold transition";
+            step3.className = "bg-brandDark p-3 rounded-xl border border-gray-800 text-gray-500 text-xs font-bold transition";
+
+            if (status === 'pending_supervisor') {
+                step1.className = "bg-yellow-500/10 p-3 rounded-xl border border-yellow-500 text-yellow-400 text-xs font-bold transition";
+            } else if (status === 'in_progress' || status === 'assigned') {
+                step1.className = "bg-green-500/10 p-3 rounded-xl border border-green-500/40 text-green-400 text-xs font-bold transition";
+                step2.className = "bg-blue-500/10 p-3 rounded-xl border border-blue-500 text-blue-400 text-xs font-bold transition";
+            } else if (status === 'completed') {
+                step1.className = "bg-green-500/10 p-3 rounded-xl border border-green-500/40 text-green-400 text-xs font-bold transition";
+                step2.className = "bg-green-500/10 p-3 rounded-xl border border-green-500/40 text-green-400 text-xs font-bold transition";
+                step3.className = "bg-green-500/10 p-3 rounded-xl border border-green-500 text-green-400 text-xs font-bold transition";
+            }
+        }
 
         function renderOrderData(data) {
             document.getElementById('displayOrderId').innerText = data.orderId || '---';
             document.getElementById('displayClientName').innerText = data.clientName || '---';
             document.getElementById('displayCost').innerText = (data.cost ? data.cost.toLocaleString() : '0') + ' جنيه';
-            document.getElementById('displayStatus').innerText = data.status === 'pending_supervisor' ? 'بانتظار مراجعة المشرف' : (data.status || 'قيد المعالجة');
             
+            const statusText = data.status === 'pending_supervisor' ? 'بانتظار مراجعة المشرف' : (data.status === 'completed' ? 'تم التسليم' : 'قيد التوصيل');
+            document.getElementById('displayStatus').innerText = statusText;
+            
+            updateTimelineUI(data.status);
+
             const driverName = data.driverName || data.assignedDriver;
             document.getElementById('displayDriver').innerText = driverName ? `${driverName} (${data.driverPhone || ''})` : 'لم يُسند بعد';
 
@@ -153,26 +197,22 @@
             document.getElementById('noOrdersBox').classList.add('hidden');
         }
 
-        async function fetchOrderDetails() {
+        async function checkAndUpdateOrder() {
             const urlParams = new URLSearchParams(window.location.search);
             const orderIdQuery = urlParams.get('order');
 
             if (!orderIdQuery) {
-                // فحص التخزين المحلي إذا لم يوجد رقم في الرابط
                 let allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
                 if (allOrders.length > 0) {
-                    // عرض أحدث طلب موجود محلياً
                     renderOrderData(allOrders[allOrders.length - 1]);
-                    return;
+                } else {
+                    document.getElementById('orderContentBox').classList.add('hidden');
+                    document.getElementById('noOrdersBox').classList.remove('hidden');
                 }
-
-                // إذا ماف طلبات نهائياً
-                document.getElementById('orderContentBox').classList.add('hidden');
-                document.getElementById('noOrdersBox').classList.remove('hidden');
                 return;
             }
 
-            // 1. البحث في التخزين المحلي أولاً لسرعة العرض
+            // فحص التخزين المحلي أولاً
             let allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
             const localOrder = allOrders.find(o => o.orderId === orderIdQuery);
 
@@ -180,7 +220,7 @@
                 renderOrderData(localOrder);
             }
 
-            // 2. البحث في السحابة (Firebase) للتحديث الفوري
+            // فحص السحابة (Firebase)
             try {
                 const q = query(collection(db, "orders"), where("orderId", "==", orderIdQuery));
                 const querySnapshot = await getDocs(q);
@@ -189,21 +229,19 @@
                     querySnapshot.forEach((docSnap) => {
                         renderOrderData(docSnap.data());
                     });
-                } else if (!localOrder) {
-                    document.getElementById('orderContentBox').classList.add('hidden');
-                    document.getElementById('noOrdersBox').classList.remove('hidden');
                 }
-
             } catch (error) {
-                console.error("خطأ في جلب تفاصيل التتبع:", error);
-                if (!localOrder) {
-                    document.getElementById('orderContentBox').classList.add('hidden');
-                    document.getElementById('noOrdersBox').classList.remove('hidden');
-                }
+                console.log("تحديث تلقائي عبر السيرفر متوقف مؤقتاً، يتم الاعتماد على المحلي");
             }
         }
 
-        window.addEventListener('DOMContentLoaded', fetchOrderDetails);
+        window.addEventListener('DOMContentLoaded', () => {
+            checkAndUpdateOrder();
+            // تحديث تلقائي لخط السير كل ثانيتين
+            if (trackingInterval) clearInterval(trackingInterval);
+            trackingInterval = setInterval(checkAndUpdateOrder, 2000);
+        });
     </script>
 </body>
 </html>
+```[cite: 1]
