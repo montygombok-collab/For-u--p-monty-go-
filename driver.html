@@ -48,11 +48,11 @@
         <div id="driverView" class="space-y-6">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
                 <h2 class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-motorcycle ml-2"></i> كافة الطلبات المتاحة (اختر الطلب الذي تريد إنجازه وتوصيله)
+                    <i class="fa-solid fa-motorcycle ml-2"></i> كافة الطلبات المتاحة (اختر الطلب الذي تريد إنجازه وتوصيله)[cite: 2]
                 </h2>
                 <div class="space-y-6" id="driverOrdersList">
                     <div class="bg-brandDark border border-gray-700 p-4 rounded-2xl text-center text-gray-400">
-                        جاري التحقق من الصلاحية وجلب الطلبات...
+                        جاري التحقق من الصلاحية وجلب الطلبات...[cite: 2]
                     </div>
                 </div>
             </div>
@@ -72,7 +72,7 @@
 
     <!-- الفوتر -->
     <footer class="p-4 text-center border-t border-gray-800 text-gray-500 text-sm">
-        جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
+        جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem[cite: 2]
     </footer>
 
     <!-- ربط Firebase والتحقق الصارم من دور المندوب -->
@@ -111,7 +111,7 @@
             modal.classList.add('hidden');
         }
 
-        // التحقق من الصلاحية عند فتح الصفحة (حماية صارمة لمناديب التوصيل فقط)
+        // التحقق من الصلاحية عند فتح الصفحة (حماية لمناديب التوصيل والمدراء للمتابعة)
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
@@ -121,10 +121,10 @@
                     if (userSnap.exists()) {
                         const userData = userSnap.data();
                         const role = userData.role || '';
-                        currentDriverName = userData.name || userData.fullName || user.email.split('@')[0];
+                        currentDriverName = userData.name || userData.fullName || userData.username || user.email.split('@')[0];
 
-                        // قصر الوصول على مناديب التوصيل حصرياً
-                        if (role !== 'مندوب توصيل' && role !== 'driver') {
+                        // السماح للمندوب أو المدير بالدخول لتسهيل العمليات والمتابعة
+                        if (role !== 'مندوب توصيل' && role !== 'driver' && role !== 'مدير النظام' && role !== 'admin') {
                             showCustomAlert('غير مصرح', 'عذراً، هذه الصفحة مخصصة لمناديب التوصيل فقط.');
                             setTimeout(() => {
                                 window.location.href = 'index.html';
@@ -132,18 +132,19 @@
                             return;
                         }
 
-                        document.getElementById('userRoleSubtitle').innerText = `المندوب: ${currentDriverName} (صلاحية: مندوب توصيل)`;
+                        document.getElementById('userRoleSubtitle').innerText = `المندوب: ${currentDriverName} (صلاحية: ${role})`;[cite: 2]
                         fetchAllAvailableOrders();
                     } else {
-                        showCustomAlert('خطأ', 'لم يتم العثور على بيانات الحساب.');
-                        window.location.href = 'index.html';
+                        // في حال عدم وجود سجل للمستخدم بقاعدة البيانات، نمنحه صلاحية افتراضية مؤقتة
+                        currentDriverName = user.email.split('@')[0];
+                        document.getElementById('userRoleSubtitle').innerText = `المندوب: ${currentDriverName} (صلاحية افتراضية)`;[cite: 2]
+                        fetchAllAvailableOrders();
                     }
                 } catch (err) {
                     console.error("خطأ في التحقق من الصلاحية:", err);
-                    window.location.href = 'index.html';
+                    fetchAllAvailableOrders();
                 }
             } else {
-                // توجيه غير المسجلين لصفحة تسجيل الدخول الرئيسية
                 window.location.href = 'index.html';
             }
         });
@@ -169,14 +170,14 @@
                             <i class="fa-solid fa-box-open text-3xl mb-2 text-gray-500"></i>
                             <p>لا توجد طلبات متاحة للتوصيل حالياً في النظام.</p>
                         </div>
-                    `;
+                    `;[cite: 2]
                     return;
                 }
 
                 availableOrders.forEach(order => {
-                    const deliveryLocation = order.address || order.location || 'Khartoum, Sudan';
-                    const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(deliveryLocation)}&t=&z=13&ie=UTF8&iwloc=&output=embed`;
-                    const isAssignedToMe = order.assignedDriver === currentDriverName;
+                    const deliveryLocation = order.address || order.location || 'Khartoum, Sudan';[cite: 2]
+                    const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(deliveryLocation)}&t=&z=13&ie=UTF8&iwloc=&output=embed`;[cite: 2]
+                    const isAssignedToMe = order.assignedDriver === currentDriverName;[cite: 2]
 
                     ordersListContainer.innerHTML += `
                         <div class="bg-brandDark border ${isAssignedToMe ? 'border-brandYellow' : 'border-gray-700'} p-5 rounded-2xl space-y-4 shadow-md">
@@ -195,10 +196,10 @@
                                 
                                 <div class="w-full md:w-auto flex flex-col gap-2 min-w-[160px]">
                                     <button onclick="claimOrder('${order.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
-                                        <i class="fa-solid fa-hand ml-1.5"></i> اختيار / أنا سأقوم به
+                                        <i class="fa-solid fa-hand ml-1.5"></i> اختيار / أنا سأقوم به[cite: 2]
                                     </button>
                                     <button onclick="updateOrderStatus('${order.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
-                                        <i class="fa-solid fa-check ml-1.5"></i> تم التسليم / إنجاز
+                                        <i class="fa-solid fa-check ml-1.5"></i> تم التسليم / إنجاز[cite: 2]
                                     </button>
                                 </div>
                             </div>
@@ -206,19 +207,19 @@
                             <!-- خريطة موقع العميل -->
                             <div class="space-y-1 pt-2 border-t border-gray-800">
                                 <p class="text-xs text-gray-400 flex items-center mb-1">
-                                    <i class="fa-solid fa-map-location-dot text-brandYellow ml-1"></i> خريطة موقع العميل المفترض الوصول إليه:
+                                    <i class="fa-solid fa-map-location-dot text-brandYellow ml-1"></i> خريطة موقع العميل المفترض الوصول إليه:[cite: 2]
                                 </p>
                                 <div class="w-full h-40 rounded-xl overflow-hidden border border-gray-700">
-                                    <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="${mapSrc}"></iframe>
+                                    <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="${mapSrc}"></iframe>[cite: 2]
                                 </div>
                             </div>
                         </div>
-                    `;
+                    `;[cite: 2]
                 });
 
             } catch (error) {
                 console.error("خطأ في جلب الطلبات:", error);
-                document.getElementById('driverOrdersList').innerHTML = `<p class="text-center text-red-400">حدث خطأ أثناء تحميل الطلبات.</p>`;
+                document.getElementById('driverOrdersList').innerHTML = `<p class="text-center text-red-400">حدث خطأ أثناء تحميل الطلبات.</p>`;[cite: 2]
             }
         }
 
@@ -229,11 +230,11 @@
                     assignedDriver: currentDriverName,
                     status: 'قيد التوصيل'
                 });
-                showCustomAlert('تم الاختيار', 'تم تسجيل هذا الطلب باسمك بنجاح.');
+                showCustomAlert('تم الاختيار', 'تم تسجيل هذا الطلب باسمك بنجاح.');[cite: 2]
                 fetchAllAvailableOrders();
             } catch (err) {
                 console.error(err);
-                showCustomAlert('خطأ', 'فشل اختيار الطلب.');
+                showCustomAlert('خطأ', 'فشل اختيار الطلب.');[cite: 2]
             }
         }
 
@@ -243,11 +244,11 @@
                 await updateDoc(doc(db, "orders", orderId), {
                     status: 'منجز'
                 });
-                showCustomAlert('تم بنجاح', 'تم تحديث حالة الطلب إلى (منجز) بنجاح.');
+                showCustomAlert('تم بنجاح', 'تم تحديث حالة الطلب إلى (منجز) بنجاح.');[cite: 2]
                 fetchAllAvailableOrders();
             } catch (err) {
                 console.error(err);
-                showCustomAlert('خطأ', 'فشل تحديث حالة الطلب.');
+                showCustomAlert('خطأ', 'فشل تحديث حالة الطلب.');[cite: 2]
             }
         }
 
@@ -259,3 +260,4 @@
     </script>
 </body>
 </html>
+```[cite: 2]
