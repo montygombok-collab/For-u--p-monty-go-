@@ -43,7 +43,7 @@
         </button>
     </header>
 
-    <!-- المحتوى الرئيسي -->
+    <!-- المحتوى الرئيسي (مخصص لمناديب التوصيل فقط) -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <div id="driverView" class="space-y-6">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
@@ -52,7 +52,7 @@
                 </h2>
                 <div class="space-y-6" id="driverOrdersList">
                     <div class="bg-brandDark border border-gray-700 p-4 rounded-2xl text-center text-gray-400">
-                        جاري جلب كافة الطلبات والخرائط...
+                        جاري التحقق من الصلاحية وجلب الطلبات...
                     </div>
                 </div>
             </div>
@@ -75,7 +75,7 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- ربط Firebase والمنطق البرمجي -->
+    <!-- ربط Firebase والتحقق الصارم من دور المندوب -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -111,7 +111,7 @@
             modal.classList.add('hidden');
         }
 
-        // التحقق من الصلاحية ومسمى المندوب
+        // التحقق من الصلاحية عند فتح الصفحة (حماية صارمة لمناديب التوصيل فقط)
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
@@ -123,6 +123,7 @@
                         const role = userData.role || '';
                         currentDriverName = userData.name || userData.fullName || user.email.split('@')[0];
 
+                        // قصر الوصول على مناديب التوصيل حصرياً
                         if (role !== 'مندوب توصيل' && role !== 'driver') {
                             showCustomAlert('غير مصرح', 'عذراً، هذه الصفحة مخصصة لمناديب التوصيل فقط.');
                             setTimeout(() => {
@@ -139,13 +140,15 @@
                     }
                 } catch (err) {
                     console.error("خطأ في التحقق من الصلاحية:", err);
+                    window.location.href = 'index.html';
                 }
             } else {
+                // توجيه غير المسجلين لصفحة تسجيل الدخول الرئيسية
                 window.location.href = 'index.html';
             }
         });
 
-        // جلب كافة الطلبات غير المنجزة ليختار منها المندوب
+        // جلب كافة الطلبات المتاحة ليختار منها المندوب
         async function fetchAllAvailableOrders() {
             try {
                 const querySnapshot = await getDocs(collection(db, "orders"));
