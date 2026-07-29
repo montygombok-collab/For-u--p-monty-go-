@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم السحابية وإدارة المستخدمين | For-U</title>
+    <title>لوحة التحكم  وإدارة المستخدمين | For-U</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -43,7 +43,7 @@
     <!-- المحتوى الرئيسي -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl space-y-8">
         
-        <!-- قسم الإحصائيات العامة للمدير -->
+        <!-- قسم الإحصائيات العامة -->
         <section id="adminSection" class="space-y-8 hidden">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
@@ -64,7 +64,7 @@
                 </div>
             </div>
 
-            <!-- قسم إدارة المستخدمين الحقيقيين من قاعدة البيانات -->
+            <!-- قسم إدارة المستخدمين وتعديل الصلاحيات (مع خيار إرجاع الصلاحية لعميل) -->
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-gray-700 pb-3">
                     <h2 class="text-xl font-bold flex items-center text-brandYellow">
@@ -90,12 +90,16 @@
             </div>
         </section>
 
-        <!-- قسم مشرف الطلبات -->
+        <!-- قسم الطلبات والمتابعة -->
         <section id="supervisorSection" class="space-y-6 hidden">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
-                <h2 class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-list-check ml-2"></i> طلبات العملاء السحابية (إسناد للمناديب)
+                <h2 id="ordersSectionTitle" class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
+                    <i class="fa-solid fa-list-check ml-2"></i> طلبات العملاء السحابية
                 </h2>
+                <div id="supportNoticeBox" class="hidden mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-300 text-xs flex items-center">
+                    <i class="fa-solid faليس-لديها-صلاحية ml-2 text-base"></i>
+                    <span>ملاحظة: أنت تملك صلاحية "مسؤول دعم" للاطلاع ومتابعة حالة النظام فقط، **وليس لديك صلاحية إسناد الطلبات للمناديب**.</span>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-right text-sm">
                         <thead class="bg-brandDark text-gray-400 border-b border-gray-700">
@@ -105,7 +109,7 @@
                                 <th class="p-3">الوصف</th>
                                 <th class="p-3">التكلفة</th>
                                 <th class="p-3">الحالة</th>
-                                <th class="p-3">إسناد إلى مندوب</th>
+                                <th id="actionColumnHeader" class="p-3">إسناد إلى مندوب</th>
                             </tr>
                         </thead>
                         <tbody id="firestoreOrdersTable" class="divide-y divide-gray-800">
@@ -185,21 +189,27 @@
             modal.classList.add('hidden');
         }
 
-        // دالة إظهار الصفحة المخصصة بناءً على الصلاحية الفعلية
+        // تطبيق واجهة العرض والتحكم في الصلاحيات
         function applyRoleView(role) {
             document.getElementById('adminSection').classList.add('hidden');
             document.getElementById('supervisorSection').classList.add('hidden');
             document.getElementById('driverSection').classList.add('hidden');
+            document.getElementById('supportNoticeBox').classList.add('hidden');
 
             const roleBadge = document.getElementById('userRoleBadge');
             const headerTitle = document.getElementById('headerTitle');
 
-            // توحيد قراءة أسماء الصلاحيات (سواء مكتوبة بالعربي أو الإنجليزي)
             if (role === 'مدير النظام' || role === 'admin') {
                 headerTitle.innerText = 'لوحة تحكم المدير العام';
                 roleBadge.innerText = 'صلاحية كاملة (إدارة النظام والمستخدمين)';
                 document.getElementById('adminSection').classList.remove('hidden');
                 document.getElementById('supervisorSection').classList.remove('hidden');
+            } else if (role === 'مسؤول دعم' || role === 'support') {
+                headerTitle.innerText = 'بوابة مسؤولي الدعم';
+                roleBadge.innerText = 'متابعة النظام واطلاع (بدون صلاحية إسناد)';
+                document.getElementById('adminSection').classList.remove('hidden'); // يرى الإحصائيات والمستخدمين
+                document.getElementById('supervisorSection').classList.remove('hidden'); // يرى الطلبات
+                document.getElementById('supportNoticeBox').classList.remove('hidden'); // ينبهه أنه لا يستطيع الإسناد
             } else if (role === 'مشرف طلبات' || role === 'supervisor') {
                 headerTitle.innerText = 'لوحة مشرفي الطلبات';
                 roleBadge.innerText = 'متابعة وإسناد الطلبات السحابية';
@@ -215,7 +225,6 @@
             renderViews();
         }
 
-        // التحقق من المستخدم الحالي وجلب صلاحيته من جدول users
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
@@ -237,7 +246,6 @@
                     console.error("خطأ في جلب بيانات المستخدم:", err);
                 }
             } else {
-                // لو لم يكن مسجلاً للدخول، يتم توجيهه للرئيسية
                 window.location.href = 'index.html';
             }
         });
@@ -262,7 +270,7 @@
                         name: data.name || data.fullName || data.username || 'مستخدم سحابي',
                         email: data.email || data.userEmail || 'بدون بريد',
                         phone: data.phone || data.phoneNumber || 'غير مسجل',
-                        role: data.role || 'مندوب توصيل'
+                        role: data.role || 'عميل'
                     });
                 });
 
@@ -284,19 +292,38 @@
             const tbodyOrders = document.getElementById('firestoreOrdersTable');
             const tbodyUsers = document.getElementById('firestoreUsersTable');
             const driverBox = document.getElementById('driverActiveOrderBox');
+            const actionColHeader = document.getElementById('actionColumnHeader');
+
+            // التحقق إذا كان المستخدم الحالي "مسؤول دعم" لإخفاء عمود أو تعطيل أزرار الإسناد
+            const isSupportOnly = (currentUserRole === 'مسؤول دعم' || currentUserRole === 'support');
+            if (isSupportOnly && actionColHeader) {
+                actionColHeader.innerText = 'حالة الإسناد (للاطلاع فقط)';
+            }
             
-            // تعبئة جدول الطلبات للمشرف والمدير
+            // تعبئة جدول الطلبات
             if (tbodyOrders) {
                 tbodyOrders.innerHTML = '';
                 if (allOrders.length === 0) {
                     tbodyOrders.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">لا توجد طلبات سحابية واردة حالياً.</td></tr>`;
                 } else {
                     allOrders.forEach(order => {
-                        let driverOptions = `<option value="">اختر المندوب...</option>`;
-                        allUsers.filter(u => u.role === 'مندوب توصيل' || u.role === 'driver').forEach(d => {
-                            const isSelected = order.assignedDriver === d.name ? 'selected' : '';
-                            driverOptions += `<option value="${d.name}" ${isSelected}>${d.name}</option>`;
-                        });
+                        let actionCellHTML = '';
+                        if (isSupportOnly) {
+                            // مسؤول الدعم يرى اسم المندوب المسند إليه فقط دون إمكانية التعديل
+                            actionCellHTML = `<span class="text-xs text-gray-300 font-semibold">${order.assignedDriver || 'غير مسند'}</span>`;
+                        } else {
+                            // المدير أو المشرف يستطيع الإسناد والتعديل
+                            let driverOptions = `<option value="">اختر المندوب...</option>`;
+                            allUsers.filter(u => u.role === 'مندوب توصيل' || u.role === 'driver').forEach(d => {
+                                const isSelected = order.assignedDriver === d.name ? 'selected' : '';
+                                driverOptions += `<option value="${d.name}" ${isSelected}>${d.name}</option>`;
+                            });
+                            actionCellHTML = `
+                                <select onchange="assignDriverToOrder('${order.id}', this.value)" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
+                                    ${driverOptions}
+                                </select>
+                            `;
+                        }
 
                         tbodyOrders.innerHTML += `
                             <tr>
@@ -305,25 +332,21 @@
                                 <td class="p-3">${order.description || 'توصيل طلب'}</td>
                                 <td class="p-3 font-bold">${(order.cost || 0).toLocaleString()} جنيه</td>
                                 <td class="p-3"><span class="bg-yellow-500/10 text-brandYellow px-2.5 py-1 rounded-lg text-xs border border-yellow-500/20">${order.status || 'قيد المراجعة'}</span></td>
-                                <td class="p-3">
-                                    <select onchange="assignDriverToOrder('${order.id}', this.value)" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
-                                        ${driverOptions}
-                                    </select>
-                                </td>
+                                <td class="p-3">${actionCellHTML}</td>
                             </tr>
                         `;
                     });
                 }
             }
 
-            // تعبئة جدول المستخدمين للمدير فقط
+            // تعبئة جدول المستخدمين (مع خيار إرجاع الصلاحية إلى عميل)
             if (tbodyUsers) {
                 tbodyUsers.innerHTML = '';
                 if (allUsers.length === 0) {
                     tbodyUsers.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">لا توجد حسابات مسجلة.</td></tr>`;
                 } else {
                     allUsers.forEach(user => {
-                        const currentRole = user.role || 'مندوب توصيل';
+                        const currentRole = user.role || 'عميل';
                         tbodyUsers.innerHTML += `
                             <tr>
                                 <td class="p-3">
@@ -337,8 +360,10 @@
                                 <td class="p-3 text-center">
                                     <select onchange="updateUserRoleInCloud('${user.id}', this.value)" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
                                         <option value="" disabled>تغيير الصلاحية...</option>
+                                        <option value="عميل" ${currentRole === 'عميل' ? 'selected' : ''}>إرجاع إلى (عميل)</option>
                                         <option value="مندوب توصيل" ${currentRole === 'مندوب توصيل' ? 'selected' : ''}>مندوب توصيل</option>
                                         <option value="مشرف طلبات" ${currentRole === 'مشرف طلبات' ? 'selected' : ''}>مشرف طلبات</option>
+                                        <option value="مسؤول دعم" ${currentRole === 'مسؤول دعم' ? 'selected' : ''}>مسؤول دعم (بدون إسناد)</option>
                                         <option value="مدير النظام" ${currentRole === 'مدير النظام' ? 'selected' : ''}>مدير النظام</option>
                                     </select>
                                 </td>
@@ -348,7 +373,7 @@
                 }
             }
 
-            // عرض الطلب للمندوب النشط بناءً على اسمه الحقيقي
+            // عرض الطلب للمندوب النشط
             if (driverBox) {
                 const driverOrder = allOrders.find(o => o.assignedDriver === currentUserName && o.status !== 'منجز');
 
@@ -388,6 +413,13 @@
 
         window.assignDriverToOrder = async function(docId, driverName) {
             if(!driverName) return;
+            // حماية إضافية تمنع مسؤول الدعم من إسناد الطلب حتى لو حاول برمجياً
+            if (currentUserRole === 'مسؤول دعم' || currentUserRole === 'support') {
+                showCustomAlert('غير مسموح', 'عذراً، صلاحية "مسؤول دعم" لا تتيح لك إسناد الطلبات.');
+                fetchCloudData();
+                return;
+            }
+
             try {
                 await updateDoc(doc(db, "orders", docId), {
                     assignedDriver: driverName,
