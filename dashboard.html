@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم الموحدة | For-U</title>
+    <title>لوحة التحكم السحابية | For-U</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -24,21 +24,21 @@
 </head>
 <body class="bg-brandDark text-white min-h-screen flex flex-col justify-between">
 
-    <!-- الهيدر الموحد مع تبديل الصلاحيات -->
+    <!-- الهيدر الموحد -->
     <header class="p-4 md:p-6 flex justify-between items-center border-b border-gray-800">
         <div class="flex items-center space-x-3 space-x-reverse">
             <div class="bg-brandYellow text-brandDark font-black text-xl px-3 py-1 rounded-xl">4U</div>
             <div>
-                <h1 id="headerTitle" class="text-lg font-bold">لوحة التحكم</h1>
-                <p id="userRoleBadge" class="text-xs text-brandYellow">جاري تحميل الصلاحية...</p>
+                <h1 id="headerTitle" class="text-lg font-bold">لوحة التحكم السحابية</h1>
+                <p id="userRoleBadge" class="text-xs text-brandYellow">جاري الاتصال بقاعدة البيانات...</p>
             </div>
         </div>
         <div class="flex items-center space-x-3 space-x-reverse">
-            <!-- محاكي تبديل الصلاحيات لسهولة التجربة -->
+            <!-- محاكي تبديل الصلاحيات -->
             <select id="roleSelector" onchange="switchRole(this.value)" class="bg-brandCard border border-gray-700 text-xs text-white rounded-xl px-3 py-2 outline-none focus:border-brandYellow">
                 <option value="admin">صلاحية: المدير</option>
                 <option value="supervisor">صلاحية: مشرف الطلبات</option>
-                <option value="driver">صلاحية: مندوب التوصيل</option>
+                <option value="driver">صلاحية: مندوب التوصيل (محمود حسن)</option>
             </select>
             <button onclick="logout()" class="text-gray-400 hover:text-red-400 text-sm flex items-center">
                 <i class="fa-solid fa-right-from-bracket ml-1"></i>
@@ -46,56 +46,32 @@
         </div>
     </header>
 
-    <!-- المحتوى الرئيسي المتغير حسب الصلاحية -->
+    <!-- المحتوى الرئيسي -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl space-y-8">
         
-        <!-- قسم المدير فقط: إنشاء حسابات والتقارير والإعدادات -->
+        <!-- قسم المدير -->
         <section id="adminSection" class="space-y-8 hidden">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
-                    <p class="text-xs text-gray-400">إجمالي طلبات النظام</p>
-                    <h3 class="text-2xl font-black text-brandYellow mt-1">128 طلب</h3>
+                    <p class="text-xs text-gray-400">إجمالي الطلبات السحابية</p>
+                    <h3 id="totalOrdersCount" class="text-2xl font-black text-brandYellow mt-1">0</h3>
                 </div>
                 <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
                     <p class="text-xs text-gray-400">المناديب المسجلين</p>
-                    <h3 class="text-2xl font-black text-blue-400 mt-1">5 مناديب</h3>
+                    <h3 class="text-2xl font-black text-blue-400 mt-1">2 مناديب</h3>
                 </div>
                 <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
-                    <p class="text-xs text-gray-400">إجمالي الإيرادات</p>
-                    <h3 class="text-2xl font-black text-green-400 mt-1">640,000 جنيه</h3>
-                </div>
-            </div>
-
-            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
-                <h2 class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-user-plus ml-2"></i> إنشاء حساب موظف جديد (مشرف / مندوب)
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">اسم الموظف</label>
-                        <input type="text" id="newStaffName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-brandYellow" placeholder="الاسم الكامل">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-300 mb-1">نوع الصلاحية</label>
-                        <select id="newStaffRole" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-brandYellow">
-                            <option value="supervisor">مشرف طلبات</option>
-                            <option value="driver">مندوب توصيل</option>
-                        </select>
-                    </div>
-                    <div>
-                        <button onclick="createStaffAccount()" class="w-full bg-brandYellow text-brandDark font-bold py-2.5 rounded-xl hover:bg-yellow-400 transition shadow-lg text-sm">
-                            إضافة الحساب للنظام
-                        </button>
-                    </div>
+                    <p class="text-xs text-gray-400">حالة النظام السحابي</p>
+                    <h3 class="text-2xl font-black text-green-400 mt-1">متصل 🟢</h3>
                 </div>
             </div>
         </section>
 
-        <!-- قسم مشرف الطلبات + المدير: معالجة وإسناد الطلبات القادمة من التطبيق -->
+        <!-- قسم مشرف الطلبات والمدير: جدول الطلبات الحقيقية من Firestore -->
         <section id="supervisorSection" class="space-y-6 hidden">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
                 <h2 class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-list-check ml-2"></i> طلبات العملاء القادمة من التطبيق (إسناد للمناديب)
+                    <i class="fa-solid fa-list-check ml-2"></i> طلبات العملاء السحابية (إسناد للمناديب)
                 </h2>
                 <div class="overflow-x-auto">
                     <table class="w-full text-right text-sm">
@@ -105,28 +81,26 @@
                                 <th class="p-3">العميل</th>
                                 <th class="p-3">الوصف</th>
                                 <th class="p-3">التكلفة</th>
-                                <th class="p-3">الحالة الحالية</th>
+                                <th class="p-3">الحالة</th>
                                 <th class="p-3">إسناد إلى مندوب</th>
                             </tr>
                         </thead>
-                        <tbody id="supervisorOrdersTable" class="divide-y divide-gray-800">
-                            <!-- يتم تعبئتها ديناميكياً من الطلبات الحقيقية للعميل -->
+                        <tbody id="firestoreOrdersTable" class="divide-y divide-gray-800">
+                            <tr><td colspan="6" class="p-4 text-center text-gray-500">جاري تحميل الطلبات من السحابة...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- قسم مندوب التوصيل: عرض الطلب الحالي وزر الإنجاز (بشرط عدم وجود طلب نشط آخر) -->
+        <!-- قسم مندوب التوصيل -->
         <section id="driverSection" class="space-y-6 hidden">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
                 <h2 class="text-xl font-bold flex items-center text-brandYellow border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-motorcycle ml-2"></i> طلبات التوصيل المسندة إليك
+                    <i class="fa-solid fa-motorcycle ml-2"></i> الطلب المسند إليك (مندوب: محمود حسن)
                 </h2>
-                
                 <div id="driverActiveOrderBox" class="bg-brandDark border border-gray-700 p-5 rounded-2xl space-y-3">
-                    <!-- يظهر هنا الطلب المسند للمندوب -->
-                    <p class="text-gray-400 text-sm text-center py-4">لا توجد طلبات مسندة إليك حالياً أو بانتظار إسناد المشرف.</p>
+                    <p class="text-gray-400 text-sm text-center py-4">جاري التحقق من الطلبات المسندة...</p>
                 </div>
             </div>
         </section>
@@ -138,7 +112,7 @@
         <div class="bg-brandCard border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
             <h4 id="alertTitle" class="text-xl font-bold mb-2 text-brandYellow">تنبيه النظام</h4>
             <p id="alertMessage" class="text-gray-300 text-sm mb-6 leading-relaxed">رسالة...</p>
-            <button onclick="closeCustomAlert()" class="w-full bg-brandYellow text-brandDark font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg text-sm">
+            <button onclick="closeCustomAlert()" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg text-sm">
                 حسنًا
             </button>
         </div>
@@ -149,16 +123,27 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- سكريبت إدارة الصلاحيات والمنطق -->
-    <script>
-        let currentRole = 'admin'; // افتراضياً
+    <!-- ربط Firebase وسكريبت المنطق -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        window.addEventListener('DOMContentLoaded', () => {
-            loadDashboardData();
-            switchRole('admin'); // البدء بصلاحية المدير كافتراضي للتجربة
-        });
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
+            authDomain: "for-u-56f3f.firebaseapp.com",
+            projectId: "for-u-56f3f",
+            storageBucket: "for-u-56f3f.firebasestorage.app",
+            messagingSenderId: "519930793199",
+            appId: "1:519930793199:web:0c876d149832cd0a8d5f1a",
+            measurementId: "G-2ZV3NGRYZG"
+        };
 
-        function showCustomAlert(title, message) {
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let allOrders = [];
+
+        window.showCustomAlert = function(title, message) {
             document.getElementById('alertTitle').innerText = title;
             document.getElementById('alertMessage').innerText = message;
             const modal = document.getElementById('customAlertModal');
@@ -166,17 +151,14 @@
             modal.classList.add('flex');
         }
 
-        function closeCustomAlert() {
+        window.closeCustomAlert = function() {
             const modal = document.getElementById('customAlertModal');
             modal.classList.remove('flex');
             modal.classList.add('hidden');
         }
 
-        function switchRole(role) {
-            currentRole = role;
+        window.switchRole = function(role) {
             document.getElementById('roleSelector').value = role;
-            
-            // إخفاء الكل أولاً
             document.getElementById('adminSection').classList.add('hidden');
             document.getElementById('supervisorSection').classList.add('hidden');
             document.getElementById('driverSection').classList.add('hidden');
@@ -186,113 +168,125 @@
 
             if (role === 'admin') {
                 headerTitle.innerText = 'لوحة تحكم المدير العام';
-                roleBadge.innerText = 'صلاحية كاملة (إدارة، حسابات، وتقارير)';
+                roleBadge.innerText = 'صلاحية كاملة (متابعة السحابة)';
                 document.getElementById('adminSection').classList.remove('hidden');
-                document.getElementById('supervisorSection').classList.remove('hidden'); // المدير يرى المشرفين أيضاً
+                document.getElementById('supervisorSection').classList.remove('hidden');
             } else if (role === 'supervisor') {
                 headerTitle.innerText = 'لوحة مشرفي الطلبات';
-                roleBadge.innerText = 'متابعة وإسناد طلبات العملاء';
+                roleBadge.innerText = 'متابعة وإسناد الطلبات السحابية';
                 document.getElementById('supervisorSection').classList.remove('hidden');
             } else if (role === 'driver') {
                 headerTitle.innerText = 'بوابة مناديب التوصيل';
-                roleBadge.innerText = 'استقبال وإنجاز طلب واحد نشط فقط';
+                roleBadge.innerText = 'طلب نشط واحد فقط';
                 document.getElementById('driverSection').classList.remove('hidden');
             }
-            loadDashboardData();
+            renderViews();
         }
 
-        function loadDashboardData() {
-            // جلب الطلب المحفوظ من localStorage (الذي أرسله العميل من customer.html)
-            const savedOrderStr = localStorage.getItem('latest_order');
-            const tbody = document.getElementById('supervisorOrdersTable');
+        // جلب الطلبات من Firestore
+        async function fetchOrdersFromCloud() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "orders"));
+                allOrders = [];
+                querySnapshot.forEach((docSnap) => {
+                    allOrders.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                document.getElementById('totalOrdersCount').innerText = allOrders.length;
+                renderViews();
+            } catch (error) {
+                console.error("خطأ في جلب البيانات:", error);
+            }
+        }
+
+        function renderViews() {
+            const tbody = document.getElementById('firestoreOrdersTable');
             const driverBox = document.getElementById('driverActiveOrderBox');
             
             tbody.innerHTML = '';
-            
-            if (!savedOrderStr) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">لا توجد طلبات جديدة واردة من التطبيق حالياً.</td></tr>`;
-                return;
-            }
-
-            const order = JSON.parse(savedOrderStr);
-
-            // جدول المشرف / المدير
-            tbody.innerHTML = `
-                <tr>
-                    <td class="p-3 font-bold text-brandYellow">${order.orderId}</td>
-                    <td class="p-3">${order.clientName} (${order.clientPhone})</td>
-                    <td class="p-3">${order.description || 'توصيل طلب'}</td>
-                    <td class="p-3 font-bold">${order.cost.toLocaleString()} جنيه</td>
-                    <td class="p-3"><span class="bg-yellow-500/10 text-brandYellow px-2.5 py-1 rounded-lg text-xs border border-yellow-500/20">${order.status}</span></td>
-                    <td class="p-3">
-                        <select onchange="assignDriver('${order.orderId}', this.value)" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
-                            <option value="">${order.assignedDriver ? 'مسند إلى: ' + order.assignedDriver : 'اختر المندوب للإسناد...'}</option>
-                            <option value="محمود حسن">محمود حسن (موتور)</option>
-                            <option value="عمر إبراهيم">عمر إبراهيم (موتور)</option>
-                        </select>
-                    </td>
-                </tr>
-            `;
-
-            // واجهة المندوب (عرض الطلب المسند إليه وتطبيق قيد الطلب النشط الواحد)
-            if (order.assignedDriver) {
-                if (order.status === 'منجز') {
-                    driverBox.innerHTML = `<p class="text-green-400 text-sm text-center py-4"><i class="fa-solid fa-circle-check ml-1"></i> لقد أتممت طلبك الأخير بنجاح. بانتظار إسناد طلب جديد لك.</p>`;
-                } else {
-                    driverBox.innerHTML = `
-                        <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                            <span class="text-gray-400 text-xs">رقم الطلب النشط:</span>
-                            <span class="font-bold text-brandYellow text-sm">${order.orderId}</span>
-                        </div>
-                        <div class="flex justify-between items-center text-xs text-gray-300">
-                            <span>العميل:</span> <span class="font-bold text-white">${order.clientName} (${order.clientPhone})</span>
-                        </div>
-                        <div class="flex justify-between items-center text-xs text-gray-300">
-                            <span>حالة الطلب:</span> <span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">${order.status}</span>
-                        </div>
-                        <button onclick="completeOrder('${order.orderId}')" class="w-full bg-green-500 text-brandDark font-bold py-3 rounded-xl hover:bg-green-400 transition shadow-lg text-xs mt-2">
-                            <i class="fa-solid fa-check-double ml-1"></i> إنجاز الطلب الحالي (لتفعيل استقبال طلب غيره)
-                        </button>
-                    `;
-                }
+            if (allOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">لا توجد طلبات سحابية واردة حالياً.</td></tr>`;
             } else {
-                driverBox.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">لا يوجد طلب مسند إليك حالياً من قِبل المشرف.</p>`;
+                allOrders.forEach(order => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="p-3 font-bold text-brandYellow">${order.orderId}</td>
+                            <td class="p-3">${order.clientName} (${order.clientPhone})</td>
+                            <td class="p-3">${order.description || 'توصيل طلب'}</td>
+                            <td class="p-3 font-bold">${order.cost?.toLocaleString()} جنيه</td>
+                            <td class="p-3"><span class="bg-yellow-500/10 text-brandYellow px-2.5 py-1 rounded-lg text-xs border border-yellow-500/20">${order.status}</span></td>
+                            <td class="p-3">
+                                <select onchange="assignDriverToOrder('${order.id}', this.value)" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
+                                    <option value="">${order.assignedDriver ? 'مسند إلى: ' + order.assignedDriver : 'اختر المندوب...'}</option>
+                                    <option value="محمود حسن">محمود حسن</option>
+                                    <option value="عمر إبراهيم">عمر إبراهيم</option>
+                                </select>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // عرض الطلب للمندوب (محمود حسن مثلاً) مع قيد الطلب النشط الواحد
+            const currentDriverName = "محمود حسن";
+            const driverOrder = allOrders.find(o => o.assignedDriver === currentDriverName && o.status !== 'منجز');
+
+            if (driverOrder) {
+                driverBox.innerHTML = `
+                    <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                        <span class="text-gray-400 text-xs">رقم الطلب النشط:</span>
+                        <span class="font-bold text-brandYellow text-sm">${driverOrder.orderId}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-gray-300">
+                        <span>العميل:</span> <span class="font-bold text-white">${driverOrder.clientName} (${driverOrder.clientPhone})</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs text-gray-300">
+                        <span>الحالة:</span> <span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">${driverOrder.status}</span>
+                    </div>
+                    <button onclick="completeOrderInCloud('${driverOrder.id}')" class="w-full bg-green-500 text-brandDark font-bold py-3 rounded-xl hover:bg-green-400 transition shadow-lg text-xs mt-2">
+                        <i class="fa-solid fa-check-double ml-1"></i> إنجاز الطلب الحالي (لإتاحة استقبال طلب جديد)
+                    </button>
+                `;
+            } else {
+                driverBox.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">لا توجد طلبات نشطة مسندة إليك حالياً.</p>`;
             }
         }
 
-        function assignDriver(orderId, driverName) {
+        window.assignDriverToOrder = async function(docId, driverName) {
             if(!driverName) return;
-            let order = JSON.parse(localStorage.getItem('latest_order'));
-            order.assignedDriver = driverName;
-            order.status = 'قيد التوصيل (مع ' + driverName + ')';
-            localStorage.setItem('latest_order', JSON.stringify(order));
-            showCustomAlert('تم الإسناد', `تم إسناد الطلب (${orderId}) للمندوب ${driverName} بنجاح.`);
-            loadDashboardData();
-        }
-
-        // دالة إنجاز الطلب مع القيد المنطقي للمندوب
-        function completeOrder(orderId) {
-            let order = JSON.parse(localStorage.getItem('latest_order'));
-            order.status = 'منجز';
-            localStorage.setItem('latest_order', JSON.stringify(order));
-            showCustomAlert('تم بنجاح', 'تهانينا! تم إنجاز الطلب الحالي بنجاح وأصبح بإمكانك استقبال طلب جديد.');
-            loadDashboardData();
-        }
-
-        function createStaffAccount() {
-            const name = document.getElementById('newStaffName').value.trim();
-            const role = document.getElementById('newStaffRole').value;
-            if(!name) {
-                showCustomAlert('تنبيه', 'الرجاء إدخال اسم الموظف.');
-                return;
+            try {
+                await updateDoc(doc(db, "orders", docId), {
+                    assignedDriver: driverName,
+                    status: 'قيد التوصيل (' + driverName + ')'
+                });
+                showCustomAlert('تم الإسناد', `تم إسناد الطلب للمندوب ${driverName} بنجاح في السحابة.`);
+                fetchOrdersFromCloud();
+            } catch (err) {
+                console.error(err);
+                showCustomAlert('خطأ', 'فشل تحديث البيانات في السحابة.');
             }
-            showCustomAlert('نجاح', `تم إنشاء حساب (${role == 'supervisor' ? 'مشرف طلبات' : 'مندوب توصيل'}) للموظف ${name} بنجاح.`);
-            document.getElementById('newStaffName').value = '';
         }
 
-        function logout() {
+        window.completeOrderInCloud = async function(docId) {
+            try {
+                await updateDoc(doc(db, "orders", docId), {
+                    status: 'منجز'
+                });
+                showCustomAlert('تم بنجاح', 'تم إنجاز الطلب بنجاح وأصبح بإمكانك استلام طلب جديد.');
+                fetchOrdersFromCloud();
+            } catch (err) {
+                console.error(err);
+                showCustomAlert('خطأ', 'فشل إنجاز الطلب في السحابة.');
+            }
+        }
+
+        window.logout = function() {
             window.location.href = 'index.html';
         }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchOrdersFromCloud();
+            switchRole('admin');
+        });
     </script>
 </body>
 </html>
