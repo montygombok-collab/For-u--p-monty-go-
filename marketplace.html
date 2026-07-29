@@ -47,16 +47,15 @@
 
         <!-- شبكة المنتجات -->
         <div id="marketProductsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <!-- يتم تعبئة المنتجات ديناميكياً من الجافاسكريبت -->
             <div class="col-span-full text-center py-20 text-gray-500">
                 <i class="fa-solid fa-spinner fa-spin text-3xl text-[#FFB800] mb-3"></i>
-                <p class="text-xs">جاري تحميل منتجات المتاجر...</p>
+                <p class="text-xs">جاري تحميل منتجات المتاجر الحقيقية...</p>
             </div>
         </div>
 
     </main>
 
-    <!-- الفوتر السفلي السريع -->
+    <!-- الفوتر السفلي -->
     <footer class="p-4 border-t border-gray-800/60 bg-[#1E1E1E] text-center text-xs text-gray-400">
         <p>فور يو (For-U) - نصلك قبل ما تطلب &copy; 2026</p>
     </footer>
@@ -107,34 +106,61 @@
         </div>
     </div>
 
-    <!-- جافاسكريبت لجلب المنتجات والتعامل مع الطلبات -->
-    <script>
-        let selectedProductForOrder = null;
-        let allProductsList = [];
+    <!-- كود الجافاسكريبت والربط الحقيقي بـ Firebase -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, addFromServer, addDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-        window.addEventListener('DOMContentLoaded', () => {
-            loadMarketplaceProducts();
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
+            authDomain: "for-u-56f3f.firebaseapp.com",
+            projectId: "for-u-56f3f",
+            storageBucket: "for-u-56f3f.firebasestorage.app",
+            messagingSenderId: "519930793199",
+            appId: "1:519930793199:web:0c876d149832cd0a8d5f1a",
+            measurementId: "G-2ZV3NGRYZG"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let allProductsList = [];
+        let selectedProductForOrder = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await fetchMarketProducts();
+            const savedName = localStorage.getItem('foru_user_name');
+            if(savedName) {
+                document.getElementById('orderCustomerName').value = savedName;
+            }
         });
 
-        // جلب المنتجات المخزنة من المتاجر (مربوطة بالتخزين المحلي أو قاعدة البيانات المشتركة من store-dashboard.html)
-        function loadMarketplaceProducts() {
+        // جلب المنتجات الحقيقية من قاعدة بيانات Firestore (مجموعة products أو المتاجر)
+        async function fetchMarketProducts() {
             const grid = document.getElementById('marketProductsGrid');
-            
-            // يتم جلب البيانات المحفوظة عادة من لوحة تحكم المتجر (store-dashboard)
-            // افتراض مفتاح التخزين: 'foru_store_products'
-            const storedProducts = localStorage.getItem('foru_store_products');
-            
-            if (storedProducts) {
-                allProductsList = JSON.parse(storedProducts);
-            } else {
-                // بيانات تجريبية في حال لم يتم إضافة منتجات حقيقية بعد
-                allProductsList = [
-                    { id: 1, name: 'وجبة برجر دبل تشيز', price: '4500', store: 'مطعم السعادة', desc: 'وجبة برجر لحم طازجة مع الجبن والبطاطس', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60' },
-                    { id: 2, name: 'ساعة يد ذكية حديثة', price: '18000', store: 'متجر الإلكترونيات الذكية', desc: 'ساعة مقاومة للماء وتتصل بالهاتف عبر البلوتوث', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&auto=format&fit=crop&q=60' }
-                ];
-            }
+            try {
+                const querySnapshot = await getDocs(collection(db, "products"));
+                allProductsList = [];
+                querySnapshot.forEach((doc) => {
+                    allProductsList.push({ id: doc.id, ...doc.data() });
+                });
 
-            renderProducts(allProductsList);
+                // إذا لم توجد منتجات في السيرفر، نجلب الاحتياطي من الـ LocalStorage للتوافق
+                if (allProductsList.length === 0) {
+                    const localStored = localStorage.getItem('foru_store_products');
+                    if (localStored) {
+                        allProductsList = JSON.parse(localStored);
+                    }
+                }
+
+                renderProducts(allProductsList);
+            } catch (error) {
+                console.error("Error fetching products: ", error);
+                // الرجوع للتخزين المحلي في حال عدم الاتصال المؤقت
+                const localStored = localStorage.getItem('foru_store_products');
+                allProductsList = localStored ? JSON.parse(localStored) : [];
+                renderProducts(allProductsList);
+            }
         }
 
         function renderProducts(products) {
@@ -165,7 +191,7 @@
                     </div>
                     <div class="p-3 pt-0 flex items-center justify-between border-t border-gray-800/60 mt-2">
                         <span class="text-[#FFB800] font-black text-xs">${product.price} ج.س</span>
-                        <button onclick='openOrderModal(${JSON.stringify(product)})' class="bg-[#FFB800] text-[#121212] font-bold px-3 py-1.5 rounded-xl hover:bg-yellow-400 transition text-xs shadow flex items-center">
+                        <button onclick='window.openOrderModalFromIndex(${JSON.stringify(product)})' class="bg-[#FFB800] text-[#121212] font-bold px-3 py-1.5 rounded-xl hover:bg-yellow-400 transition text-xs shadow flex items-center">
                             <i class="fa-solid fa-cart-shopping ml-1"></i> اطلب الآن
                         </button>
                     </div>
@@ -173,35 +199,30 @@
             `).join('');
         }
 
-        function filterMarketProducts() {
+        window.filterMarketProducts = function() {
             const query = document.getElementById('searchMarketInput').value.toLowerCase();
             const filtered = allProductsList.filter(p => 
                 p.name.toLowerCase().includes(query) || 
                 (p.store && p.store.toLowerCase().includes(query))
             );
             renderProducts(filtered);
-        }
+        };
 
-        function openOrderModal(product) {
+        window.openOrderModalFromIndex = function(product) {
             selectedProductForOrder = product;
             document.getElementById('modalProductName').innerText = `المنتج: ${product.name} - السعر: ${product.price} ج.س`;
-            
-            // تعبئة بيانات المستخدم تلقائياً إذا كانت مخزنة مسبقاً
-            const savedName = localStorage.getItem('foru_user_name');
-            if(savedName) document.getElementById('orderCustomerName').value = savedName;
-
             const modal = document.getElementById('orderModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-        }
+        };
 
-        function closeOrderModal() {
+        window.closeOrderModal = function() {
             const modal = document.getElementById('orderModal');
             modal.classList.remove('flex');
             modal.classList.add('hidden');
-        }
+        };
 
-        function submitOrder(event) {
+        window.submitOrder = async function(event) {
             event.preventDefault();
             const name = document.getElementById('orderCustomerName').value;
             const phone = document.getElementById('orderCustomerPhone').value;
@@ -219,14 +240,21 @@
                 date: new Date().toLocaleString()
             };
 
-            // حفظ الطلب في قائمة الطلبات العامة ليتمكن التاجر أو نظام التتبع من رؤيته
+            try {
+                // محاولة حفظ الطلب في قاعدة البيانات الحقيقية Firestore
+                await addDoc(collection(db, "orders"), newOrder);
+            } catch (e) {
+                console.log("Firestore offline, saving locally.");
+            }
+
+            // حفظ احتياطي في التخزين المحلي لصفحة التتبع
             let existingOrders = JSON.parse(localStorage.getItem('foru_store_orders') || '[]');
             existingOrders.push(newOrder);
             localStorage.setItem('foru_store_orders', JSON.stringify(existingOrders));
 
             closeOrderModal();
-            showCustomAlert('نجاح الطلب', `✅ تم إرسال طلبك بنجاح!\nرقم الطلب: ${newOrder.id}\nيمكنك متابعة حالة الطلب من صفحة التتبع.`);
-        }
+            showCustomAlert('نجاح الطلب', `✅ تم إرسال طلبك بنجاح!\nرقم الطلب: ${newOrder.id}\nسيتم تحويلك لصفحة التتبع الآن.`);
+        };
 
         function showCustomAlert(title, message) {
             document.getElementById('alertTitle').innerText = title;
@@ -236,13 +264,12 @@
             modal.classList.add('flex');
         }
 
-        function closeCustomAlert() {
+        window.closeCustomAlert = function() {
             const modal = document.getElementById('customAlertModal');
             modal.classList.remove('flex');
             modal.classList.add('hidden');
-            // تحويل المستخدم لصفحة التتبع بعد إتمام الطلب بنجاح
             window.location.href = 'track.html';
-        }
+        };
     </script>
 </body>
 </html>
