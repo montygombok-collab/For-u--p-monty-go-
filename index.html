@@ -123,9 +123,9 @@
         </div>
     </div>
 
-    <!-- نافذة التنبيه الاحترافية المخصصة (بدلاً من alert المتصفح المزعجة) -->
+    <!-- نافذة التنبيه الاحترافية المخصصة -->
     <div id="customAlertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl animate-scale">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
             <div id="alertIconContainer" class="w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl">
                 <i class="fa-solid fa-circle-check"></i>
             </div>
@@ -148,7 +148,8 @@
         import { 
             getAuth, 
             onAuthStateChanged, 
-            signInWithPopup, 
+            signInWithRedirect, 
+            getRedirectResult,
             GoogleAuthProvider, 
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
@@ -170,7 +171,6 @@
 
         let currentMode = 'login';
 
-        // دالة عرض التنبيه الاحترافي المخصص
         window.showCustomAlert = function(title, message, isError = false) {
             document.getElementById('alertTitle').innerText = title;
             document.getElementById('alertMessage').innerText = message;
@@ -237,6 +237,20 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
+            // التحقق من نتيجة العودة عبر التوجيه (Redirect Result) من Google
+            getRedirectResult(auth)
+                .then((result) => {
+                    if (result && result.user) {
+                        const user = result.user;
+                        localStorage.setItem('foru_user_email', user.email);
+                        updateUIAfterLogin(user.email);
+                        showCustomAlert('نجاح العملية', '✅ تم تسجيل الدخول عبر حساب غوغل بنجاح!');
+                    }
+                })
+                .catch((error) => {
+                    showCustomAlert('خطأ في المصادقة', '❌ خطأ: ' + error.message, true);
+                });
+
             const urlParams = new URLSearchParams(window.location.search);
             const userEmailFromRedirect = urlParams.get('email');
 
@@ -267,19 +281,10 @@
             document.getElementById('userEmailSpan').innerText = email;
         }
 
+        // استخدام التوجيه المباشر (Redirect) لتفادي خطأ إغلاق النافذة المنبثقة على الهواتف
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    const user = result.user;
-                    localStorage.setItem('foru_user_email', user.email);
-                    updateUIAfterLogin(user.email);
-                    closeAuthModal();
-                    showCustomAlert('نجاح العملية', '✅ تم تسجيل الدخول عبر حساب غوغل بنجاح!');
-                })
-                .catch((error) => {
-                    showCustomAlert('خطأ في المصادقة', '❌ خطأ: ' + error.message, true);
-                });
+            signInWithRedirect(auth, provider);
         };
 
         window.loginWithSudanPlay = function() {
