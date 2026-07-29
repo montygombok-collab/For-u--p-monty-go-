@@ -100,6 +100,20 @@
         </div>
     </main>
 
+    <!-- نافذة التنبيه المخصصة -->
+    <div id="customAlertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
+            <div id="alertIconContainer" class="w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h4 id="alertTitle" class="text-xl font-bold mb-2">تنبيه النظام</h4>
+            <p id="alertMessage" class="text-gray-300 text-sm mb-6 leading-relaxed">رسالة...</p>
+            <button id="alertActionBtn" onclick="closeCustomAlert()" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg">
+                حسنًا
+            </button>
+        </div>
+    </div>
+
     <!-- الفوتر -->
     <footer class="p-4 text-center border-t border-gray-800 text-gray-500 text-sm">
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
@@ -110,44 +124,42 @@
     
     <!-- السكريبت الخاص بالخريطة والمنطق -->
     <script>
-        // إعداد الخريطة المبدئية (مثلاً مركز الخرطوم أو أمدرمان افتراضياً)
         const map = L.map('map').setView([15.5007, 32.5599], 13);
 
-        // طبقة الخريطة المجانية من OpenStreetMap
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
         let marker = null;
-        const basePricePerKm = 500; // سعر الكيلو الافتراضي (يمكن التحكم به لاحقاً من الإدارة)
+        let selectedLat = null;
+        let selectedLng = null;
+        const basePricePerKm = 500; 
         let calculatedDistance = 0;
+        let generatedOrderId = '';
 
-        // حدث الضغط على الخريطة لتحديد الموقع
         map.on('click', function(e) {
-            const lat = e.latlng.lat;
-            const lng = e.latlng.lng;
+            selectedLat = e.latlng.lat;
+            selectedLng = e.latlng.lng;
 
             if (marker) {
-                marker.setLatLng([lat, lng]);
+                marker.setLatLng([selectedLat, selectedLng]);
             } else {
-                marker = L.marker([lat, lng]).addTo(map);
+                marker = L.marker([selectedLat, selectedLng]).addTo(map);
             }
 
-            // افتراض نقطة انطلاق الشركة ثابتة (مثلاً نقطة مركزية) لحساب المسافة تقريبياً
             const companyLat = 15.5007;
             const companyLng = 32.5599;
             
-            calculatedDistance = calculateDistance(companyLat, companyLng, lat, lng);
+            calculatedDistance = calculateDistance(companyLat, companyLng, selectedLat, selectedLng);
             const totalCost = Math.round(calculatedDistance * basePricePerKm);
 
             document.getElementById('distanceText').innerText = calculatedDistance.toFixed(2) + ' كم';
             document.getElementById('costText').innerText = totalCost.toLocaleString() + ' جنيه';
         });
 
-        // دالة حساب المسافة بين إحداثيات خطوط الطول والعرض (Haversine formula)
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371; // نصف قطر الأرض بـ كم
+            const R = 6371; 
             const dLat = deg2rad(lat2 - lat1);
             const dLon = deg2rad(lon2 - lon1);
             const a = 
@@ -162,18 +174,75 @@
             return deg * (Math.PI/180);
         }
 
+        function showCustomAlert(title, message, isError = false, actionCallback = null) {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            const iconContainer = document.getElementById('alertIconContainer');
+            const btn = document.getElementById('alertActionBtn');
+            
+            if (isError) {
+                iconContainer.className = "w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-red-400 text-2xl";
+                iconContainer.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else {
+                iconContainer.className = "w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl";
+                iconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            }
+
+            if(actionCallback) {
+                btn.onclick = actionCallback;
+                btn.innerText = "الانتقال إلى تتبع الطلب الآن 🛵";
+            } else {
+                btn.onclick = closeCustomAlert;
+                btn.innerText = "حسنًا";
+            }
+
+            const alertModal = document.getElementById('customAlertModal');
+            alertModal.classList.remove('hidden');
+            alertModal.classList.add('flex');
+        }
+
+        function closeCustomAlert() {
+            const alertModal = document.getElementById('customAlertModal');
+            alertModal.classList.remove('flex');
+            alertModal.classList.add('hidden');
+        }
+
         function submitOrder() {
-            const name = document.getElementById('clientName').value;
-            const phone = document.getElementById('clientPhone').value;
-            const desc = document.getElementById('orderDesc').value;
+            const name = document.getElementById('clientName').value.trim();
+            const phone = document.getElementById('clientPhone').value.trim();
+            const desc = document.getElementById('orderDesc').value.trim();
 
             if(!name || !phone || !marker) {
-                alert('الرجاء إدخال اسم العميل، رقم الهاتف، وتحديد الموقع على الخريطة.');
+                showCustomAlert('تنبيه ناقص', 'الرجاء إدخال اسم العميل، رقم الهاتف، وتحديد الموقع على الخريطة.', true);
                 return;
             }
 
-            alert('تم إرسال طلبك بنجاح! سيتم التواصل معك قريباً.');
-            // لاحقاً سنقوم بربط هذه الدالة بقاعدة بيانات Firestore لحفظ الطلب مباشرة في قسم "الطلبات الجديدة"
+            // توليد رقم طلب فريد
+            generatedOrderId = 'FOR-' + Math.floor(1000 + Math.random() * 9000);
+
+            // حفظ بيانات الطلب في localStorage (أو ربطه بقاعدة البيانات لاحقاً)
+            const orderData = {
+                orderId: generatedOrderId,
+                clientName: name,
+                clientPhone: phone,
+                description: desc,
+                lat: selectedLat,
+                lng: selectedLng,
+                distance: calculatedDistance.toFixed(2),
+                cost: Math.round(calculatedDistance * basePricePerKm),
+                status: 'قيد المعالجة'
+            };
+            localStorage.setItem('latest_order', JSON.stringify(orderData));
+
+            // إظهار رسالة النجاح مع زر الانتقال المباشر لصفحة التتبع والخريطة
+            showCustomAlert(
+                'تم إرسال الطلب بنجاح!', 
+                `رقم طلبك هو (${generatedOrderId}). تم حفظ موقعك بنجاح وجاري تجهيز المندوب.`, 
+                false, 
+                () => {
+                    window.location.href = `track.html?order=${generatedOrderId}`;
+                }
+            );
         }
     </script>
 </body>
