@@ -111,18 +111,22 @@
             </div>
 
             <!-- 2. الطريقة التقليدية (البريد الإلكتروني وكلمة المرور) -->
-            <form id="authForm" class="space-y-4 mt-3" onsubmit="handleEmailAuth(event)">
+            <form id="authForm" class="space-y-4 mt-3" onsubmit="handleEmailAuth(event)" autocomplete="off">
+                <!-- حقول وهمية مخفية لمنع المتصفحات في الهواتف من ملء الحقول التلقائي -->
+                <input type="text" style="display:none" name="fakeusernameremembered">
+                <input type="password" style="display:none" name="fakepasswordremembered">
+
                 <div id="nameFieldContainer" class="hidden">
                     <label class="block text-sm text-gray-300 mb-1">الاسم الكامل</label>
-                    <input type="text" id="fullName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="محمد أحمد">
+                    <input type="text" id="fullName" autocomplete="off" spellcheck="false" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="محمد أحمد">
                 </div>
                 <div>
                     <label class="block text-sm text-gray-300 mb-1">البريد الإلكتروني</label>
-                    <input type="email" id="email" required class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="name@foru.com">
+                    <input type="email" id="email" required autocomplete="off" spellcheck="false" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="name@foru.com">
                 </div>
                 <div>
                     <label class="block text-sm text-gray-300 mb-1">كلمة المرور</label>
-                    <input type="password" id="password" required class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="••••••••">
+                    <input type="password" id="password" required autocomplete="new-password" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-brandYellow outline-none transition" placeholder="••••••••">
                 </div>
                 <button type="submit" id="submitBtnText" class="w-full bg-brandYellow text-brandDark font-bold py-3.5 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-2">
                     دخول بالنظام
