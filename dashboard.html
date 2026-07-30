@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم  وإدارة المستخدمين | For-U</title>
+    <title>لوحة التحكم وإدارة المستخدمين | For-U</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -64,7 +64,7 @@
                 </div>
             </div>
 
-            <!-- قسم إدارة المستخدمين وتعديل الصلاحيات (مع خيار إرجاع الصلاحية لعميل) -->
+            <!-- قسم إدارة المستخدمين وتعديل الصلاحيات -->
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
                 <div class="flex justify-between items-center border-b border-gray-700 pb-3">
                     <h2 class="text-xl font-bold flex items-center text-brandYellow">
@@ -90,15 +90,15 @@
             </div>
         </section>
 
-        <!-- قسم الطلبات والمتابعة -->
+        <!-- قسم الطلبات والمتابعة (تحديد السعر والإرسال للمناديب) -->
         <section id="supervisorSection" class="space-y-6 hidden">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
                 <h2 id="ordersSectionTitle" class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-list-check ml-2"></i> طلبات العملاء السحابية
+                    <i class="fa-solid fa-list-check ml-2"></i> طلبات العملاء وتحديد التكلفة والإسناد
                 </h2>
                 <div id="supportNoticeBox" class="hidden mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-300 text-xs flex items-center">
-                    <i class="fa-solid faليس-لديها-صلاحية ml-2 text-base"></i>
-                    <span>ملاحظة: أنت تملك صلاحية "مسؤول دعم" للاطلاع ومتابعة حالة النظام فقط، **وليس لديك صلاحية إسناد الطلبات للمناديب**.</span>
+                    <i class="fa-solid fa-triangle-exclamation ml-2 text-base"></i>
+                    <span>ملاحظة: أنت تملك صلاحية "مسؤول دعم" للاطلاع ومتابعة حالة النظام فقط، **وليس لديك صلاحية تعديل الأسعار أو إسناد الطلبات**.</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-right text-sm">
@@ -107,9 +107,9 @@
                                 <th class="p-3">رقم الطلب</th>
                                 <th class="p-3">العميل</th>
                                 <th class="p-3">الوصف</th>
-                                <th class="p-3">التكلفة</th>
-                                <th class="p-3">الحالة</th>
-                                <th id="actionColumnHeader" class="p-3">إسناد إلى مندوب</th>
+                                <th class="p-3">تحديد السعر (جنيه)</th>
+                                <th class="p-3">إسناد إلى مندوب</th>
+                                <th class="p-3 text-center">الإجراء</th>
                             </tr>
                         </thead>
                         <tbody id="firestoreOrdersTable" class="divide-y divide-gray-800">
@@ -124,9 +124,9 @@
         <section id="driverSection" class="space-y-6 hidden">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
                 <h2 class="text-xl font-bold flex items-center text-brandYellow border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-motorcycle ml-2"></i> الطلب المسند إليك
+                    <i class="fa-solid fa-motorcycle ml-2"></i> الطلبات الواردة والمسندة إليك
                 </h2>
-                <div id="driverActiveOrderBox" class="bg-brandDark border border-gray-700 p-5 rounded-2xl space-y-3">
+                <div id="driverActiveOrderBox" class="space-y-4">
                     <p class="text-gray-400 text-sm text-center py-4">جاري التحقق من الطلبات المسندة...</p>
                 </div>
             </div>
@@ -150,7 +150,7 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- ربط Firebase وجلب الصلاحية الحقيقية للمستخدم -->
+    <!-- ربط Firebase وإدارة العمليات -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -189,7 +189,6 @@
             modal.classList.add('hidden');
         }
 
-        // تطبيق واجهة العرض والتحكم في الصلاحيات
         function applyRoleView(role) {
             document.getElementById('adminSection').classList.add('hidden');
             document.getElementById('supervisorSection').classList.add('hidden');
@@ -201,22 +200,22 @@
 
             if (role === 'مدير النظام' || role === 'admin') {
                 headerTitle.innerText = 'لوحة تحكم المدير العام';
-                roleBadge.innerText = 'صلاحية كاملة (إدارة النظام والمستخدمين)';
+                roleBadge.innerText = 'صلاحية كاملة (إدارة النظام والمستخدمين والطلبات)';
                 document.getElementById('adminSection').classList.remove('hidden');
                 document.getElementById('supervisorSection').classList.remove('hidden');
             } else if (role === 'مسؤول دعم' || role === 'support') {
                 headerTitle.innerText = 'بوابة مسؤولي الدعم';
-                roleBadge.innerText = 'متابعة النظام واطلاع (بدون صلاحية إسناد)';
-                document.getElementById('adminSection').classList.remove('hidden'); // يرى الإحصائيات والمستخدمين
-                document.getElementById('supervisorSection').classList.remove('hidden'); // يرى الطلبات
-                document.getElementById('supportNoticeBox').classList.remove('hidden'); // ينبهه أنه لا يستطيع الإسناد
+                roleBadge.innerText = 'متابعة النظام واطلاع (بدون تعديل)';
+                document.getElementById('adminSection').classList.remove('hidden');
+                document.getElementById('supervisorSection').classList.remove('hidden');
+                document.getElementById('supportNoticeBox').classList.remove('hidden');
             } else if (role === 'مشرف طلبات' || role === 'supervisor') {
                 headerTitle.innerText = 'لوحة مشرفي الطلبات';
-                roleBadge.innerText = 'متابعة وإسناد الطلبات السحابية';
+                roleBadge.innerText = 'تسعير وإسناد الطلبات لبوابة المناديب';
                 document.getElementById('supervisorSection').classList.remove('hidden');
             } else if (role === 'مندوب توصيل' || role === 'driver') {
                 headerTitle.innerText = 'بوابة مناديب التوصيل';
-                roleBadge.innerText = 'متابعة الطلبات المسندة إليك';
+                roleBadge.innerText = 'متابعة وتوصيل الطلبات المسندة إليك';
                 document.getElementById('driverSection').classList.remove('hidden');
             } else {
                 headerTitle.innerText = 'بوابة المستخدم';
@@ -292,54 +291,63 @@
             const tbodyOrders = document.getElementById('firestoreOrdersTable');
             const tbodyUsers = document.getElementById('firestoreUsersTable');
             const driverBox = document.getElementById('driverActiveOrderBox');
-            const actionColHeader = document.getElementById('actionColumnHeader');
 
-            // التحقق إذا كان المستخدم الحالي "مسؤول دعم" لإخفاء عمود أو تعطيل أزرار الإسناد
             const isSupportOnly = (currentUserRole === 'مسؤول دعم' || currentUserRole === 'support');
-            if (isSupportOnly && actionColHeader) {
-                actionColHeader.innerText = 'حالة الإسناد (للاطلاع فقط)';
-            }
             
-            // تعبئة جدول الطلبات
+            // تعبئة جدول الطلبات للمشرفين والمدراء
             if (tbodyOrders) {
                 tbodyOrders.innerHTML = '';
                 if (allOrders.length === 0) {
                     tbodyOrders.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">لا توجد طلبات سحابية واردة حالياً.</td></tr>`;
                 } else {
                     allOrders.forEach(order => {
-                        let actionCellHTML = '';
+                        let rowHTML = '';
                         if (isSupportOnly) {
-                            // مسؤول الدعم يرى اسم المندوب المسند إليه فقط دون إمكانية التعديل
-                            actionCellHTML = `<span class="text-xs text-gray-300 font-semibold">${order.assignedDriver || 'غير مسند'}</span>`;
+                            rowHTML = `
+                                <tr>
+                                    <td class="p-3 font-bold text-brandYellow">${order.orderId || order.id}</td>
+                                    <td class="p-3">${order.clientName || 'عميل'} (${order.clientPhone || ''})</td>
+                                    <td class="p-3">${order.description || 'توصيل طلب'}</td>
+                                    <td class="p-3 font-bold">${(order.cost || 0).toLocaleString()} جنيه</td>
+                                    <td class="p-3">${order.assignedDriver || 'غير مسند'}</td>
+                                    <td class="p-3 text-center text-xs text-gray-400">للاطلاع فقط</td>
+                                </tr>
+                            `;
                         } else {
-                            // المدير أو المشرف يستطيع الإسناد والتعديل
+                            // مشرف الطلبات أو المدير: حقل لتحديد السعر وقائمة مناديب وزر إرسال
                             let driverOptions = `<option value="">اختر المندوب...</option>`;
                             allUsers.filter(u => u.role === 'مندوب توصيل' || u.role === 'driver').forEach(d => {
                                 const isSelected = order.assignedDriver === d.name ? 'selected' : '';
                                 driverOptions += `<option value="${d.name}" ${isSelected}>${d.name}</option>`;
                             });
-                            actionCellHTML = `
-                                <select onchange="assignDriverToOrder('${order.id}', this.value)" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
-                                    ${driverOptions}
-                                </select>
+
+                            rowHTML = `
+                                <tr>
+                                    <td class="p-3 font-bold text-brandYellow">${order.orderId || order.id}</td>
+                                    <td class="p-3">${order.clientName || 'عميل'} (${order.clientPhone || ''})</td>
+                                    <td class="p-3">${order.description || 'توصيل طلب'}</td>
+                                    <td class="p-3">
+                                        <input type="number" id="price_${order.id}" value="${order.cost || ''}" placeholder="أدخل السعر" class="w-28 bg-brandDark border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
+                                    </td>
+                                    <td class="p-3">
+                                        <select id="driver_${order.id}" class="bg-brandDark border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
+                                            ${driverOptions}
+                                        </select>
+                                    </td>
+                                    <td class="p-3 text-center">
+                                        <button onclick="sendOrderToDriver('${order.id}')" class="bg-brandYellow text-brandDark font-bold px-3 py-1.5 rounded-lg hover:bg-yellow-400 transition text-xs shadow">
+                                            <i class="fa-solid fa-paper-plane ml-1"></i> إرسال للمندوب
+                                        </button>
+                                    </td>
+                                </tr>
                             `;
                         }
-
-                        tbodyOrders.innerHTML += `
-                            <tr>
-                                <td class="p-3 font-bold text-brandYellow">${order.orderId || order.id}</td>
-                                <td class="p-3">${order.clientName || 'عميل'} (${order.clientPhone || ''})</td>
-                                <td class="p-3">${order.description || 'توصيل طلب'}</td>
-                                <td class="p-3 font-bold">${(order.cost || 0).toLocaleString()} جنيه</td>
-                                <td class="p-3"><span class="bg-yellow-500/10 text-brandYellow px-2.5 py-1 rounded-lg text-xs border border-yellow-500/20">${order.status || 'قيد المراجعة'}</span></td>
-                                <td class="p-3">${actionCellHTML}</td>
-                            </tr>
-                        `;
+                        tbodyOrders.innerHTML += rowHTML;
                     });
                 }
             }
 
-            // تعبئة جدول المستخدمين (مع خيار إرجاع الصلاحية إلى عميل)
+            // تعبئة جدول المستخدمين
             if (tbodyUsers) {
                 tbodyUsers.innerHTML = '';
                 if (allUsers.length === 0) {
@@ -373,28 +381,39 @@
                 }
             }
 
-            // عرض الطلب للمندوب النشط
+            // عرض الطلبات المسندة للمندوب في بوابته الخاصة
             if (driverBox) {
-                const driverOrder = allOrders.find(o => o.assignedDriver === currentUserName && o.status !== 'منجز');
+                const driverOrders = allOrders.filter(o => o.assignedDriver === currentUserName && o.status !== 'منجز');
 
-                if (driverOrder) {
-                    driverBox.innerHTML = `
-                        <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                            <span class="text-gray-400 text-xs">رقم الطلب النشط:</span>
-                            <span class="font-bold text-brandYellow text-sm">${driverOrder.orderId || driverOrder.id}</span>
-                        </div>
-                        <div class="flex justify-between items-center text-xs text-gray-300">
-                            <span>العميل:</span> <span class="font-bold text-white">${driverOrder.clientName} (${driverOrder.clientPhone})</span>
-                        </div>
-                        <div class="flex justify-between items-center text-xs text-gray-300">
-                            <span>الحالة:</span> <span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">${driverOrder.status}</span>
-                        </div>
-                        <button onclick="completeOrderInCloud('${driverOrder.id}')" class="w-full bg-green-500 text-brandDark font-bold py-3 rounded-xl hover:bg-green-400 transition shadow-lg text-xs mt-2">
-                            <i class="fa-solid fa-check-double ml-1"></i> إنجاز الطلب الحالي
-                        </button>
-                    `;
+                if (driverOrders.length > 0) {
+                    driverBox.innerHTML = '';
+                    driverOrders.forEach(driverOrder => {
+                        driverBox.innerHTML += `
+                            <div class="bg-brandDark border border-gray-700 p-5 rounded-2xl space-y-3">
+                                <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                                    <span class="text-gray-400 text-xs">رقم الطلب:</span>
+                                    <span class="font-bold text-brandYellow text-sm">${driverOrder.orderId || driverOrder.id}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs text-gray-300">
+                                    <span>العميل:</span> <span class="font-bold text-white">${driverOrder.clientName} (${driverOrder.clientPhone})</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs text-gray-300">
+                                    <span>التفاصيل:</span> <span class="text-white">${driverOrder.description}</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs text-gray-300">
+                                    <span>التكلفة المحددة:</span> <span class="font-bold text-brandYellow text-sm">${(driverOrder.cost || 0).toLocaleString()} جنيه</span>
+                                </div>
+                                <div class="flex justify-between items-center text-xs text-gray-300">
+                                    <span>الحالة:</span> <span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">${driverOrder.status}</span>
+                                </div>
+                                <button onclick="completeOrderInCloud('${driverOrder.id}')" class="w-full bg-green-500 text-brandDark font-bold py-3 rounded-xl hover:bg-green-400 transition shadow-lg text-xs mt-2">
+                                    <i class="fa-solid fa-check-double ml-1"></i> إنجاز الطلب وتسليمه
+                                </button>
+                            </div>
+                        `;
+                    });
                 } else {
-                    driverBox.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">لا توجد طلبات نشطة مسندة إليك حالياً (${currentUserName}).</p>`;
+                    driverBox.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">لا توجد طلبات جديدة مسندة إليك حالياً (${currentUserName}).</p>`;
                 }
             }
         }
@@ -411,25 +430,37 @@
             }
         }
 
-        window.assignDriverToOrder = async function(docId, driverName) {
-            if(!driverName) return;
-            // حماية إضافية تمنع مسؤول الدعم من إسناد الطلب حتى لو حاول برمجياً
+        // دالة إرسال السعر وتوجيه الطلب لمندوب التوصيل
+        window.sendOrderToDriver = async function(docId) {
             if (currentUserRole === 'مسؤول دعم' || currentUserRole === 'support') {
-                showCustomAlert('غير مسموح', 'عذراً، صلاحية "مسؤول دعم" لا تتيح لك إسناد الطلبات.');
-                fetchCloudData();
+                showCustomAlert('غير مسموح', 'عذراً، صلاحية "مسؤول دعم" لا تتيح لك تعديل الأسعار أو إسناد الطلبات.');
+                return;
+            }
+
+            const priceInput = document.getElementById(`price_${docId}`).value;
+            const driverSelect = document.getElementById(`driver_${docId}`).value;
+
+            if (!priceInput || priceInput <= 0) {
+                showCustomAlert('تنبيه', 'يرجى إدخال السعر والتكلفة الصحيحة للطلب قبل الإرسال.');
+                return;
+            }
+
+            if (!driverSelect) {
+                showCustomAlert('تنبيه', 'يرجى اختيار مندوب لتوصيل الطلب.');
                 return;
             }
 
             try {
                 await updateDoc(doc(db, "orders", docId), {
-                    assignedDriver: driverName,
-                    status: 'قيد التوصيل (' + driverName + ')'
+                    cost: Number(priceInput),
+                    assignedDriver: driverSelect,
+                    status: 'قيد التوصيل (بواسطة ' + driverSelect + ')'
                 });
-                showCustomAlert('تم الإسناد', `تم إسناد الطلب للمندوب ${driverName} بنجاح.`);
+                showCustomAlert('تم الإرسال', `تم تحديد السعر وإرسال الطلب إلى بوابة المندوب (${driverSelect}) بنجاح.`);
                 fetchCloudData();
             } catch (err) {
                 console.error(err);
-                showCustomAlert('خطأ', 'فشل إسناد الطلب.');
+                showCustomAlert('خطأ', 'فشل إرسال الطلب للمندوب.');
             }
         }
 
