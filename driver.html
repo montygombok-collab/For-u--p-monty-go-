@@ -43,12 +43,12 @@
         </button>
     </header>
 
-    <!-- المحتوى الرئيسي (مخصص لمناديب التوصيل فقط) -->
+    <!-- المحتوى الرئيسي (مخصص لمناديب التوصيل) -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <div id="driverView" class="space-y-6">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
                 <h2 class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-motorcycle ml-2"></i> كافة الطلبات المتاحة (اختر الطلب الذي تريد إنجازه وتوصيله)[cite: 2]
+                    <i class="fa-solid fa-motorcycle ml-2"></i> الطلبات المسندة والمتاحة من مشرفي الطلبات[cite: 2, 5]
                 </h2>
                 <div class="space-y-6" id="driverOrdersList">
                     <div class="bg-brandDark border border-gray-700 p-4 rounded-2xl text-center text-gray-400">
@@ -75,7 +75,7 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem[cite: 2]
     </footer>
 
-    <!-- ربط Firebase والتحقق الصارم من دور المندوب -->
+    <!-- ربط Firebase وتحديث جلب الطلبات لتتوافق مع إسناد المشرفين -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -111,7 +111,6 @@
             modal.classList.add('hidden');
         }
 
-        // التحقق من الصلاحية عند فتح الصفحة (حماية لمناديب التوصيل والمدراء للمتابعة)
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
@@ -123,7 +122,6 @@
                         const role = userData.role || '';
                         currentDriverName = userData.name || userData.fullName || userData.username || user.email.split('@')[0];
 
-                        // السماح للمندوب أو المدير بالدخول لتسهيل العمليات والمتابعة
                         if (role !== 'مندوب توصيل' && role !== 'driver' && role !== 'مدير النظام' && role !== 'admin') {
                             showCustomAlert('غير مصرح', 'عذراً، هذه الصفحة مخصصة لمناديب التوصيل فقط.');
                             setTimeout(() => {
@@ -135,7 +133,6 @@
                         document.getElementById('userRoleSubtitle').innerText = `المندوب: ${currentDriverName} (صلاحية: ${role})`;[cite: 2]
                         fetchAllAvailableOrders();
                     } else {
-                        // في حال عدم وجود سجل للمستخدم بقاعدة البيانات، نمنحه صلاحية افتراضية مؤقتة
                         currentDriverName = user.email.split('@')[0];
                         document.getElementById('userRoleSubtitle').innerText = `المندوب: ${currentDriverName} (صلاحية افتراضية)`;[cite: 2]
                         fetchAllAvailableOrders();
@@ -149,68 +146,84 @@
             }
         });
 
-        // جلب كافة الطلبات المتاحة ليختار منها المندوب
+        // دمج جلب الطلبات من Firestore و LocalStorage لتلقي طلبات مشرفي الطلبات بدقة
         async function fetchAllAvailableOrders() {
             try {
-                const querySnapshot = await getDocs(collection(db, "orders"));
+                let firestoreOrders = [];
+                try {
+                    const querySnapshot = await getDocs(collection(db, "orders"));
+                    querySnapshot.forEach((docSnap) => {
+                        firestoreOrders.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                } catch (e) {
+                    console.log("الاعتماد على التخزين المحلي للطلبات");
+                }
+
+                const localOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
+                
+                // دمج الطلبات وتفادي التكرار
+                const combinedMap = new Map();
+                firestoreOrders.forEach(o => combinedMap.set(o.orderId || o.id, o));
+                localOrders.forEach(o => {
+                    if (!combinedMap.has(o.orderId)) combinedMap.set(o.orderId, o);
+                });
+
+                const allOrders = Array.from(combinedMap.values());
                 const ordersListContainer = document.getElementById('driverOrdersList');
                 ordersListContainer.innerHTML = '';
 
-                let availableOrders = [];
-                querySnapshot.forEach((docSnap) => {
-                    const orderData = docSnap.data();
-                    if (orderData.status !== 'منجز') {
-                        availableOrders.push({ id: docSnap.id, ...orderData });
-                    }
-                });
+                // تصفية الطلبات غير المنجزة والتي تم تسعيرها أو إسنادها
+                const activeOrders = allOrders.filter(order => order.status !== 'منجز' && order.status !== 'completed');
 
-                if (availableOrders.length === 0) {
+                if (activeOrders.length === 0) {
                     ordersListContainer.innerHTML = `
                         <div class="bg-brandDark border border-gray-700 p-6 rounded-2xl text-center text-gray-400">
                             <i class="fa-solid fa-box-open text-3xl mb-2 text-gray-500"></i>
-                            <p>لا توجد طلبات متاحة للتوصيل حالياً في النظام.</p>
+                            <p>لا توجد طلبات جديدة مسندة أو متاحة حالياً للتوصيل.</p>
                         </div>
                     `;[cite: 2]
                     return;
                 }
 
-                availableOrders.forEach(order => {
-                    const deliveryLocation = order.address || order.location || 'Khartoum, Sudan';[cite: 2]
-                    const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(deliveryLocation)}&t=&z=13&ie=UTF8&iwloc=&output=embed`;[cite: 2]
-                    const isAssignedToMe = order.assignedDriver === currentDriverName;[cite: 2]
+                activeOrders.forEach(order => {
+                    const isAssignedToMe = (order.assignedDriver === currentDriverName || order.driverName === currentDriverName);
+                    
+                    // بيانات الموقع والإحداثيات الواردة من لوحة المشرف
+                    const latVal = order.lat ? Number(order.lat).toFixed(4) : '--';
+                    const lngVal = order.lng ? Number(order.lng).toFixed(4) : '--';
+                    const mapLink = (order.lat && order.lng) ? `https://www.google.com/maps?q=${order.lat},${order.lng}` : `https://maps.google.com/maps?q=${encodeURIComponent(order.address || 'Khartoum')}`;
 
                     ordersListContainer.innerHTML += `
                         <div class="bg-brandDark border ${isAssignedToMe ? 'border-brandYellow' : 'border-gray-700'} p-5 rounded-2xl space-y-4 shadow-md">
                             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                                <div class="space-y-1">
+                                <div class="space-y-1.5 w-full">
                                     <div class="flex items-center gap-2">
                                         <span class="bg-yellow-500/10 text-brandYellow text-xs px-2.5 py-1 rounded-lg border border-yellow-500/20 font-bold">${order.status || 'قيد الانتظار'}</span>
-                                        ${isAssignedToMe ? '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded border border-emerald-500/30 font-bold">مسند إليك</span>' : ''}
+                                        <span class="text-xs text-gray-400">رقم الطلب: <b class="text-white">${order.orderId || order.id}</b></span>
+                                        ${isAssignedToMe ? '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded border border-emerald-500/30 font-bold mr-auto">مسند إليك رسمياً</span>' : ''}
                                     </div>
-                                    <h3 class="font-bold text-base mt-2">عميل: ${order.clientName || 'غير متوفر'}</h3>
-                                    <p class="text-xs text-gray-400">الوصف: ${order.description || 'طلب توصيل سحابي'}</p>
-                                    <p class="text-xs text-gray-400">العنوان: <span class="text-white">${deliveryLocation}</span></p>
-                                    <p class="text-xs text-gray-400">رقم الهاتف: <span class="text-white font-bold">${order.clientPhone || 'غير متوفر'}</span></p>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs pt-1 border-t border-gray-800">
+                                        <div><span class="text-gray-400">العميل:</span> <span class="font-bold text-white">${order.clientName || 'غير متوفر'} (${order.clientPhone || 'بدون هاتف'})</span></div>
+                                        <div><span class="text-gray-400">المتجر (المرسل):</span> <span class="font-bold text-white">${order.storeName || 'غير مسجل'} (${order.storePhone || 'بدون هاتف'})</span></div>
+                                    </div>
+                                    <p class="text-xs text-gray-300"><b>البضاعة:</b> ${order.description || 'طلب توصيل'}</p>
+                                    <p class="text-xs text-gray-400"><b>المسافة المقدرة:</b> <span class="text-brandYellow font-bold">${order.distance || '0'} كم</span></p>
                                     <p class="text-xs text-brandYellow font-semibold">المبلغ المطلوب تحصيله: ${(order.cost || 0).toLocaleString()} جنيه</p>
-                                </div>
-                                
-                                <div class="w-full md:w-auto flex flex-col gap-2 min-w-[160px]">
-                                    <button onclick="claimOrder('${order.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
-                                        <i class="fa-solid fa-hand ml-1.5"></i> اختيار / أنا سأقوم به[cite: 2]
-                                    </button>
-                                    <button onclick="updateOrderStatus('${order.id}')" class="bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
-                                        <i class="fa-solid fa-check ml-1.5"></i> تم التسليم / إنجاز[cite: 2]
-                                    </button>
                                 </div>
                             </div>
 
-                            <!-- خريطة موقع العميل -->
-                            <div class="space-y-1 pt-2 border-t border-gray-800">
-                                <p class="text-xs text-gray-400 flex items-center mb-1">
-                                    <i class="fa-solid fa-map-location-dot text-brandYellow ml-1"></i> خريطة موقع العميل المفترض الوصول إليه:[cite: 2]
-                                </p>
-                                <div class="w-full h-40 rounded-xl overflow-hidden border border-gray-700">
-                                    <iframe width="100%" height="100%" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="${mapSrc}"></iframe>[cite: 2]
+                            <!-- أزرار الإجراءات والموقع الجغرافي -->
+                            <div class="flex flex-col md:flex-row justify-between items-center gap-3 pt-3 border-t border-gray-800">
+                                <a href="${mapLink}" target="_blank" class="text-xs text-blue-400 underline flex items-center">
+                                    <i class="fa-solid fa-map-location-dot ml-1.5"></i> فتح موقع العميل على الخريطة (${latVal}, ${lngVal})
+                                </a>
+                                <div class="flex items-center gap-2 w-full md:w-auto">
+                                    <button onclick="claimOrder('${order.id}', '${order.orderId}')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
+                                        <i class="fa-solid fa-hand ml-1.5"></i> قبول وتسلم الطلب[cite: 2]
+                                    </button>
+                                    <button onclick="updateOrderStatus('${order.id}', '${order.orderId}')" class="flex-1 md:flex-none bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
+                                        <i class="fa-solid fa-check ml-1.5"></i> إنجاز وتسليم الطلب[cite: 2]
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -223,28 +236,51 @@
             }
         }
 
-        // اختيار المندوب للطلب وتسجيل اسمه عليه
-        window.claimOrder = async function(orderId) {
+        // قبول واختيار الطلب وتسجيله للمندوب الحالي
+        window.claimOrder = async function(docId, orderCode) {
             try {
-                await updateDoc(doc(db, "orders", orderId), {
-                    assignedDriver: currentDriverName,
-                    status: 'قيد التوصيل'
+                let localOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
+                localOrders = localOrders.map(o => {
+                    if (o.orderId === orderCode || o.id === docId) {
+                        return { ...o, assignedDriver: currentDriverName, driverName: currentDriverName, status: 'قيد التوصيل' };
+                    }
+                    return o;
                 });
-                showCustomAlert('تم الاختيار', 'تم تسجيل هذا الطلب باسمك بنجاح.');[cite: 2]
+                localStorage.setItem('foru_all_orders', JSON.stringify(localOrders));
+
+                if (!docId.startsWith('FOR-')) {
+                    await updateDoc(doc(db, "orders", docId), {
+                        assignedDriver: currentDriverName,
+                        driverName: currentDriverName,
+                        status: 'قيد التوصيل'
+                    });
+                }
+                showCustomAlert('تم القبول', 'تم تسجيل هذا الطلب وتخصيصه لك بنجاح.');[cite: 2]
                 fetchAllAvailableOrders();
             } catch (err) {
                 console.error(err);
-                showCustomAlert('خطأ', 'فشل اختيار الطلب.');[cite: 2]
+                showCustomAlert('خطأ', 'فشل قبول الطلب.');[cite: 2]
             }
         }
 
-        // تحديث حالة الطلب إلى "منجز"
-        window.updateOrderStatus = async function(orderId) {
+        // تحديث حالة الطلب إلى "منجز" وإزالته من قائمة الطلبات النشطة
+        window.updateOrderStatus = async function(docId, orderCode) {
             try {
-                await updateDoc(doc(db, "orders", orderId), {
-                    status: 'منجز'
+                let localOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
+                localOrders = localOrders.map(o => {
+                    if (o.orderId === orderCode || o.id === docId) {
+                        return { ...o, status: 'منجز' };
+                    }
+                    return o;
                 });
-                showCustomAlert('تم بنجاح', 'تم تحديث حالة الطلب إلى (منجز) بنجاح.');[cite: 2]
+                localStorage.setItem('foru_all_orders', JSON.stringify(localOrders));
+
+                if (!docId.startsWith('FOR-')) {
+                    await updateDoc(doc(db, "orders", docId), {
+                        status: 'منجز'
+                    });
+                }
+                showCustomAlert('تم بنجاح', 'تم إنجاز وتوصيل الطلب بنجاح.');[cite: 2]
                 fetchAllAvailableOrders();
             } catch (err) {
                 console.error(err);
@@ -260,4 +296,3 @@
     </script>
 </body>
 </html>
-```[cite: 2]
