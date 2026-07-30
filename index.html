@@ -20,7 +20,7 @@
     <!-- شاشة التحميل -->
     <div id="loadingOverlay" class="fixed inset-0 bg-[#121212] z-50 flex flex-col items-center justify-center space-y-4 transition-opacity duration-300">
         <div class="w-16 h-16 border-4 border-[#FFB800]/20 border-t-[#FFB800] rounded-full animate-spin"></div>
-        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحقق من الحساب...</p>
+        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحقق من الحساب وتوجيهك...</p>
     </div>
 
     <!-- الهيدر العلوي -->
@@ -190,6 +190,25 @@
 
         let currentMode = 'login';
 
+        // دالة فحص وتوجيه المستخدم بناءً على الـ Role
+        function redirectBasedOnRole(role) {
+            const normalizedRole = role ? role.trim() : 'عميل';
+            
+            if (normalizedRole === 'مندوب' || normalizedRole === 'مندوب توصيل') {
+                window.location.href = 'driver.html';
+            } else if (normalizedRole === 'مشرف' || normalizedRole === 'مشرف طلبات' || normalizedRole === 'مدير' || normalizedRole === 'مدير نظام') {
+                window.location.href = 'dashboard.html';
+            } else {
+                // العميل يبقى في الواجهة الحالية أو يتوجه إلى customer.html حسب رغبتك (هنا تم ترك العميل يرى واجهة index أو يمكنك توجيهه لـ customer.html إذا أردت)
+                // لعرض الواجهة بشكل طبيعي للعميل:
+                const loader = document.getElementById('loadingOverlay');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 300);
+                }
+            }
+        }
+
         async function handleUserSessionUI(user, customName = '') {
             try {
                 const userRef = doc(db, "users", user.uid);
@@ -217,6 +236,9 @@
                 localStorage.setItem('foru_user_email', user.email || '');
                 localStorage.setItem('foru_user_role', role);
 
+                // تنفيذ التوجيه المباشر حسب الصلاحية
+                redirectBasedOnRole(role);
+
                 document.getElementById('userNameSpan').innerText = userName;
                 document.getElementById('userProfileDisplay').classList.remove('hidden');
                 document.getElementById('userProfileDisplay').classList.add('flex');
@@ -229,11 +251,6 @@
                 document.getElementById('authModal').classList.remove('flex');
                 document.getElementById('authModal').classList.add('hidden');
 
-                const loader = document.getElementById('loadingOverlay');
-                if(loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.remove(), 300);
-                }
             } catch (error) {
                 console.error("خطأ في جلب بيانات المستخدم:", error);
                 const loader = document.getElementById('loadingOverlay');
