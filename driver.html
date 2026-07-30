@@ -151,7 +151,7 @@
             }
         });
 
-        // دالة جلب كافة الطلبات (من Firestore و LocalStorage لضمان عدم ضياع أي طلب أُرسل من لوحة المشرف)
+        // دالة جلب كافة الطلبات
         window.fetchAllAvailableOrders = async function() {
             try {
                 let firestoreOrders = [];
@@ -177,7 +177,7 @@
                 const ordersListContainer = document.getElementById('driverOrdersList');
                 ordersListContainer.innerHTML = '';
 
-                // تصفية الطلبات لعرض غير المنجزة فقط (أي طلب تم تسعيره أو إرساله)
+                // تصفية الطلبات لعرض غير المنجزة فقط
                 const activeOrders = allOrders.filter(order => {
                     const status = order.status;
                     return status !== 'منجز' && status !== 'completed';
@@ -206,9 +206,9 @@
                             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <div class="space-y-1.5 w-full">
                                     <div class="flex items-center gap-2">
-                                        <span class="bg-yellow-500/10 text-brandYellow text-xs px-2.5 py-1 rounded-lg border border-yellow-500/20 font-bold">${order.status === 'in_progress' ? 'قيد التوصيل / جاهز' : (order.status || 'متاح')}</span>
+                                        <span class="bg-yellow-500/10 text-brandYellow text-xs px-2.5 py-1 rounded-lg border border-yellow-500/20 font-bold">${order.status === 'in_progress' ? 'جاهز للتوصيل' : (order.status || 'متاح')}</span>
                                         <span class="text-xs text-gray-400">رقم الطلب: <b class="text-white">${order.orderId || order.id}</b></span>
-                                        ${isAssignedToMe ? '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded border border-emerald-500/30 font-bold mr-auto">مسجل باسمك</span>' : ''}
+                                        ${isAssignedToMe ? '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded border border-emerald-500/30 font-bold mr-auto">قيد التوصيل معك</span>' : ''}
                                     </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs pt-1 border-t border-gray-800">
                                         <div><span class="text-gray-400">العميل:</span> <span class="font-bold text-white">${order.clientName || 'غير متوفر'} (${order.clientPhone || 'بدون هاتف'})</span></div>
@@ -219,18 +219,21 @@
                                 </div>
                             </div>
 
-                            <!-- تفاصيل الخريطة وأزرار الإجراءات -->
+                            <!-- الخريطة والزرين المُعدلين -->
                             <div class="flex flex-col md:flex-row justify-between items-center gap-3 pt-3 border-t border-gray-800">
                                 <a href="${mapLink}" target="_blank" class="text-xs text-blue-400 underline flex items-center">
-                                    <i class="fa-solid fa-map-location-dot ml-1.5"></i> فتح موقع العميل على الخريطة (${latVal}, ${lngVal})
+                                    <i class="fa-solid fa-map-location-dot ml-1.5"></i> موقع العميل (${latVal}, ${lngVal})
                                 </a>
                                 <div class="flex items-center gap-2 w-full md:w-auto">
-                                    <button onclick="claimOrder('${order.id}', '${order.orderId}')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
-                                        <i class="fa-solid fa-hand ml-1.5"></i> قبول / أنا سأقوم بتوصيله
-                                    </button>
-                                    <button onclick="updateOrderStatus('${order.id}', '${order.orderId}')" class="flex-1 md:flex-none bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
-                                        <i class="fa-solid fa-check ml-1.5"></i> إنجاز وتسليم الطلب
-                                    </button>
+                                    ${!isAssignedToMe ? `
+                                        <button onclick="claimAndNavigate('${order.id}', '${order.orderId}', '${mapLink}')" class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
+                                            <i class="fa-solid fa-location-arrow ml-1.5"></i> قبول الطلب والتوجيه للخريطة
+                                        </button>
+                                    ` : `
+                                        <button onclick="updateOrderStatus('${order.id}', '${order.orderId}')" class="w-full md:w-auto bg-green-600 hover:bg-green-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
+                                            <i class="fa-solid fa-check-double ml-1.5"></i> تم التوصيل
+                                        </button>
+                                    `}
                                 </div>
                             </div>
                         </div>
@@ -243,9 +246,12 @@
             }
         }
 
-        // قبول الطلب وتسجيله باسم المندوب الحالي
-        window.claimOrder = async function(docId, orderCode) {
+        // دالة قبول الطلب والتوجيه الفوري إلى الخريطة
+        window.claimAndNavigate = async function(docId, orderCode, mapUrl) {
             try {
+                // فتح رابط الخريطة فوراً لمنع حظر النوافذ المنبثقة من المتصفح (Popup Blocker)
+                const mapWindow = window.open(mapUrl, '_blank');
+
                 let localOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
                 localOrders = localOrders.map(o => {
                     if (o.orderId === orderCode || o.id === docId) {
@@ -262,15 +268,15 @@
                         status: 'قيد التوصيل'
                     });
                 }
-                showCustomAlert('تم القبول', 'تم تسجيل هذا الطلب باسمك بنجاح.');
+
                 fetchAllAvailableOrders();
             } catch (err) {
                 console.error(err);
-                showCustomAlert('خطأ', 'فشل قبول الطلب.');
+                showCustomAlert('خطأ', 'فشل قبول الطلب والتوجيه للخريطة.');
             }
         }
 
-        // إنجاز وتحديث حالة الطلب إلى منجز
+        // إنجاز وتحديث حالة الطلب عند الضغط على "تم التوصيل"
         window.updateOrderStatus = async function(docId, orderCode) {
             try {
                 let localOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
@@ -287,7 +293,7 @@
                         status: 'completed'
                     });
                 }
-                showCustomAlert('تم بنجاح', 'تم إنجاز وتسليم الطلب بنجاح.');
+                showCustomAlert('تم التوصيل بنجاح', 'تم إنجاز الطلب وتسليمه بنجاح.');
                 fetchAllAvailableOrders();
             } catch (err) {
                 console.error(err);
