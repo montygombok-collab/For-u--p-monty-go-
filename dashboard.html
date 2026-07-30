@@ -98,7 +98,7 @@
                 </h2>
                 <div id="supportNoticeBox" class="hidden mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-300 text-xs flex items-center">
                     <i class="fa-solid fa-triangle-exclamation ml-2 text-base"></i>
-                    <span>ملاحظة: أنت تملك صلاحية "مسؤول دعم" للاطلاع ومتابعة حالة النظام فقط، **وليس لديك صلاحية تعديل الأسعار أو إسناد الطلبات**.</span>
+                    <span>ملاحظة: أنت تملك صلاحية "مسؤول دعم" للاطلاع ومتابعة حالة النظام فقط، **وليس لديك صلاحية تعديل الأسعار أو إرسال الطلبات**.</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-right text-sm">
@@ -109,12 +109,11 @@
                                 <th class="p-3">بيانات المتجر (المرسل)</th>
                                 <th class="p-3">تفاصيل البضاعة والموقع</th>
                                 <th class="p-3">تحديد السعر (جنيه)</th>
-                                <th class="p-3">إسناد لمندوب</th>
-                                <th class="p-3 text-center">الإجراء</th>
+                                <th class="p-3 text-center">إرسال لبوابة المناديب العامة</th>
                             </tr>
                         </thead>
                         <tbody id="firestoreOrdersTable" class="divide-y divide-gray-800">
-                            <tr><td colspan="7" class="p-4 text-center text-gray-500">جاري تحميل الطلبات...</td></tr>
+                            <tr><td colspan="6" class="p-4 text-center text-gray-500">جاري تحميل الطلبات...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -125,10 +124,10 @@
         <section id="driverSection" class="space-y-6 hidden">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
                 <h2 class="text-xl font-bold flex items-center text-brandYellow border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-motorcycle ml-2"></i> الطلبات الواردة والمسندة إليك
+                    <i class="fa-solid fa-motorcycle ml-2"></i> بوابة مناديب التوصيل العامة (جميع الطلبات المتاحة)
                 </h2>
                 <div id="driverActiveOrderBox" class="space-y-4">
-                    <p class="text-gray-400 text-sm text-center py-4">جاري التحقق من الطلبات المسندة...</p>
+                    <p class="text-gray-400 text-sm text-center py-4">جاري تحميل الطلبات المتاحة...</p>
                 </div>
             </div>
         </section>
@@ -212,11 +211,11 @@
                 document.getElementById('supportNoticeBox').classList.remove('hidden');
             } else if (role === 'مشرف طلبات' || role === 'supervisor') {
                 headerTitle.innerText = 'لوحة مشرفي الطلبات';
-                roleBadge.innerText = 'تسعير وإسناد الطلبات لبوابة المناديب';
+                roleBadge.innerText = 'تسعير وإرسال الطلبات لبوابة المناديب العامة';
                 document.getElementById('supervisorSection').classList.remove('hidden');
             } else if (role === 'مندوب توصيل' || role === 'driver') {
                 headerTitle.innerText = 'بوابة مناديب التوصيل';
-                roleBadge.innerText = 'متابعة وتوصيل الطلبات المسندة إليك';
+                roleBadge.innerText = 'متابعة وتوصيل الطلبات المتاحة بالساحة العامة';
                 document.getElementById('driverSection').classList.remove('hidden');
             } else {
                 headerTitle.innerText = 'بوابة المستخدم';
@@ -234,7 +233,7 @@
                     if (userSnap.exists()) {
                         const userData = userSnap.data();
                         currentUserRole = userData.role || 'مندوب توصيل';
-                        currentUserName = userData.name || user.displayName || 'مستخدم';
+                        currentUserName = userData.name || userData.fullName || userData.username || user.email.split('@')[0];
                     } else {
                         currentUserRole = 'مندوب توصيل';
                         currentUserName = user.email.split('@')[0];
@@ -252,7 +251,6 @@
 
         async function fetchCloudData() {
             try {
-                // جلب الطلبات من Firestore أولاً، ثم دمجها مع LocalStorage لضمان تزامن الطلبات المحلية الفورية
                 let firestoreOrders = [];
                 const ordersSnapshot = await getDocs(collection(db, "orders"));
                 ordersSnapshot.forEach((docSnap) => {
@@ -261,7 +259,6 @@
 
                 const localOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
                 
-                // دمج الطلبات وتفادي التكرار بناءً على الـ orderId أو id
                 const combinedMap = new Map();
                 firestoreOrders.forEach(o => combinedMap.set(o.orderId || o.id, o));
                 localOrders.forEach(o => {
@@ -298,7 +295,6 @@
                 renderViews();
             } catch (error) {
                 console.error("خطأ في جلب البيانات:", error);
-                // الاعتماد على التخزين المحلي في حالة انقطاع السيرفر
                 allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
                 renderViews();
             }
@@ -311,11 +307,11 @@
 
             const isSupportOnly = (currentUserRole === 'مسؤول دعم' || currentUserRole === 'support');
             
-            // تعبئة جدول الطلبات للمشرفين والمدراء مع كامل التفاصيل (المتجر، الإحداثيات، المسافة)
+            // تعبئة جدول الطلبات للمشرفين والمدراء
             if (tbodyOrders) {
                 tbodyOrders.innerHTML = '';
                 if (allOrders.length === 0) {
-                    tbodyOrders.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">لا توجد طلبات سحابية واردة حالياً.</td></tr>`;
+                    tbodyOrders.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">لا توجد طلبات سحابية واردة حالياً.</td></tr>`;
                 } else {
                     allOrders.forEach(order => {
                         const latVal = order.lat ? Number(order.lat).toFixed(4) : '--';
@@ -341,17 +337,10 @@
                                         <div><a href="${mapLink}" target="_blank" class="text-blue-400 underline"><i class="fa-solid fa-map-pin ml-1"></i> عرض الموقع (${latVal}, ${lngVal})</a></div>
                                     </td>
                                     <td class="p-3 font-bold">${(order.cost || 0).toLocaleString()} جنيه</td>
-                                    <td class="p-3 font-semibold text-gray-300">${order.assignedDriver || 'غير مسند'}</td>
                                     <td class="p-3 text-center text-xs text-gray-400">للاطلاع فقط</td>
                                 </tr>
                             `;
                         } else {
-                            let driverOptions = `<option value="">اختر المندوب...</option>`;
-                            allUsers.filter(u => u.role === 'مندوب توصيل' || u.role === 'driver').forEach(d => {
-                                const isSelected = order.assignedDriver === d.name ? 'selected' : '';
-                                driverOptions += `<option value="${d.name}" ${isSelected}>${d.name}</option>`;
-                            });
-
                             rowHTML = `
                                 <tr>
                                     <td class="p-3 font-bold text-brandYellow">${order.orderId || order.id}</td>
@@ -371,14 +360,9 @@
                                     <td class="p-3">
                                         <input type="number" id="price_${order.id}" value="${order.cost || ''}" placeholder="السعر" class="w-24 bg-brandDark border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
                                     </td>
-                                    <td class="p-3">
-                                        <select id="driver_${order.id}" class="bg-brandDark border border-gray-700 rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
-                                            ${driverOptions}
-                                        </select>
-                                    </td>
                                     <td class="p-3 text-center">
-                                        <button onclick="sendOrderToDriver('${order.id}', '${order.orderId || order.id}')" class="bg-brandYellow text-brandDark font-bold px-3 py-1.5 rounded-lg hover:bg-yellow-400 transition text-xs shadow">
-                                            <i class="fa-solid fa-paper-plane ml-1"></i> إرسال
+                                        <button onclick="sendOrderToPublicDrivers('${order.id}', '${order.orderId || order.id}')" class="bg-brandYellow text-brandDark font-bold px-3 py-1.5 rounded-lg hover:bg-yellow-400 transition text-xs shadow">
+                                            <i class="fa-solid fa-paper-plane ml-1"></i> إرسال للعام
                                         </button>
                                     </td>
                                 </tr>
@@ -413,7 +397,7 @@
                                         <option value="عميل" ${currentRole === 'عميل' ? 'selected' : ''}>إرجاع إلى (عميل)</option>
                                         <option value="مندوب توصيل" ${currentRole === 'مندوب توصيل' ? 'selected' : ''}>مندوب توصيل</option>
                                         <option value="مشرف طلبات" ${currentRole === 'مشرف طلبات' ? 'selected' : ''}>مشرف طلبات</option>
-                                        <option value="مسؤول دعم" ${currentRole === 'مسؤول دعم' ? 'selected' : ''}>مسؤول دعم (بدون إسناد)</option>
+                                        <option value="مسؤول دعم" ${currentRole === 'مسؤول دعم' ? 'selected' : ''}>مسؤول دعم (بدون إرسال)</option>
                                         <option value="مدير النظام" ${currentRole === 'مدير النظام' ? 'selected' : ''}>مدير النظام</option>
                                     </select>
                                 </td>
@@ -423,42 +407,52 @@
                 }
             }
 
-            // عرض الطلبات للمندوب في بوابته الخاصة
+            // عرض كافة الطلبات المتاحة وغير المنجزة لبوابة المناديب العامة (بدون تخصيص لمندوب محدد)
             if (driverBox) {
-                const driverOrders = allOrders.filter(o => o.assignedDriver === currentUserName && o.status !== 'completed' && o.status !== 'منجز');
+                const publicOrders = allOrders.filter(o => o.status !== 'completed' && o.status !== 'منجز');
 
-                if (driverOrders.length > 0) {
+                if (publicOrders.length > 0) {
                     driverBox.innerHTML = '';
-                    driverOrders.forEach(driverOrder => {
+                    publicOrders.forEach(driverOrder => {
+                        const isAssignedToMe = (driverOrder.assignedDriver === currentUserName || driverOrder.driverName === currentUserName);
                         const mapLink = (driverOrder.lat && driverOrder.lng) ? `https://www.google.com/maps?q=${driverOrder.lat},${driverOrder.lng}` : '#';
+                        
                         driverBox.innerHTML += `
-                            <div class="bg-brandDark border border-gray-700 p-5 rounded-2xl space-y-3">
+                            <div class="bg-brandDark border ${isAssignedToMe ? 'border-brandYellow' : 'border-gray-700'} p-5 rounded-2xl space-y-3">
                                 <div class="flex justify-between items-center border-b border-gray-800 pb-3">
-                                    <span class="text-gray-400 text-xs">رقم الطلب:</span>
-                                    <span class="font-bold text-brandYellow text-sm">${driverOrder.orderId || driverOrder.id}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs bg-yellow-500/10 text-brandYellow px-2 py-0.5 rounded border border-yellow-500/20">${driverOrder.status || 'متاح'}</span>
+                                        <span class="font-bold text-brandYellow text-sm">طلب رقم: ${driverOrder.orderId || driverOrder.id}</span>
+                                    </div>
+                                    ${isAssignedToMe ? '<span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/30">مسجل باسمك</span>' : ''}
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs text-gray-300">
-                                    <div><span>العميل:</span> <span class="font-bold text-white">${driverOrder.clientName} (${driverOrder.clientPhone})</span></div>
-                                    <div><span>المتجر (المرسل):</span> <span class="font-bold text-white">${driverOrder.storeName} (${driverOrder.storePhone})</span></div>
+                                    <div><span>العميل:</span> <span class="font-bold text-white">${driverOrder.clientName || 'غير متوفر'} (${driverOrder.clientPhone || 'بدون هاتف'})</span></div>
+                                    <div><span>المتجر (المرسل):</span> <span class="font-bold text-white">${driverOrder.storeName || 'غير مسجل'} (${driverOrder.storePhone || 'بدون هاتف'})</span></div>
                                 </div>
                                 <div class="text-xs text-gray-300">
-                                    <span>نوع البضاعة:</span> <span class="text-white">${driverOrder.description}</span>
+                                    <span>نوع البضاعة:</span> <span class="text-white">${driverOrder.description || 'توصيل طلب'}</span>
                                 </div>
                                 <div class="flex justify-between items-center text-xs text-gray-300">
-                                    <span>التكلفة المعتمدة:</span> <span class="font-bold text-brandYellow text-sm">${(driverOrder.cost || 0).toLocaleString()} جنيه</span>
+                                    <span>المبلغ المطلوب تحصيله:</span> <span class="font-bold text-brandYellow text-sm">${(driverOrder.cost || 0).toLocaleString()} جنيه</span>
                                 </div>
                                 <div class="flex justify-between items-center text-xs text-gray-300">
                                     <span>الموقع المستهدف:</span> 
                                     <a href="${mapLink}" target="_blank" class="text-blue-400 underline"><i class="fa-solid fa-map-location-dot ml-1"></i> فتح على الخريطة</a>
                                 </div>
-                                <button onclick="completeOrderInCloud('${driverOrder.id}', '${driverOrder.orderId}')" class="w-full bg-green-500 text-brandDark font-bold py-3 rounded-xl hover:bg-green-400 transition shadow-lg text-xs mt-2">
-                                    <i class="fa-solid fa-check-double ml-1"></i> إنجاز وتسليم الطلب
-                                </button>
+                                <div class="flex gap-2 pt-2">
+                                    <button onclick="claimPublicOrder('${driverOrder.id}', '${driverOrder.orderId}')" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl transition shadow text-xs">
+                                        <i class="fa-solid fa-hand ml-1"></i> قبول / أنا سأقوم بتوصيله
+                                    </button>
+                                    <button onclick="completeOrderInCloud('${driverOrder.id}', '${driverOrder.orderId}')" class="flex-1 bg-green-500 text-brandDark font-bold py-2.5 rounded-xl hover:bg-green-400 transition shadow text-xs">
+                                        <i class="fa-solid fa-check ml-1"></i> إنجاز وتسليم الطلب
+                                    </button>
+                                </div>
                             </div>
                         `;
                     });
                 } else {
-                    driverBox.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">لا توجد طلبات جديدة مسندة إليك حالياً (${currentUserName}).</p>`;
+                    driverBox.innerHTML = `<p class="text-gray-400 text-sm text-center py-4">لا توجد طلبات متاحة في الساحة العامة حالياً.</p>`;
                 }
             }
         }
@@ -475,36 +469,26 @@
             }
         }
 
-        // دالة تحديد السعر وإرسال الطلب للمندوب وتحديث الحالة لتظهر في بوابة التتبع للعميل
-        window.sendOrderToDriver = async function(docId, orderCode) {
+        // إرسال الطلب مع السعر إلى بوابة المناديب العامة (بدون حصر بمندوب معين)
+        window.sendOrderToPublicDrivers = async function(docId, orderCode) {
             if (currentUserRole === 'مسؤول دعم' || currentUserRole === 'support') {
-                showCustomAlert('غير مسموح', 'عذراً، صلاحية "مسؤول دعم" لا تتيح لك تعديل الأسعار أو إسناد الطلبات.');
+                showCustomAlert('غير مسموح', 'عذراً، صلاحية "مسؤول دعم" لا تتيح لك تعديل الأسعار أو إرسال الطلبات.');
                 return;
             }
 
             const priceInput = document.getElementById(`price_${docId}`).value;
-            const driverSelect = document.getElementById(`driver_${docId}`).value;
 
             if (!priceInput || priceInput <= 0) {
-                showCustomAlert('تنبيه', 'يرجى إدخال السعر والتكلفة الصحيحة للطلب قبل الإرسال.');
+                showCustomAlert('تنبيه', 'يرجى إدخال السعر والتكلفة الصحيحة للطلب قبل إرساله للعام.');
                 return;
             }
 
-            if (!driverSelect) {
-                showCustomAlert('تنبيه', 'يرجى اختيار مندوب لتوصيل الطلب.');
-                return;
-            }
-
-            // تحديث التخزين المحلي ليتزامن مع صفحة العميل فوراً
             let allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
             allOrders = allOrders.map(o => {
                 if (o.orderId === orderCode || o.id === docId) {
                     return {
                         ...o,
                         cost: Number(priceInput),
-                        assignedDriver: driverSelect,
-                        driverName: driverSelect,
-                        driverPhone: '0912345678', // هاتف افتراضي للمندوب يمكن ربطه تلقائياً
                         status: 'in_progress'
                     };
                 }
@@ -512,13 +496,10 @@
             });
             localStorage.setItem('foru_all_orders', JSON.stringify(allOrders));
 
-            // محاولة التحديث في Firestore إذا كان الـ docId حقيقياً
             try {
                 if(!docId.startsWith('FOR-')) {
                     await updateDoc(doc(db, "orders", docId), {
                         cost: Number(priceInput),
-                        assignedDriver: driverSelect,
-                        driverName: driverSelect,
                         status: 'in_progress'
                     });
                 }
@@ -526,7 +507,32 @@
                 console.log("تم التحديث محلياً بنجاح");
             }
 
-            showCustomAlert('تم الإرسال', `تم تحديد السعر (${priceInput} جنيه) وإرسال الطلب إلى المندوب (${driverSelect}) بنجاح.`);
+            showCustomAlert('تم الإرسال', `تم تحديد السعر (${priceInput} جنيه) وإرسال الطلب إلى بوابة المناديب العامة بنجاح.`);
+            fetchCloudData();
+        }
+
+        // اختيار المندوب للطلب العام وتسجيله باسمه
+        window.claimPublicOrder = async function(docId, orderCode) {
+            let allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
+            allOrders = allOrders.map(o => {
+                if (o.orderId === orderCode || o.id === docId) {
+                    return { ...o, assignedDriver: currentUserName, driverName: currentUserName, status: 'قيد التوصيل' };
+                }
+                return o;
+            });
+            localStorage.setItem('foru_all_orders', JSON.stringify(allOrders));
+
+            try {
+                if(!docId.startsWith('FOR-')) {
+                    await updateDoc(doc(db, "orders", docId), {
+                        assignedDriver: currentUserName,
+                        driverName: currentUserName,
+                        status: 'قيد التوصيل'
+                    });
+                }
+            } catch (err) {}
+
+            showCustomAlert('تم القبول', 'تم تسجيل هذا الطلب باسمك بنجاح.');
             fetchCloudData();
         }
 
