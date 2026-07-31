@@ -39,9 +39,14 @@
             </div>
         </div>
         <div class="flex items-center gap-3">
-            <div id="navTabs" class="hidden sm:flex gap-2">
-                <button onclick="switchView('market')" id="btnMarketTab" class="bg-brandYellow text-brandDark text-xs font-bold px-3 py-2 rounded-xl transition">الساحة العامة</button>
-                <button onclick="switchView('myOrder')" id="btnMyOrderTab" class="bg-brandCard border border-gray-700 text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition">طلبات التوصيل الخاصة بي</button>
+            <!-- القائمة المحدثة: البوابة (الساحة العامة) + طلباتي الحالية -->
+            <div id="navTabs" class="flex gap-2">
+                <button onclick="switchView('market')" id="btnMarketTab" class="bg-brandYellow text-brandDark text-xs font-bold px-3 py-2 rounded-xl transition shadow">
+                    <i class="fa-solid fa-store ml-1"></i> البوابة (الساحة العامة)
+                </button>
+                <button onclick="switchView('myOrder')" id="btnMyOrderTab" class="bg-brandCard border border-gray-700 text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition shadow">
+                    <i class="fa-solid fa-box-open ml-1"></i> طلباتي الحالية
+                </button>
             </div>
             <button onclick="logout()" class="text-gray-400 hover:text-red-400 text-sm flex items-center bg-brandCard border border-gray-700 px-3 py-2 rounded-xl">
                 <i class="fa-solid fa-right-from-bracket ml-1"></i> خروج
@@ -52,12 +57,12 @@
     <!-- المحتوى الرئيسي -->
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         
-        <!-- قسم الساحة العامة (للطلبات المتاحة إذا لم يكن لديه طلب قيد التنفيذ) -->
+        <!-- قسم الساحة العامة (البوابة) -->
         <div id="marketView" class="space-y-6">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
                 <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3">
                     <h2 class="text-xl font-bold flex items-center text-brandYellow">
-                        <i class="fa-solid fa-motorcycle ml-2"></i> ساحة الطلبات العامة المتاحة للتوصيل
+                        <i class="fa-solid fa-motorcycle ml-2"></i> البوابة العامة للطلبات المتاحة للتوصيل
                     </h2>
                     <button onclick="fetchAllAvailableOrders()" class="bg-brandDark border border-gray-700 text-xs px-3 py-1.5 rounded-xl text-gray-300 hover:text-brandYellow transition">
                         <i class="fa-solid fa-rotate ml-1"></i> تحديث القائمة
@@ -65,7 +70,7 @@
                 </div>
                 
                 <div id="activeNoticeBanner" class="hidden mb-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-300 text-xs flex items-center justify-between">
-                    <span><i class="fa-solid fa-circle-info ml-1.5"></i> لديك طلب قيد التوصيل حالياً. لا يمكنك اختيار طلب آخر حتى تقوم بتسليمه.</span>
+                    <span><i class="fa-solid fa-circle-info ml-1.5"></i> لديك طلب قيد التوصيل حالياً في قسم "طلباتي الحالية". لا يمكنك اختيار طلب آخر حتى تقوم بتسليمه.</span>
                     <button onclick="switchView('myOrder')" class="underline font-bold">عرض طلبي الحالي</button>
                 </div>
 
@@ -77,7 +82,7 @@
             </div>
         </div>
 
-        <!-- قسم صفحة "طلبات التوصيل" الخاصة بالمندوب (الطلب الحالي المختار) -->
+        <!-- قسم طلباتي الحالية (الطلب النشط والتنبيهات) -->
         <div id="myOrderView" class="space-y-6 hidden">
             <div class="bg-brandCard border-2 border-brandYellow p-6 rounded-3xl shadow-2xl relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-brandYellow text-brandDark text-xs font-black px-4 py-1.5 rounded-bl-2xl">
@@ -85,13 +90,13 @@
                 </div>
                 <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-3 pt-2">
                     <h2 class="text-xl font-bold flex items-center text-brandYellow">
-                        <i class="fa-solid fa-box-open ml-2"></i> تفاصيل طلب التوصيل وخط السير الخريطة
+                        <i class="fa-solid fa-box-open ml-2"></i> تفاصيل طلباتي الحالية وخط السير والخريطة
                     </h2>
                 </div>
                 
                 <div id="myOrderContainer" class="space-y-6">
                     <div class="bg-brandDark border border-gray-700 p-6 rounded-2xl text-center text-gray-400">
-                        ليس لديك أي طلب قيد التوصيل حالياً. انتقل للساحة العامة لاختيار طلب.
+                        ليس لديك أي طلب قيد التوصيل حالياً. انتقل للبوابة العامة لاختيار طلب.
                     </div>
                 </div>
             </div>
@@ -115,7 +120,7 @@
         جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
     </footer>
 
-    <!-- ربط Firebase وجلب الطلبات العامة -->
+    <!-- ربط Firebase وإدارة آليات التنبيهات والطلبات -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -136,6 +141,7 @@
         const db = getFirestore(app);
 
         let currentDriverName = '';
+        let lastKnownOrderCount = 0; // ضبط آلية الإشعارات عند ورود طلبات جديدة
 
         window.showCustomAlert = function(title, message) {
             document.getElementById('alertTitle').innerText = title;
@@ -160,13 +166,13 @@
             if (viewName === 'market') {
                 marketView.classList.remove('hidden');
                 myOrderView.classList.add('hidden');
-                btnMarket.className = "bg-brandYellow text-brandDark text-xs font-bold px-3 py-2 rounded-xl transition";
-                btnMyOrder.className = "bg-brandCard border border-gray-700 text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition";
+                btnMarket.className = "bg-brandYellow text-brandDark text-xs font-bold px-3 py-2 rounded-xl transition shadow";
+                btnMyOrder.className = "bg-brandCard border border-gray-700 text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition shadow";
             } else {
                 marketView.classList.add('hidden');
                 myOrderView.classList.remove('hidden');
-                btnMyOrder.className = "bg-brandYellow text-brandDark text-xs font-bold px-3 py-2 rounded-xl transition";
-                btnMarket.className = "bg-brandCard border border-gray-700 text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition";
+                btnMyOrder.className = "bg-brandYellow text-brandDark text-xs font-bold px-3 py-2 rounded-xl transition shadow";
+                btnMarket.className = "bg-brandCard border border-gray-700 text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition shadow";
             }
         }
 
@@ -205,7 +211,7 @@
             }
         });
 
-        // دالة جلب كافة الطلبات مع تطبيق شرط الطلب الواحد والتظليل والصفحة المنفصلة
+        // دالة جلب الطلبات مع ضبط آلية الإشعار التلقائي للمناديب
         window.fetchAllAvailableOrders = async function() {
             try {
                 let firestoreOrders = [];
@@ -233,7 +239,14 @@
                 ordersListContainer.innerHTML = '';
                 myOrderContainer.innerHTML = '';
 
-                // فحص هل لدى المندوب طلب مسند إليه وقيد التنفيذ حالياً؟
+                // ضبط آلية التنبيه والإشعارات عند إضافة طلب جديد للبوابة
+                const activeOrdersForCheck = allOrders.filter(o => o.status !== 'منجز' && o.status !== 'completed');
+                if (lastKnownOrderCount > 0 && activeOrdersForCheck.length > lastKnownOrderCount) {
+                    showCustomAlert('إشعار طلب جديد 🔔', 'تم إضافة طلب توصيل جديد إلى البوابة العامة، تفقد القائمة الآن!');
+                }
+                lastKnownOrderCount = activeOrdersForCheck.length;
+
+                // فحص هل لدى المندوب طلب نشط حالياً
                 const myActiveOrder = allOrders.find(o => {
                     const isAssigned = (o.assignedDriver === currentDriverName || o.driverName === currentDriverName);
                     const isNotCompleted = (o.status !== 'منجز' && o.status !== 'completed');
@@ -246,7 +259,7 @@
                     document.getElementById('activeNoticeBanner').classList.add('hidden');
                 }
 
-                // عرض الطلب الخاص بالمندوب في صفحة "طلبات التوصيل"
+                // عرض الطلب الحالي في قسم "طلباتي الحالية"
                 if (myActiveOrder) {
                     const latVal = myActiveOrder.lat ? Number(myActiveOrder.lat).toFixed(4) : '--';
                     const lngVal = myActiveOrder.lng ? Number(myActiveOrder.lng).toFixed(4) : '--';
@@ -264,7 +277,7 @@
                                     <h4 class="text-xs text-brandYellow font-bold uppercase tracking-wider">بيانات العميل:</h4>
                                     <div><b>الاسم:</b> ${myActiveOrder.clientName || 'غير متوفر'}</div>
                                     <div><b>الهاتف:</b> <a href="tel:${myActiveOrder.clientPhone}" class="text-blue-400 underline">${myActiveOrder.clientPhone || 'بدون هاتف'}</a></div>
-                                    <div><b>الموقع الإحداثيات:</b> (${latVal}, ${lngVal})</div>
+                                    <div><b>الإحداثيات:</b> (${latVal}, ${lngVal})</div>
                                 </div>
                                 <div class="space-y-2">
                                     <h4 class="text-xs text-brandYellow font-bold uppercase tracking-wider">بيانات المتجر والمرسل:</h4>
@@ -279,7 +292,6 @@
                                 <p class="text-white text-sm pt-1">${myActiveOrder.description || 'توصيل طلب سريع'}</p>
                             </div>
 
-                            <!-- خريطة وتظليل خط السير والزرين -->
                             <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-gray-700">
                                 <a href="${mapLink}" target="_blank" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-5 py-3 rounded-xl transition shadow flex items-center justify-center">
                                     <i class="fa-solid fa-map-location-dot ml-2 text-base"></i> فتح خط السير وموقع العميل على الخريطة
@@ -294,29 +306,24 @@
                     myOrderContainer.innerHTML = `
                         <div class="bg-brandDark border border-gray-700 p-8 rounded-2xl text-center text-gray-400 space-y-3">
                             <i class="fa-solid fa-box-open text-4xl text-gray-500"></i>
-                            <p class="text-sm">ليس لديك أي طلب نشط قيد التوصيل حالياً.</p>
-                            <button onclick="switchView('market')" class="bg-brandYellow text-brandDark text-xs font-bold px-4 py-2 rounded-xl">انتقل للساحة العامة لاختيار طلب</button>
+                            <p class="text-sm">ليس لديك أي طلب نشط في "طلباتي الحالية" قيد التوصيل حالياً.</p>
+                            <button onclick="switchView('market')" class="bg-brandYellow text-brandDark text-xs font-bold px-4 py-2 rounded-xl">انتقل للبوابة العامة لاختيار طلب</button>
                         </div>
                     `;
                 }
 
-                // فلترة الطلبات المتاحة في الساحة العامة
-                const activeOrders = allOrders.filter(order => {
-                    const status = order.status;
-                    return status !== 'منجز' && status !== 'completed';
-                });
-
-                if (activeOrders.length === 0) {
+                // عرض الطلبات المتاحة في البوابة العامة
+                if (activeOrdersForCheck.length === 0) {
                     ordersListContainer.innerHTML = `
                         <div class="bg-brandDark border border-gray-700 p-6 rounded-2xl text-center text-gray-400">
                             <i class="fa-solid fa-box-open text-3xl mb-2 text-gray-500"></i>
-                            <p>لا توجد طلبات متاحة حالياً في الساحة العامة للتوصيل.</p>
+                            <p>لا توجد طلبات متاحة حالياً في البوابة العامة للتوصيل.</p>
                         </div>
                     `;
                     return;
                 }
 
-                activeOrders.forEach(order => {
+                activeOrdersForCheck.forEach(order => {
                     const isAssignedToMe = (order.assignedDriver === currentDriverName || order.driverName === currentDriverName);
                     const isAssignedToOther = (order.assignedDriver && order.assignedDriver !== currentDriverName) || (order.driverName && order.driverName !== currentDriverName);
                     
@@ -324,7 +331,6 @@
                     const lngVal = order.lng ? Number(order.lng).toFixed(4) : '--';
                     const mapLink = (order.lat && order.lng) ? `https://www.google.com/maps?q=${order.lat},${order.lng}` : `https://maps.google.com/maps?q=${encodeURIComponent(order.address || 'Khartoum')}`;
 
-                    // إذا كان الطلب مسند لمندوب آخر، نتخطاه أو نظهره كـ محجوز
                     if (isAssignedToOther) return;
 
                     ordersListContainer.innerHTML += `
@@ -332,13 +338,13 @@
                             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                                 <div class="space-y-1.5 w-full">
                                     <div class="flex items-center gap-2">
-                                        <span class="bg-yellow-500/10 text-brandYellow text-xs px-2.5 py-1 rounded-lg border border-yellow-500/20 font-bold">${order.status === 'in_progress' ? 'جاهز للتوصيل' : (order.status || 'متاح')}</span>
+                                        <span class="bg-yellow-500/10 text-brandYellow text-xs px-2.5 py-1 rounded-lg border border-yellow-500/20 font-bold">متاح للتوصيل</span>
                                         <span class="text-xs text-gray-400">رقم الطلب: <b class="text-white">${order.orderId || order.id}</b></span>
                                         ${isAssignedToMe ? '<span class="bg-emerald-500/20 text-emerald-400 text-xs px-2 py-0.5 rounded border border-emerald-500/30 font-bold mr-auto">قيد التوصيل معك</span>' : ''}
                                     </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs pt-1 border-t border-gray-800">
                                         <div><span class="text-gray-400">العميل:</span> <span class="font-bold text-white">${order.clientName || 'غير متوفر'} (${order.clientPhone || 'بدون هاتف'})</span></div>
-                                        <div><span class="text-gray-400">المتجر (المرسل):</span> <span class="font-bold text-white">${order.storeName || 'غير مسجل'}</span></div>
+                                        <div><span class="text-gray-400">المتجر:</span> <span class="font-bold text-white">${order.storeName || 'غير مسجل'}</span></div>
                                     </div>
                                     <p class="text-xs text-gray-300"><b>البضاعة:</b> ${order.description || 'توصيل طلب'}</p>
                                     <p class="text-xs text-brandYellow font-semibold">المبلغ المطلوب تحصيله: ${(order.cost || 0).toLocaleString()} جنيه</p>
@@ -347,16 +353,16 @@
 
                             <div class="flex flex-col md:flex-row justify-between items-center gap-3 pt-3 border-t border-gray-800">
                                 <a href="${mapLink}" target="_blank" class="text-xs text-blue-400 underline flex items-center">
-                                    <i class="fa-solid fa-map-location-dot ml-1.5"></i> موقع العميل (${latVal}, ${lngVal})
+                                    <i class="fa-solid fa-map-location-dot ml-1.5"></i> الموقع (${latVal}, ${lngVal})
                                 </a>
                                 <div class="flex items-center gap-2 w-full md:w-auto">
                                     ${!isAssignedToMe ? `
                                         <button onclick="claimAndNavigate('${order.id}', '${order.orderId}', '${mapLink}')" class="w-full md:w-auto bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
-                                            <i class="fa-solid fa-location-arrow ml-1.5"></i> قبول الطلب والانتقال لصفحة التوصيل
+                                            <i class="fa-solid fa-location-arrow ml-1.5"></i> قبول الطلب والانتقال لطلباتي الحالية
                                         </button>
                                     ` : `
                                         <button onclick="switchView('myOrder')" class="w-full md:w-auto bg-brandYellow text-brandDark text-xs font-bold px-4 py-2.5 rounded-xl transition shadow flex items-center justify-center">
-                                            <i class="fa-solid fa-eye ml-1.5"></i> عرض في صفحة طلبات التوصيل
+                                            <i class="fa-solid fa-eye ml-1.5"></i> عرض في طلباتي الحالية
                                         </button>
                                     `}
                                 </div>
@@ -371,12 +377,11 @@
             }
         }
 
-        // دالة قبول الطلب مع التحقق من عدم وجود طلب سابق، واختفائه لينتقل مباشرة لصفحة طلبات التوصيل
+        // قبول الطلب والانتقال تلقائياً إلى "طلباتي الحالية"
         window.claimAndNavigate = async function(docId, orderCode, mapUrl) {
             try {
                 let localOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
                 
-                // التأكد أن المندوب ليس لديه طلب آخر نشط
                 const hasOtherActive = localOrders.some(o => {
                     const mine = (o.assignedDriver === currentDriverName || o.driverName === currentDriverName);
                     const active = (o.status !== 'منجز' && o.status !== 'completed');
@@ -384,11 +389,10 @@
                 });
 
                 if (hasOtherActive) {
-                    showCustomAlert('تنبيه هام', 'عذراً، لديك طلب قيد التوصيل بالفعل. لا يمكنك اختيار طلب آخر حتى تسلم الطلب الحالي.');
+                    showCustomAlert('تنبيه هام', 'عذراً، لديك طلب قيد التوصيل بالفعل في "طلباتي الحالية". لا يمكنك اختيار طلب آخر.');
                     return;
                 }
 
-                // فتح رابط الخريطة وخط السير فوراً
                 window.open(mapUrl, '_blank');
 
                 localOrders = localOrders.map(o => {
@@ -408,14 +412,14 @@
                 }
 
                 fetchAllAvailableOrders();
-                switchView('myOrder'); // الانتقال التلقائي لصفحة طلبات التوصيل الخاصة به
+                switchView('myOrder'); // الانتقال التلقائي لطلباتي الحالية
             } catch (err) {
                 console.error(err);
                 showCustomAlert('خطأ', 'فشل قبول الطلب.');
             }
         }
 
-        // إنجاز وتحديث حالة الطلب عند الضغط على "تم التوصيل" ليتمكن من أخذ طلب جديد
+        // إنجاز الطلب وإتمام التوصيل
         window.updateOrderStatus = async function(docId, orderCode) {
             try {
                 let localOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
@@ -432,7 +436,7 @@
                         status: 'completed'
                     });
                 }
-                showCustomAlert('تم التسليم بنجاح', 'تم إنجاز الطلب بنجاح. أصبحت جاهزاً الآن لاستلام طلب جديد من الساحة العامة.');
+                showCustomAlert('تم التسليم بنجاح', 'تم إنجاز الطلب بنجاح. يمكنك الآن الانتقال للبوابة العامة لاستلام طلب جديد.');
                 fetchAllAvailableOrders();
                 switchView('market');
             } catch (err) {
