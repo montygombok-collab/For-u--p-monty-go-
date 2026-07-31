@@ -28,8 +28,19 @@
     </header>
 
     <!-- المحتوى -->
-    <main class="flex-grow container mx-auto px-4 py-6 max-w-2xl">
+    <main class="flex-grow container mx-auto px-4 py-6 max-w-2xl space-y-4">
         
+        <!-- إشعار السداد اليومي الدائم -->
+        <div id="dailyPaymentNotice" class="hidden bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="text-xs text-yellow-300 space-y-1 text-center sm:text-right">
+                <div class="font-bold flex items-center justify-center sm:justify-start gap-1">
+                    <i class="fa-solid fa-triangle-exclamation"></i> تنبيه السداد اليومي المطلوب
+                </div>
+                <p id="paymentDetailsText">جاري حساب إجمالي تحصيلات اليوم...</p>
+            </div>
+            <button onclick="payDailyDues()" class="w-full sm:w-auto bg-[#FFB800] text-[#121212] font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap">تم السداد</button>
+        </div>
+
         <!-- البوابة (الطلبات المتاحة) -->
         <div id="marketView" class="space-y-4">
             <div class="flex justify-between items-center">
@@ -51,8 +62,20 @@
 
     </main>
 
+    <!-- نافذة تفاصيل الطلب المنبثقة -->
+    <div id="detailsModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-2xl p-5 max-w-sm w-full text-right space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+                <h3 class="text-xs font-bold text-[#FFB800]">تفاصيل الطلب الكاملة</h3>
+                <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="modalDetailsContent" class="text-xs space-y-2 text-gray-300"></div>
+            <button onclick="closeDetailsModal()" class="w-full bg-gray-700 text-white font-bold py-2 rounded-xl text-xs">إغلاق</button>
+        </div>
+    </div>
+
     <!-- تنبيه منبسط -->
-    <div id="alertModal" class="fixed inset-0 bg-black/8oomla backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div id="alertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-[#1E1E1E] border border-gray-800 rounded-2xl p-5 max-w-xs w-full text-center space-y-3">
             <p id="alertMsg" class="text-xs text-gray-200"></p>
             <button onclick="document.getElementById('alertModal').classList.add('hidden')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-2 rounded-xl text-xs">حسناً</button>
@@ -98,6 +121,8 @@
             driverName = snap.exists() ? (snap.data().name || user.email.split('@')[0]) : user.email.split('@')[0];
             document.getElementById('driverName').innerText = driverName;
             loadOrders();
+            // آلية التحديث المستمر كل 10 ثواني تلقائياً
+            setInterval(loadOrders, 10000);
         });
 
         window.loadOrders = async function() {
@@ -119,8 +144,27 @@
                 if (lastCount > 0 && active.length > lastCount) showAlert('🔔 طلب جديد متاح في البوابة!');
                 lastCount = active.length;
 
+                // حساب إشعار السداد الدائم اليومي الخاص بهذا المندوب
+                const todayStr = new Date().toISOString().slice(0, 10);
+                const driverCompletedToday = orders.filter(o => {
+                    const isMine = (o.assignedDriver === driverName || o.driverName === driverName);
+                    const isDone = (o.status === 'منجز' || o.status === 'completed');
+                    const isToday = o.completedDate === todayStr || isDone; // تعتمد على الطلبات المنجزة
+                    return isMine && isDone;
+                });
+
+                const totalDues = driverCompletedToday.reduce((sum, o) => sum + (Number(o.cost) || 0), 0);
+                const paymentNotice = document.getElementById('dailyPaymentNotice');
+                const lastPaidDate = localStorage.getItem(`paid_date_${driverName}`);
+
+                if (totalDues > 0 && lastPaidDate !== todayStr) {
+                    paymentNotice.classList.remove('hidden');
+                    document.getElementById('paymentDetailsText').innerText = `إجمالي التحصيلات غير السادية اليوم: ${totalDues} جنيه (${driverCompletedToday.length} طلب مكتمل)`;
+                } else {
+                    paymentNotice.classList.add('hidden');
+                }
+
                 const myOrder = orders.find(o => (o.assignedDriver === driverName || o.driverName === driverName) && o.status !== 'منجز' && o.status !== 'completed');
-                
                 document.getElementById('activeNotice').classList.toggle('hidden', !myOrder);
 
                 // عرض طلبي الحالي
@@ -130,11 +174,10 @@
                     myContainer.innerHTML = `
                         <div class="bg-[#1E1E1E] border border-[#FFB800] p-4 rounded-2xl space-y-3 text-right">
                             <div class="flex justify-between text-xs">
-                                <span class="text-[#FFB800] font-bold">طلب #${myOrder.orderId || myOrder.id}</span>
+                                <span class="text-[#FFB800] font-bold">طلب توصيل نشط</span>
                                 <span class="text-emerald-400 font-bold">قيد التوصيل</span>
                             </div>
                             <div class="text-xs space-y-1 text-gray-300">
-                                <div><b>العميل:</b> ${myOrder.clientName || '-'} (${myOrder.clientPhone || '-'})</div>
                                 <div><b>المتجر:</b> ${myOrder.storeName || '-'}</div>
                                 <div><b>المبلغ:</b> <span class="text-[#FFB800] font-bold">${(myOrder.cost || 0)} جنيه</span></div>
                                 <div><b>الوصف:</b> ${myOrder.description || '-'}</div>
@@ -148,7 +191,7 @@
                     myContainer.innerHTML = `<div class="p-6 text-gray-500 text-xs">لا يوجد طلب نشط حالياً.</div>`;
                 }
 
-                // عرض البوابة
+                // عرض البوابة (إخفاء رقم الطلب واستبدال زر القبول بـ "إنجاز هذا الطلب")
                 const marketList = document.getElementById('marketList');
                 const available = active.filter(o => !o.assignedDriver && !o.driverName);
                 if (available.length === 0) {
@@ -159,18 +202,50 @@
                 marketList.innerHTML = available.map(o => `
                     <div class="bg-[#1E1E1E] border border-gray-800 p-4 rounded-2xl space-y-2 text-right">
                         <div class="flex justify-between text-xs">
-                            <span class="text-[#FFB800] font-bold">طلب #${o.orderId || o.id}</span>
+                            <span class="text-[#FFB800] font-bold">طلب متاح للتوصيل</span>
                             <span class="text-gray-400">${(o.cost || 0)} جنيه</span>
                         </div>
                         <div class="text-xs text-gray-300">
                             <div><b>المتجر:</b> ${o.storeName || '-'}</div>
                             <div><b>الوصف:</b> ${o.description || '-'}</div>
                         </div>
-                        <button onclick="claimOrder('${o.id}', '${o.orderId}')" class="w-full bg-[#FFB800] text-[#121212] py-2 rounded-xl text-xs font-bold mt-2">قبول الطلب</button>
+                        <div class="flex gap-2 pt-2">
+                            <button onclick='openDetailsModal(${JSON.stringify(o).replace(/'/g, "&apos;")})' class="flex-1 bg-gray-700 text-white py-2 rounded-xl text-xs font-bold">تفاصيل الطلب</button>
+                            <button onclick="claimOrder('${o.id}', '${o.orderId}')" class="flex-1 bg-[#FFB800] text-[#121212] py-2 rounded-xl text-xs font-bold">إنجاز هذا الطلب</button>
+                        </div>
                     </div>
                 `).join('');
 
             } catch (e) { console.error(e); }
+        }
+
+        window.openDetailsModal = function(order) {
+            const content = document.getElementById('modalDetailsContent');
+            content.innerHTML = `
+                <div><b>المتجر:</b> ${order.storeName || '-'}</div>
+                <div><b>هاتف المتجر:</b> ${order.storePhone || 'غير متوفر'}</div>
+                <div><b>اسم العميل:</b> ${order.clientName || '-'}</div>
+                <div><b>هاتف العميل:</b> ${order.clientPhone || 'غير متوفر'}</div>
+                <div><b>العنوان:</b> ${order.address || 'غير محدد'}</div>
+                <div><b>الوصف والتفاصيل:</b> ${order.description || '-'}</div>
+                <div><b>المبلغ المطلوب:</b> <span class="text-[#FFB800] font-bold">${(order.cost || 0)} جنيه</span></div>
+            `;
+            document.getElementById('detailsModal').classList.remove('hidden');
+            document.getElementById('detailsModal').classList.add('flex');
+        }
+
+        window.closeDetailsModal = function() {
+            document.getElementById('detailsModal').classList.remove('hidden');
+            document.getElementById('detailsModal').classList.add('flex');
+            document.getElementById('detailsModal').classList.remove('flex');
+            document.getElementById('detailsModal').classList.add('hidden');
+        }
+
+        window.payDailyDues = function() {
+            const todayStr = new Date().toISOString().slice(0, 10);
+            localStorage.setItem(`paid_date_${driverName}`, todayStr);
+            showAlert('تم تسجيل سداد المستحقات اليومية بنجاح.');
+            loadOrders();
         }
 
         window.claimOrder = async function(id, code) {
@@ -190,11 +265,12 @@
 
         window.completeOrder = async function(id, code) {
             let local = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
-            local = local.map(o => (o.orderId === code || o.id === id) ? { ...o, status: 'completed' } : o);
+            const todayStr = new Date().toISOString().slice(0, 10);
+            local = local.map(o => (o.orderId === code || o.id === id) ? { ...o, status: 'completed', completedDate: todayStr } : o);
             localStorage.setItem('foru_all_orders', JSON.stringify(local));
 
             if (!id.startsWith('FOR-')) {
-                await updateDoc(doc(db, "orders", id), { status: 'completed' });
+                await updateDoc(doc(db, "orders", id), { status: 'completed', completedDate: todayStr });
             }
             showAlert('تم تسليم الطلب بنجاح.');
             loadOrders();
