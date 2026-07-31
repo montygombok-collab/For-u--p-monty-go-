@@ -103,18 +103,21 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm text-gray-300 mb-1">نوع الطلبية</label>
+                            <label class="block text-sm text-gray-300 mb-1">تصنيف الطلبية</label>
                             <select id="orderType" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none">
-                                <option value="عادي">طلب عادي (ملابس، طرود، أوراق)</option>
-                                <option value="تلفون">تلفون / هاتف محمول (أمانة عالية)</option>
+                                <option value="طرد عام">طرد عام</option>
+                                <option value="إلكترونيات وأجهزة">إلكترونيات وأجهزة</option>
+                                <option value="أوراق ومستندات">أوراق ومستندات</option>
+                                <option value="هدايا وملابس">هدايا وملابس</option>
+                                <option value="مواد غذائية">مواد غذائية</option>
                             </select>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm text-gray-300 mb-1">اسم المنتج / وصف البضاعة</label>
-                        <input type="text" id="productName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none mb-2" placeholder="اسم المنتج بالتفصيل">
-                        <textarea id="orderDesc" rows="2" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="أي تفاصيل إضافية..."></textarea>
+                        <label class="block text-sm text-gray-300 mb-1">اسم المنتج بالتفصيل (يتم تحليله ذكياً لتحديد السعر)</label>
+                        <input type="text" id="productName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none mb-2" placeholder="مثال: هاتف آيفون 13، طرد ملابس، أوراق رسمية...">
+                        <textarea id="orderDesc" rows="2" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="أي تفاصيل إضافية للمندوب..."></textarea>
                     </div>
 
                     <!-- زر تحديد السعر -->
@@ -260,7 +263,7 @@
             return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
         }
 
-        // دالة زر "تحديد السعر" بناءً على كل المعطيات (النوع، المسافة، المدينة، المتجر، المنتج)
+        // دالة تحليل اسم المنتج والبيانات لتحديد السعر الذكي
         window.calculatePrice = function() {
             if (!marker) {
                 alert('الرجاء تحديد الموقع على الخريطة أولاً لحساب المسافة والسعر.');
@@ -268,20 +271,23 @@
             }
 
             const area = document.getElementById('orderArea').value;
-            const orderType = document.getElementById('orderType').value;
-            const productName = document.getElementById('productName').value.trim();
+            const productName = document.getElementById('productName').value.trim().toLowerCase();
             const storeName = document.getElementById('storeName').value.trim();
-            const storeType = document.getElementById('storeType').value.trim();
+            const storeType = document.getElementById('storeType').value.trim().toLowerCase();
 
             if (!productName || !storeName) {
-                alert('الرجاء إدخال اسم المتجر واسم المنتج أولاً ليقوم النظام بحساب التسعير بدقة.');
+                alert('الرجاء إدخال اسم المتجر واسم المنتج بدقة أولاً.');
                 return;
             }
+
+            // فحص ذكي لتحليل هل المنتج عبارة عن تليفون/هاتف بناءً على الكلمات المفتاحية
+            const phoneKeywords = ['تليفون', 'موبايل', 'هاتف', 'iphone', 'samsung', 'جوال', 'redmi', 'oppo', 'infinix', 'tecno', 'realme', 'الخصوص', 'برو', 'بلس'];
+            const isPhoneProduct = phoneKeywords.some(keyword => productName.includes(keyword) || storeType.includes('موبايل') || storeType.includes('هاتف'));
 
             let baseCost = 0;
 
             if (area === 'أم درمان') {
-                if (orderType === 'تلفون') {
+                if (isPhoneProduct) {
                     // التلفونات في أم درمان بين 20 إلى 25 ألف حسب المسافة
                     let phoneBase = 20000;
                     let distanceExtra = Math.min(5000, Math.round(calculatedDistance * 1000));
@@ -290,21 +296,15 @@
                     // الطلب العادي في أم درمان: تكلفة الكيلو 1000 جنيه
                     let normalPerKmRate = 1000;
                     baseCost = Math.round(calculatedDistance * normalPerKmRate);
-                    // وضع حد أدنى منطقي للطلب العادي (مثلاً 3000 جنيه)
-                    if (baseCost < 3000) baseCost = 3000;
+                    if (baseCost < 3000) baseCost = 3000; // حد أدنى للطلب العادي
                 }
             } else {
-                // مدن أخرى (الخرطوم أو بحري) مع اعتبار نوع الطلب والمسافة
-                if (orderType === 'تلفون') {
+                // مدن أخرى (الخرطوم، بحري)
+                if (isPhoneProduct) {
                     baseCost = 22000 + Math.round(calculatedDistance * 1200);
                 } else {
                     baseCost = 4000 + Math.round(calculatedDistance * 1200);
                 }
-            }
-
-            // تعديل طفيف بناءً على نوع المتجر إذا لزم الأمر لزيادة دقة النظام الشامل
-            if (storeType.includes('إلكترونيات') && orderType !== 'تلفون') {
-                baseCost = Math.round(baseCost * 1.15);
             }
 
             finalCalculatedCost = baseCost;
