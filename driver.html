@@ -1,18 +1,30 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة الميدان | For-U</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brandYellow: '#FFB800',
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
     <style>body { font-family: 'Cairo', sans-serif; }</style>
 </head>
-<body class="bg-[#121212] text-white min-h-screen flex flex-col justify-between">
+<body class="bg-gray-100 dark:bg-[#121212] text-gray-800 dark:text-white min-h-screen flex flex-col justify-between transition-colors duration-300">
 
     <!-- الهيدر المبسط -->
-    <header class="p-4 flex justify-between items-center border-b border-gray-800">
+    <header class="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#121212]">
         <div class="flex items-center gap-3">
             <div class="bg-[#FFB800] text-[#121212] font-black px-3 py-1 rounded-xl">4U</div>
             <div>
@@ -21,8 +33,11 @@
             </div>
         </div>
         <div class="flex items-center gap-2">
+            <button onclick="toggleDarkMode()" class="bg-gray-200 dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs px-3 py-2 rounded-xl transition" title="تبديل المظهر">
+                <i id="themeIcon" class="fa-solid fa-moon"></i>
+            </button>
             <button onclick="switchView('market')" id="btnMarket" class="bg-[#FFB800] text-[#121212] text-xs font-bold px-3 py-2 rounded-xl transition">البوابة</button>
-            <button onclick="switchView('myOrder')" id="btnMyOrder" class="bg-[#1E1E1E] border border-gray-700 text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition">طلباتي</button>
+            <button onclick="switchView('myOrder')" id="btnMyOrder" class="bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition">طلباتي</button>
             <button onclick="auth.signOut().then(()=>location.href='index.html')" class="text-gray-400 hover:text-red-400 text-xs px-2 py-2"><i class="fa-solid fa-right-from-bracket"></i></button>
         </div>
     </header>
@@ -30,13 +45,13 @@
     <!-- المحتوى -->
     <main class="flex-grow container mx-auto px-4 py-6 max-w-2xl space-y-4">
         
-        <!-- إشعار السداد اليومي الدائم -->
+        <!-- إشعار السداد اليومي الدائم (حسب نوع المركبة: 30 ألف للتابعة للشركة، 10 ألف لما دون ذلك) -->
         <div id="dailyPaymentNotice" class="hidden bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div class="text-xs text-yellow-300 space-y-1 text-center sm:text-right">
+            <div class="text-xs text-yellow-600 dark:text-yellow-300 space-y-1 text-center sm:text-right">
                 <div class="font-bold flex items-center justify-center sm:justify-start gap-1">
                     <i class="fa-solid fa-triangle-exclamation"></i> تنبيه السداد اليومي المطلوب
                 </div>
-                <p id="paymentDetailsText">جاري حساب إجمالي تحصيلات اليوم...</p>
+                <p id="paymentDetailsText">جاري تحديث الرسوم المستحقة...</p>
             </div>
             <button onclick="payDailyDues()" class="w-full sm:w-auto bg-[#FFB800] text-[#121212] font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap">تم السداد</button>
         </div>
@@ -45,44 +60,44 @@
         <div id="marketView" class="space-y-4">
             <div class="flex justify-between items-center">
                 <h2 class="text-sm font-bold text-[#FFB800]"><i class="fa-solid fa-motorcycle ml-1"></i> الطلبات المتاحة</h2>
-                <button onclick="loadOrders()" class="text-xs text-gray-400 hover:text-white"><i class="fa-solid fa-rotate"></i> تحديث</button>
+                <button onclick="loadOrders()" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-rotate"></i> تحديث</button>
             </div>
-            <div id="activeNotice" class="hidden p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-300 text-xs flex justify-between items-center">
+            <div id="activeNotice" class="hidden p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-600 dark:text-blue-300 text-xs flex justify-between items-center">
                 <span>لديك طلب قيد التوصيل حالياً.</span>
                 <button onclick="switchView('myOrder')" class="underline font-bold">عرض</button>
             </div>
-            <div id="marketList" class="space-y-3 text-xs text-gray-400 text-center py-6">جاري التحميل...</div>
+            <div id="marketList" class="space-y-3 text-xs text-gray-500 dark:text-gray-400 text-center py-6">جاري التحميل...</div>
         </div>
 
         <!-- طلباتي الحالية -->
         <div id="myOrderView" class="space-y-4 hidden">
             <h2 class="text-sm font-bold text-[#FFB800]"><i class="fa-solid fa-box-open ml-1"></i> طلبي الحالي</h2>
-            <div id="myOrderContainer" class="space-y-4 text-xs text-gray-400 text-center py-6">ليس لديك طلب نشط.</div>
+            <div id="myOrderContainer" class="space-y-4 text-xs text-gray-500 dark:text-gray-400 text-center py-6">ليس لديك طلب نشط.</div>
         </div>
 
     </main>
 
     <!-- نافذة تفاصيل الطلب المنبثقة -->
     <div id="detailsModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-[#1E1E1E] border border-gray-800 rounded-2xl p-5 max-w-sm w-full text-right space-y-3 shadow-2xl">
-            <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+        <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-5 max-w-sm w-full text-right space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-2">
                 <h3 class="text-xs font-bold text-[#FFB800]">تفاصيل الطلب الكاملة</h3>
-                <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-800 dark:hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div id="modalDetailsContent" class="text-xs space-y-2 text-gray-300"></div>
-            <button onclick="closeDetailsModal()" class="w-full bg-gray-700 text-white font-bold py-2 rounded-xl text-xs">إغلاق</button>
+            <div id="modalDetailsContent" class="text-xs space-y-2 text-gray-600 dark:text-gray-300"></div>
+            <button onclick="closeDetailsModal()" class="w-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-bold py-2 rounded-xl text-xs">إغلاق</button>
         </div>
     </div>
 
     <!-- تنبيه منبسط -->
     <div id="alertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-[#1E1E1E] border border-gray-800 rounded-2xl p-5 max-w-xs w-full text-center space-y-3">
-            <p id="alertMsg" class="text-xs text-gray-200"></p>
+        <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-5 max-w-xs w-full text-center space-y-3">
+            <p id="alertMsg" class="text-xs text-gray-800 dark:text-gray-200"></p>
             <button onclick="document.getElementById('alertModal').classList.add('hidden')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-2 rounded-xl text-xs">حسناً</button>
         </div>
     </div>
 
-    <footer class="p-3 text-center border-t border-gray-800 text-gray-600 text-[10px]">For-U &copy; 2026</footer>
+    <footer class="p-3 text-center border-t border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-600 text-[10px]">For-U &copy; 2026</footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -100,7 +115,21 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let driverName = '', lastCount = 0;
+        let driverName = '', lastCount = 0, isCompanyVehicle = false;
+
+        window.toggleDarkMode = function() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeIcon').className = isDark ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        }
+
+        // استرجاع المظهر المحفوظ
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+            document.getElementById('themeIcon').className = 'fa-solid fa-sun';
+        }
 
         window.showAlert = (msg) => {
             document.getElementById('alertMsg').innerText = msg;
@@ -111,17 +140,23 @@
         window.switchView = (v) => {
             document.getElementById('marketView').classList.toggle('hidden', v !== 'market');
             document.getElementById('myOrderView').classList.toggle('hidden', v !== 'myOrder');
-            document.getElementById('btnMarket').className = v === 'market' ? "bg-[#FFB800] text-[#121212] text-xs font-bold px-3 py-2 rounded-xl transition" : "bg-[#1E1E1E] border border-gray-700 text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition";
-            document.getElementById('btnMyOrder').className = v === 'myOrder' ? "bg-[#FFB800] text-[#121212] text-xs font-bold px-3 py-2 rounded-xl transition" : "bg-[#1E1E1E] border border-gray-700 text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition";
+            document.getElementById('btnMarket').className = v === 'market' ? "bg-[#FFB800] text-[#121212] text-xs font-bold px-3 py-2 rounded-xl transition" : "bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition";
+            document.getElementById('btnMyOrder').className = v === 'myOrder' ? "bg-[#FFB800] text-[#121212] text-xs font-bold px-3 py-2 rounded-xl transition" : "bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition";
         }
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) { location.href = 'index.html'; return; }
             const snap = await getDoc(doc(db, "users", user.uid));
-            driverName = snap.exists() ? (snap.data().name || user.email.split('@')[0]) : user.email.split('@')[0];
+            if (snap.exists()) {
+                const data = snap.data();
+                driverName = data.name || user.email.split('@')[0];
+                // التحقق مما إذا كانت المركبة تابعة للشركة
+                isCompanyVehicle = data.isCompanyVehicle || data.vehicleType === 'شركة' || data.companyVehicle === true;
+            } else {
+                driverName = user.email.split('@')[0];
+            }
             document.getElementById('driverName').innerText = driverName;
             loadOrders();
-            // آلية التحديث المستمر كل 10 ثواني تلقائياً
             setInterval(loadOrders, 10000);
         });
 
@@ -144,22 +179,21 @@
                 if (lastCount > 0 && active.length > lastCount) showAlert('🔔 طلب جديد متاح في البوابة!');
                 lastCount = active.length;
 
-                // حساب إشعار السداد الدائم اليومي الخاص بهذا المندوب
+                // حساب إشعار السداد الدائم اليومي (30 ألف لمركبة الشركة، 10 ألف لما دون ذلك)
                 const todayStr = new Date().toISOString().slice(0, 10);
                 const driverCompletedToday = orders.filter(o => {
                     const isMine = (o.assignedDriver === driverName || o.driverName === driverName);
                     const isDone = (o.status === 'منجز' || o.status === 'completed');
-                    const isToday = o.completedDate === todayStr || isDone; // تعتمد على الطلبات المنجزة
                     return isMine && isDone;
                 });
 
-                const totalDues = driverCompletedToday.reduce((sum, o) => sum + (Number(o.cost) || 0), 0);
+                const requiredFee = isCompanyVehicle ? 30000 : 10000;
                 const paymentNotice = document.getElementById('dailyPaymentNotice');
                 const lastPaidDate = localStorage.getItem(`paid_date_${driverName}`);
 
-                if (totalDues > 0 && lastPaidDate !== todayStr) {
+                if (driverCompletedToday.length > 0 && lastPaidDate !== todayStr) {
                     paymentNotice.classList.remove('hidden');
-                    document.getElementById('paymentDetailsText').innerText = `إجمالي التحصيلات غير السادية اليوم: ${totalDues} جنيه (${driverCompletedToday.length} طلب مكتمل)`;
+                    document.getElementById('paymentDetailsText').innerText = `المطلوب سداده اليوم (${isCompanyVehicle ? 'مركبة شركة' : 'مركبة خاصة'}): ${requiredFee.toLocaleString()} جنيه`;
                 } else {
                     paymentNotice.classList.add('hidden');
                 }
@@ -172,12 +206,12 @@
                 if (myOrder) {
                     const mapUrl = myOrder.lat ? `https://www.google.com/maps?q=${myOrder.lat},${myOrder.lng}` : '#';
                     myContainer.innerHTML = `
-                        <div class="bg-[#1E1E1E] border border-[#FFB800] p-4 rounded-2xl space-y-3 text-right">
+                        <div class="bg-white dark:bg-[#1E1E1E] border border-[#FFB800] p-4 rounded-2xl space-y-3 text-right shadow">
                             <div class="flex justify-between text-xs">
                                 <span class="text-[#FFB800] font-bold">طلب توصيل نشط</span>
-                                <span class="text-emerald-400 font-bold">قيد التوصيل</span>
+                                <span class="text-emerald-500 dark:text-emerald-400 font-bold">قيد التوصيل</span>
                             </div>
-                            <div class="text-xs space-y-1 text-gray-300">
+                            <div class="text-xs space-y-1 text-gray-700 dark:text-gray-300">
                                 <div><b>المتجر:</b> ${myOrder.storeName || '-'}</div>
                                 <div><b>المبلغ:</b> <span class="text-[#FFB800] font-bold">${(myOrder.cost || 0)} جنيه</span></div>
                                 <div><b>الوصف:</b> ${myOrder.description || '-'}</div>
@@ -188,29 +222,29 @@
                             </div>
                         </div>`;
                 } else {
-                    myContainer.innerHTML = `<div class="p-6 text-gray-500 text-xs">لا يوجد طلب نشط حالياً.</div>`;
+                    myContainer.innerHTML = `<div class="p-6 text-gray-400 dark:text-gray-500 text-xs">لا يوجد طلب نشط حالياً.</div>`;
                 }
 
                 // عرض البوابة (إخفاء رقم الطلب واستبدال زر القبول بـ "إنجاز هذا الطلب")
                 const marketList = document.getElementById('marketList');
                 const available = active.filter(o => !o.assignedDriver && !o.driverName);
                 if (available.length === 0) {
-                    marketList.innerHTML = `<div class="p-6 text-gray-500 text-xs">لا توجد طلبات متاحة.</div>`;
+                    marketList.innerHTML = `<div class="p-6 text-gray-400 dark:text-gray-500 text-xs">لا توجد طلبات متاحة.</div>`;
                     return;
                 }
 
                 marketList.innerHTML = available.map(o => `
-                    <div class="bg-[#1E1E1E] border border-gray-800 p-4 rounded-2xl space-y-2 text-right">
+                    <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 p-4 rounded-2xl space-y-2 text-right shadow">
                         <div class="flex justify-between text-xs">
                             <span class="text-[#FFB800] font-bold">طلب متاح للتوصيل</span>
-                            <span class="text-gray-400">${(o.cost || 0)} جنيه</span>
+                            <span class="text-gray-500 dark:text-gray-400">${(o.cost || 0)} جنيه</span>
                         </div>
-                        <div class="text-xs text-gray-300">
+                        <div class="text-xs text-gray-700 dark:text-gray-300">
                             <div><b>المتجر:</b> ${o.storeName || '-'}</div>
                             <div><b>الوصف:</b> ${o.description || '-'}</div>
                         </div>
                         <div class="flex gap-2 pt-2">
-                            <button onclick='openDetailsModal(${JSON.stringify(o).replace(/'/g, "&apos;")})' class="flex-1 bg-gray-700 text-white py-2 rounded-xl text-xs font-bold">تفاصيل الطلب</button>
+                            <button onclick='openDetailsModal(${JSON.stringify(o).replace(/'/g, "&apos;")})' class="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white py-2 rounded-xl text-xs font-bold">تفاصيل الطلب</button>
                             <button onclick="claimOrder('${o.id}', '${o.orderId}')" class="flex-1 bg-[#FFB800] text-[#121212] py-2 rounded-xl text-xs font-bold">إنجاز هذا الطلب</button>
                         </div>
                     </div>
@@ -235,8 +269,6 @@
         }
 
         window.closeDetailsModal = function() {
-            document.getElementById('detailsModal').classList.remove('hidden');
-            document.getElementById('detailsModal').classList.add('flex');
             document.getElementById('detailsModal').classList.remove('flex');
             document.getElementById('detailsModal').classList.add('hidden');
         }
