@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم السحابية الشاملة | For-U</title>
+    <title>لوحة التحكم | For-U</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -24,158 +24,124 @@
 </head>
 <body class="bg-brandDark text-white min-h-screen flex flex-col justify-between">
 
-    <!-- الهيدر الموحد -->
+    <!-- الهيدر -->
     <header class="p-4 md:p-6 flex flex-col sm:flex-row justify-between items-center border-b border-gray-800 gap-4">
         <div class="flex items-center space-x-3 space-x-reverse">
             <div class="bg-brandYellow text-brandDark font-black text-xl px-3 py-1 rounded-xl">4U</div>
             <div>
-                <h1 id="headerTitle" class="text-lg font-bold">لوحة التحكم السحابية</h1>
-                <p id="userRoleBadge" class="text-xs text-brandYellow">جاري التحقق من الصلاحية...</p>
+                <h1 id="headerTitle" class="text-lg font-bold">لوحة التحكم</h1>
+                <p id="userRoleBadge" class="text-xs text-brandYellow">جاري التحقق...</p>
             </div>
         </div>
         <div class="flex items-center space-x-2 space-x-reverse flex-wrap justify-center">
-            <button onclick="switchTab('ordersTab')" id="btnOrdersTab" class="bg-brandYellow text-brandDark font-bold text-xs px-3 py-2 rounded-xl transition">إدارة الطلبات</button>
-            <button onclick="switchTab('usersTab')" id="btnUsersTab" class="bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition">إدارة المستخدمين</button>
-            <button onclick="switchTab('archiveTab')" id="btnArchiveTab" class="bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition">أرشيف الطلبات</button>
-            <button onclick="logout()" class="text-red-400 text-xs flex items-center bg-brandCard border border-red-500/30 px-3 py-2 rounded-xl" title="تسجيل الخروج">
+            <button onclick="switchTab('ordersTab')" id="btnOrdersTab" class="bg-brandYellow text-brandDark font-bold text-xs px-3 py-2 rounded-xl transition">الطلبات</button>
+            <button onclick="switchTab('usersTab')" id="btnUsersTab" class="bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition">المستخدمين</button>
+            <button onclick="switchTab('archiveTab')" id="btnArchiveTab" class="bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition">الأرشيف</button>
+            <button onclick="logout()" class="text-red-400 text-xs flex items-center bg-brandCard border border-red-500/30 px-3 py-2 rounded-xl">
                 <i class="fa-solid fa-right-from-bracket ml-1"></i> خروج
             </button>
         </div>
     </header>
 
-    <!-- المحتوى الرئيسي -->
-    <main class="flex-grow container mx-auto px-4 py-8 max-w-7xl space-y-8">
+    <!-- المحتوى -->
+    <main class="flex-grow container mx-auto px-4 py-6 max-w-7xl space-y-6">
         
-        <!-- إحصائيات عامة تشمل تقسيم الإيرادات (توصيل ومبيعات) -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-            <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
+        <!-- الإحصائيات -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl">
                 <p class="text-xs text-gray-400">إجمالي الطلبات</p>
-                <h3 id="totalOrdersCount" class="text-2xl font-black text-brandYellow mt-1">0</h3>
+                <h3 id="totalOrdersCount" class="text-xl font-black text-brandYellow mt-1">0</h3>
             </div>
-            <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
-                <p class="text-xs text-gray-400">الطلبات المكتملة</p>
-                <h3 id="completedOrdersCount" class="text-2xl font-black text-green-400 mt-1">0</h3>
+            <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl">
+                <p class="text-xs text-gray-400">المكتملة</p>
+                <h3 id="completedOrdersCount" class="text-xl font-black text-green-400 mt-1">0</h3>
             </div>
-            <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
-                <p class="text-xs text-gray-400">إيرادات التوصيل (اليومية)</p>
-                <h3 id="deliveryRevenueCount" class="text-xl font-black text-blue-400 mt-1">0 ج.س</h3>
+            <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl">
+                <p class="text-xs text-gray-400">إيرادات التوصيل</p>
+                <h3 id="deliveryRevenueCount" class="text-lg font-black text-blue-400 mt-1">0</h3>
             </div>
-            <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
-                <p class="text-xs text-gray-400">إيرادات المبيعات (المسوقين/اللوحة)</p>
-                <h3 id="salesRevenueCount" class="text-xl font-black text-emerald-400 mt-1">0 ج.س</h3>
-            </div>
-            <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
-                <p class="text-xs text-gray-400">إجمالي المستخدمين</p>
-                <h3 id="totalUsersCount" class="text-2xl font-black text-purple-400 mt-1">0</h3>
-            </div>
-            <div class="bg-brandCard border border-gray-800 p-5 rounded-2xl shadow-lg">
-                <p class="text-xs text-gray-400">حالة النظام السحابي</p>
-                <h3 class="text-2xl font-black text-green-400 mt-1">متصل 🟢</h3>
+            <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl">
+                <p class="text-xs text-gray-400">إيرادات المبيعات</p>
+                <h3 id="salesRevenueCount" class="text-lg font-black text-emerald-400 mt-1">0</h3>
             </div>
         </section>
 
-        <!-- تبويب إدارة الطلبات وإنشاء طلب جديد -->
-        <div id="ordersTabContent" class="space-y-6">
-            
-            <!-- نموذج إضافة طلب جديد من اللوحة وإرساله للمناديب مباشرة -->
-            <div id="createOrderCard" class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
-                <h2 class="text-lg font-bold flex items-center text-brandYellow border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-plus-circle ml-2"></i> إنشاء وإرسال طلب جديد للمناديب مباشرة
-                </h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <input type="text" id="newClientName" placeholder="اسم العميل" class="bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-brandYellow">
-                    <input type="tel" id="newClientPhone" placeholder="هاتف العميل (09xxxxxxxx)" class="bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-brandYellow">
-                    <input type="text" id="newStoreName" placeholder="اسم المتجر (المرسل)" class="bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-brandYellow">
-                    <input type="number" id="newOrderCost" placeholder="قيمة الطلب/المبيعات (جنيه)" class="bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-brandYellow">
+        <!-- تبويب الطلبات -->
+        <div id="ordersTabContent" class="space-y-4">
+            <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl space-y-3">
+                <h2 class="text-sm font-bold text-brandYellow">إرسال طلب جديد للمناديب</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                    <input type="text" id="newClientName" placeholder="اسم العميل" class="bg-brandDark border border-gray-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brandYellow">
+                    <input type="tel" id="newClientPhone" placeholder="هاتف العميل" class="bg-brandDark border border-gray-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brandYellow">
+                    <input type="text" id="newStoreName" placeholder="اسم المتجر" class="bg-brandDark border border-gray-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brandYellow">
+                    <input type="number" id="newOrderCost" placeholder="القيمة (جنيه)" class="bg-brandDark border border-gray-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brandYellow">
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <input type="text" id="newOrderDesc" placeholder="تفاصيل البضاعة ووصف الطلب" class="bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-brandYellow">
-                    <button onclick="addNewOrderFromDashboard()" class="bg-brandYellow text-brandDark font-bold py-2.5 rounded-xl hover:bg-yellow-400 transition text-sm shadow">
-                        <i class="fa-solid fa-paper-plane ml-1"></i> إرسال الطلب لبوابة المناديب (تلقائي أخضر)
-                    </button>
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="text" id="newOrderDesc" placeholder="تفاصيل الطلب" class="flex-grow bg-brandDark border border-gray-700 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-brandYellow">
+                    <button onclick="addNewOrderFromDashboard()" class="bg-brandYellow text-brandDark font-bold px-4 py-2 rounded-xl text-xs hover:bg-yellow-400 transition">إرسال للمناديب</button>
                 </div>
             </div>
 
-            <!-- جدول الطلبات الحالية -->
-            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl">
-                <h2 id="ordersSectionTitle" class="text-xl font-bold mb-4 flex items-center text-brandYellow border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-list-check ml-2"></i> إدارة طلبات العملاء وتفاصيل المواقع الشاملة
-                </h2>
-                <div id="supportNoticeBox" class="hidden mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-300 text-xs flex items-center">
-                    <i class="fa-solid fa-triangle-exclamation ml-2 text-base"></i>
-                    <span>ملاحظة: أنت تملك صلاحية محدودة للاطلاع ومتابعة حالة النظام فقط.</span>
-                </div>
+            <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl">
+                <h2 class="text-sm font-bold text-brandYellow mb-3">قائمة الطلبات</h2>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-right text-sm min-w-[700px]">
+                    <table class="w-full text-right text-xs min-w-[600px]">
                         <thead class="bg-brandDark text-gray-400 border-b border-gray-700">
                             <tr>
-                                <th class="p-3">رقم الطلب</th>
-                                <th class="p-3">بيانات العميل</th>
-                                <th class="p-3">بيانات المتجر</th>
-                                <th class="p-3">تفاصيل البضاعة والموقع</th>
-                                <th class="p-3">القيمة (جنيه)</th>
-                                <th class="p-3 text-center">الإجراء / الحالة</th>
+                                <th class="p-2.5">الرقم</th>
+                                <th class="p-2.5">العميل</th>
+                                <th class="p-2.5">المتجر</th>
+                                <th class="p-2.5">التفاصيل والقيمة</th>
+                                <th class="p-2.5 text-center">الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody id="firestoreOrdersTable" class="divide-y divide-gray-800">
-                            <tr><td colspan="6" class="p-4 text-center text-gray-500">جاري تحميل الطلبات...</td></tr>
+                            <tr><td colspan="5" class="p-4 text-center text-gray-500">جاري التحميل...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- تبويب إدارة المستخدمين والصلاحيات المحدث -->
-        <div id="usersTabContent" class="space-y-6 hidden">
-            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-6">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-700 pb-4 gap-4">
-                    <div>
-                        <h2 class="text-xl font-bold flex items-center text-brandYellow">
-                            <i class="fa-solid fa-users-gear ml-2"></i> إدارة المستخدمين والصلاحيات المتقدمة
-                        </h2>
-                        <p class="text-xs text-gray-400 mt-1">تحديد الأدوار المطلوبة (مندوب توصيل، مدير النظام، مسوقين)، نوع مركبة المندوب، وإرسال الإشعارات.</p>
-                    </div>
-                    <span id="usersCounterBadge" class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1.5 rounded-xl text-xs font-bold">عدد المستخدمين: 0</span>
-                </div>
-                
+        <!-- تبويب المستخدمين -->
+        <div id="usersTabContent" class="space-y-4 hidden">
+            <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl space-y-4">
+                <h2 class="text-sm font-bold text-brandYellow">إدارة المستخدمين والصلاحيات</h2>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-right text-sm min-w-[750px]">
+                    <table class="w-full text-right text-xs min-w-[650px]">
                         <thead class="bg-brandDark text-gray-400 border-b border-gray-700">
                             <tr>
-                                <th class="p-3">اسم المستخدم / البريد</th>
-                                <th class="p-3">رقم الهاتف</th>
-                                <th class="p-3">الصلاحية الجديدة المطلوبة</th>
-                                <th class="p-3">نوع المركبة (للمناديب)</th>
-                                <th class="p-3 text-center">تحديث الصلاحية والمركبة</th>
+                                <th class="p-2.5">المستخدم</th>
+                                <th class="p-2.5">الهاتف</th>
+                                <th class="p-2.5">الصلاحية</th>
+                                <th class="p-2.5">المركبة</th>
+                                <th class="p-2.5 text-center">حفظ</th>
                             </tr>
                         </thead>
                         <tbody id="firestoreUsersTable" class="divide-y divide-gray-800">
-                            <tr><td colspan="5" class="p-4 text-center text-gray-500">جاري جلب المستخدمين...</td></tr>
+                            <tr><td colspan="5" class="p-4 text-center text-gray-500">جاري التحميل...</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- تبويب أرشيف الطلبات المحذوفة فعلياً -->
-        <div id="archiveTabContent" class="space-y-6 hidden">
-            <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
-                <h2 class="text-xl font-bold flex items-center text-yellow-500 border-b border-gray-700 pb-3">
-                    <i class="fa-solid fa-box-archive ml-2"></i> أرشيف الطلبات المحذوفة
-                </h2>
+        <!-- تبويب الأرشيف -->
+        <div id="archiveTabContent" class="space-y-4 hidden">
+            <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl">
+                <h2 class="text-sm font-bold text-yellow-500 mb-3">أرشيف الطلبات المحذوفة</h2>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-right text-sm min-w-[600px]">
+                    <table class="w-full text-right text-xs min-w-[500px]">
                         <thead class="bg-brandDark text-gray-400 border-b border-gray-700">
                             <tr>
-                                <th class="p-3">رقم الطلب</th>
-                                <th class="p-3">العميل</th>
-                                <th class="p-3">المتجر</th>
-                                <th class="p-3">القيمة</th>
-                                <th class="p-3 text-center">حالة الأرشيف</th>
+                                <th class="p-2.5">الرقم</th>
+                                <th class="p-2.5">العميل</th>
+                                <th class="p-2.5">المتجر</th>
+                                <th class="p-2.5">القيمة</th>
                             </tr>
                         </thead>
                         <tbody id="archiveOrdersTable" class="divide-y divide-gray-800">
-                            <tr><td colspan="5" class="p-4 text-center text-gray-500">الأرشيف فارغ.</td></tr>
+                            <tr><td colspan="4" class="p-4 text-center text-gray-500">الأرشيف فارغ.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -186,316 +152,161 @@
 
     <!-- نافذة التنبيهات -->
     <div id="customAlertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-brandCard border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
-            <h4 id="alertTitle" class="text-xl font-bold mb-2 text-brandYellow">تنبيه النظام</h4>
-            <p id="alertMessage" class="text-gray-300 text-sm mb-6 leading-relaxed">رسالة...</p>
-            <button onclick="closeCustomAlert()" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg text-sm">
-                حسنًا
-            </button>
+        <div class="bg-brandCard border border-gray-800 rounded-2xl p-5 max-w-xs w-full text-center space-y-3 shadow-2xl">
+            <p id="alertMessage" class="text-xs text-gray-200"></p>
+            <button onclick="closeCustomAlert()" class="w-full bg-brandYellow text-brandDark font-bold py-2 rounded-xl text-xs">حسناً</button>
         </div>
     </div>
 
-    <!-- الفوتر -->
-    <footer class="p-4 text-center border-t border-gray-800 text-gray-500 text-sm">
-        جميع الحقوق محفوظة &copy; 2026 For-U Ecosystem
-    </footer>
+    <footer class="p-3 text-center border-t border-gray-800 text-gray-500 text-[10px]">For-U &copy; 2026</footer>
 
-    <!-- ربط Firebase وإدارة العمليات -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        const firebaseConfig = {
+        const app = initializeApp({
             apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
             authDomain: "for-u-56f3f.firebaseapp.com",
             projectId: "for-u-56f3f",
             storageBucket: "for-u-56f3f.firebasestorage.app",
             messagingSenderId: "519930793199",
-            appId: "1:519930793199:web:0c876d149832cd0a8d5f1a",
-            measurementId: "G-2ZV3NGRYZG"
-        };
-
-        const app = initializeApp(firebaseConfig);
+            appId: "1:519930793199:web:0c876d149832cd0a8d5f1a"
+        });
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let allOrders = [];
-        let archivedOrders = [];
-        let allUsers = [];
-        let currentUserRole = '';
-        let currentUserName = '';
-        let currentUserId = '';
+        let allOrders = [], archivedOrders = [], allUsers = [], currentUserRole = '';
 
-        window.showCustomAlert = function(title, message) {
-            document.getElementById('alertTitle').innerText = title;
-            document.getElementById('alertMessage').innerText = message;
-            const modal = document.getElementById('customAlertModal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+        window.showCustomAlert = (msg) => {
+            document.getElementById('alertMessage').innerText = msg;
+            const m = document.getElementById('customAlertModal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+        }
+        window.closeCustomAlert = () => {
+            const m = document.getElementById('customAlertModal');
+            m.classList.remove('flex'); m.classList.add('hidden');
         }
 
-        window.closeCustomAlert = function() {
-            const modal = document.getElementById('customAlertModal');
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
-        }
-
-        window.switchTab = function(tabName) {
-            document.getElementById('ordersTabContent').classList.add('hidden');
-            document.getElementById('usersTabContent').classList.add('hidden');
-            document.getElementById('archiveTabContent').classList.add('hidden');
-
-            document.getElementById('btnOrdersTab').className = "bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition";
-            document.getElementById('btnUsersTab').className = "bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition";
-            document.getElementById('btnArchiveTab').className = "bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition";
-
-            if (tabName === 'ordersTab') {
-                document.getElementById('ordersTabContent').classList.remove('hidden');
-                document.getElementById('btnOrdersTab').className = "bg-brandYellow text-brandDark font-bold text-xs px-3 py-2 rounded-xl transition";
-            } else if (tabName === 'usersTab') {
-                document.getElementById('usersTabContent').classList.remove('hidden');
-                document.getElementById('btnUsersTab').className = "bg-brandYellow text-brandDark font-bold text-xs px-3 py-2 rounded-xl transition";
-            } else if (tabName === 'archiveTab') {
-                document.getElementById('archiveTabContent').classList.remove('hidden');
-                document.getElementById('btnArchiveTab').className = "bg-brandYellow text-brandDark font-bold text-xs px-3 py-2 rounded-xl transition";
-            }
+        window.switchTab = (tab) => {
+            ['ordersTabContent', 'usersTabContent', 'archiveTabContent'].forEach(t => document.getElementById(t).classList.add('hidden'));
+            ['btnOrdersTab', 'btnUsersTab', 'btnArchiveTab'].forEach(b => document.getElementById(b).className = "bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition");
+            
+            document.getElementById(tab + 'Content').classList.remove('hidden');
+            document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1)).className = "bg-brandYellow text-brandDark font-bold text-xs px-3 py-2 rounded-xl transition";
         }
 
         function applyRoleView(role) {
-            const roleBadge = document.getElementById('userRoleBadge');
-            const headerTitle = document.getElementById('headerTitle');
-            const createOrderCard = document.getElementById('createOrderCard');
-            const supportNoticeBox = document.getElementById('supportNoticeBox');
-
-            // تطبيع الصلاحية للتعامل مع التسميات الجديدة بدقة وتجنب التداخل عند التحويل
             const cleanRole = role ? role.trim() : '';
-
-            if (cleanRole === 'مدير النظام' || cleanRole === 'admin' || cleanRole === 'مدير') {
-                headerTitle.innerText = 'لوحة تحكم المدير العام';
-                roleBadge.innerText = 'صلاحية كاملة (إدارة النظام، الحذف، وتعديل الصلاحيات)';
-                if(createOrderCard) createOrderCard.style.display = 'block';
-                if(supportNoticeBox) supportNoticeBox.classList.add('hidden');
-            } else if (cleanRole === 'مندوب توصيل') {
-                // إذا تم تحويل مدير النظام الحالي إلى مندوب توصيل، يتم توجيهه مباشرة لصفحة المناديب الخاصة به لمنع بقائه بلوحة الإدارة
-                window.location.href = 'driver.html';
-                return;
-            } else if (cleanRole === 'مسوقين' || cleanRole === 'مسوق') {
-                headerTitle.innerText = 'بوابة المسوقين';
-                roleBadge.innerText = 'الصلاحية: مسوقين (متابعة المبيعات والتقارير)';
-                if(createOrderCard) createOrderCard.style.display = 'block';
-                if(supportNoticeBox) supportNoticeBox.classList.add('hidden');
-            } else {
-                headerTitle.innerText = 'لوحة التحكم';
-                roleBadge.innerText = `الصلاحية: ${cleanRole}`;
-                if(createOrderCard) createOrderCard.style.display = 'block';
-                if(supportNoticeBox) supportNoticeBox.classList.add('hidden');
-            }
+            document.getElementById('userRoleBadge').innerText = `الصلاحية: ${cleanRole}`;
+            
+            // تمكين مدير النظام من العمل بسلاسة من الهاتف بدون إعادة توجيه إجبارية تمنعه
             renderViews();
         }
 
         onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                currentUserId = user.uid;
-                try {
-                    const userRef = doc(db, "users", user.uid);
-                    const userSnap = await getDoc(userRef);
-                    
-                    if (userSnap.exists()) {
-                        const userData = userSnap.data();
-                        currentUserRole = userData.role || 'مندوب توصيل';
-                        currentUserName = userData.name || userData.fullName || user.email.split('@')[0];
-                    } else {
-                        currentUserRole = 'مدير النظام';
-                        currentUserName = user.email.split('@')[0];
-                    }
-                    
-                    applyRoleView(currentUserRole);
-                    fetchCloudData();
-                } catch (err) {
-                    currentUserRole = 'مدير النظام';
-                    applyRoleView(currentUserRole);
-                    fetchCloudData();
-                }
-            } else {
-                window.location.href = 'index.html';
+            if (!user) { location.href = 'index.html'; return; }
+            try {
+                const snap = await getDoc(doc(db, "users", user.uid));
+                currentUserRole = snap.exists() ? (snap.data().role || 'مندوب توصيل') : 'مدير النظام';
+            } catch (e) {
+                currentUserRole = 'مدير النظام';
             }
+            applyRoleView(currentUserRole);
+            fetchCloudData();
         });
 
         async function fetchCloudData() {
             try {
                 let firestoreOrders = [];
-                const ordersSnapshot = await getDocs(collection(db, "orders"));
-                ordersSnapshot.forEach((docSnap) => {
-                    firestoreOrders.push({ id: docSnap.id, ...docSnap.data() });
-                });
+                const snap = await getDocs(collection(db, "orders"));
+                snap.forEach(d => firestoreOrders.push({ id: d.id, ...d.data() }));
 
-                const localOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
+                const local = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
                 archivedOrders = JSON.parse(localStorage.getItem('foru_archived_orders') || '[]');
                 
-                const combinedMap = new Map();
-                firestoreOrders.forEach(o => combinedMap.set(o.orderId || o.id, o));
-                localOrders.forEach(o => {
-                    if (!combinedMap.has(o.orderId)) combinedMap.set(o.orderId, o);
-                });
+                const map = new Map();
+                firestoreOrders.forEach(o => map.set(o.orderId || o.id, o));
+                local.forEach(o => { if (!map.has(o.orderId)) map.set(o.orderId, o); });
+                allOrders = Array.from(map.values());
 
-                allOrders = Array.from(combinedMap.values());
+                const completed = allOrders.filter(o => o.status === 'completed' || o.status === 'منجز' || o.status === 'تم الإرسال');
+                document.getElementById('totalOrdersCount').innerText = allOrders.length;
+                document.getElementById('completedOrdersCount').innerText = completed.length;
+                document.getElementById('deliveryRevenueCount').innerText = (completed.length * 2500).toLocaleString() + ' ج';
+                document.getElementById('salesRevenueCount').innerText = completed.reduce((s, o) => s + (Number(o.cost) || 0), 0).toLocaleString() + ' ج';
 
-                const completedOrders = allOrders.filter(o => o.status === 'completed' || o.status === 'منجز' || o.status === 'تم الإرسال');
-                
-                let deliveryRevenue = completedOrders.length * 2500; 
-                let salesRevenue = completedOrders.reduce((sum, o) => sum + (Number(o.cost) || 0), 0); 
-
-                if(document.getElementById('totalOrdersCount')) {
-                    document.getElementById('totalOrdersCount').innerText = allOrders.length;
-                    document.getElementById('completedOrdersCount').innerText = completedOrders.length;
-                    document.getElementById('deliveryRevenueCount').innerText = deliveryRevenue.toLocaleString() + ' ج.س';
-                    document.getElementById('salesRevenueCount').innerText = salesRevenue.toLocaleString() + ' ج.س';
-                }
-
-                const usersSnapshot = await getDocs(collection(db, "users"));
+                const usersSnap = await getDocs(collection(db, "users"));
                 allUsers = [];
-                usersSnapshot.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    allUsers.push({ 
-                        id: docSnap.id, 
-                        name: data.name || data.fullName || data.username || 'مستخدم',
-                        email: data.email || data.userEmail || 'بدون بريد',
-                        phone: data.phone || data.phoneNumber || 'غير مسجل',
-                        role: data.role || 'عميل',
-                        vehicleType: data.vehicleType || 'غير محدد'
-                    });
+                usersSnap.forEach(d => {
+                    const data = d.data();
+                    allUsers.push({ id: d.id, name: data.name || data.fullName || 'مستخدم', email: data.email || '', phone: data.phone || '', role: data.role || 'مندوب توصيل', vehicleType: data.vehicleType || 'غير محدد' });
                 });
-
-                if(document.getElementById('totalUsersCount')) {
-                    document.getElementById('totalUsersCount').innerText = allUsers.length;
-                    document.getElementById('usersCounterBadge').innerText = `عدد المستخدمين: ${allUsers.length}`;
-                }
-
+                document.getElementById('usersTabContent').querySelector('h2').innerText = `المستخدمين (${allUsers.length})`;
                 renderViews();
-            } catch (error) {
+            } catch (e) {
                 allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
-                archivedOrders = JSON.parse(localStorage.getItem('foru_archived_orders') || '[]');
                 renderViews();
             }
         }
 
         function renderViews() {
-            const tbodyOrders = document.getElementById('firestoreOrdersTable');
-            const tbodyUsers = document.getElementById('firestoreUsersTable');
-            const tbodyArchive = document.getElementById('archiveOrdersTable');
+            const tOrders = document.getElementById('firestoreOrdersTable');
+            const tUsers = document.getElementById('firestoreUsersTable');
+            const tArchive = document.getElementById('archiveOrdersTable');
 
             const isAdmin = (currentUserRole === 'مدير النظام' || currentUserRole === 'admin' || currentUserRole === 'مدير');
 
-            // تعبئة جدول الطلبات
-            if (tbodyOrders) {
-                tbodyOrders.innerHTML = '';
-                if (allOrders.length === 0) {
-                    tbodyOrders.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">لا توجد طلبات سحابية واردة حالياً.</td></tr>`;
-                } else {
-                    allOrders.forEach(order => {
-                        const latVal = order.lat ? Number(order.lat).toFixed(4) : '--';
-                        const lngVal = order.lng ? Number(order.lng).toFixed(4) : '--';
-                        const mapLink = (order.lat && order.lng) ? `https://www.google.com/maps?q=${order.lat},${order.lng}` : '#';
+            tOrders.innerHTML = allOrders.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-gray-500">لا توجد طلبات.</td></tr>` : 
+                allOrders.map(o => `
+                    <tr>
+                        <td class="p-2.5 font-bold text-brandYellow">${o.orderId || o.id}</td>
+                        <td class="p-2.5">${o.clientName || '-'}<br><span class="text-[10px] text-gray-400">${o.clientPhone || ''}</span></td>
+                        <td class="p-2.5">${o.storeName || '-'}</td>
+                        <td class="p-2.5">${o.description || '-'}<br><b class="text-brandYellow">${(o.cost || 0).toLocaleString()} ج</b></td>
+                        <td class="p-2.5 text-center space-x-1 space-x-reverse">
+                            <button onclick="sendOrder('${o.id}', '${o.orderId || o.id}')" class="bg-green-600 text-white px-2.5 py-1 rounded-lg">إرسال</button>
+                            ${isAdmin ? `<button onclick="deleteOrder('${o.id}', '${o.orderId || o.id}')" class="bg-red-600/20 text-red-400 px-2.5 py-1 rounded-lg">حذف</button>` : ''}
+                        </td>
+                    </tr>
+                `).join('');
 
-                        let deleteBtnHTML = '';
-                        if (isAdmin) {
-                            deleteBtnHTML = `
-                                <button onclick="deleteOrderToArchive('${order.id}', '${order.orderId || order.id}')" class="bg-red-500/20 text-red-400 border border-red-500/30 px-2.5 py-1.5 rounded-lg hover:bg-red-500 hover:text-white transition text-xs" title="حذف الطلب نهائياً ونقله للأرشيف">
-                                    <i class="fa-solid fa-trash"></i> حذف
-                                </button>
-                            `;
-                        }
+            tUsers.innerHTML = allUsers.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-gray-500">لا توجد حسابات.</td></tr>` :
+                allUsers.map(u => `
+                    <tr>
+                        <td class="p-2.5">${u.name}<br><span class="text-[10px] text-gray-400">${u.email}</span></td>
+                        <td class="p-2.5">${u.phone}</td>
+                        <td class="p-2.5">
+                            <select id="role_${u.id}" class="bg-brandDark border border-gray-700 rounded p-1 text-white">
+                                <option value="مندوب توصيل" ${u.role === 'مندوب توصيل' ? 'selected' : ''}>مندوب توصيل</option>
+                                <option value="مدير النظام" ${u.role === 'مدير النظام' || u.role === 'admin' ? 'selected' : ''}>مدير النظام</option>
+                                <option value="مسوقين" ${u.role === 'مسوقين' || u.role === 'مسوق' ? 'selected' : ''}>مسوقين</option>
+                            </select>
+                        </td>
+                        <td class="p-2.5">
+                            <select id="veh_${u.id}" class="bg-brandDark border border-gray-700 rounded p-1 text-brandYellow">
+                                <option value="غير محدد" ${u.vehicleType === 'غير محدد' ? 'selected' : ''}>اختر المركبة</option>
+                                <option value="مركبة تبع الشركة" ${u.vehicleType === 'مركبة تبع الشركة' ? 'selected' : ''}>تبعة للشركة (30 ألف)</option>
+                                <option value="مركبة ما تبع الشركة" ${u.vehicleType === 'مركبة ما تبع الشركة' ? 'selected' : ''}>خاصة (10 آلاف)</option>
+                            </select>
+                        </td>
+                        <td class="p-2.5 text-center">
+                            <button onclick="saveUser('${u.id}')" class="bg-brandYellow text-brandDark font-bold px-2.5 py-1 rounded">حفظ</button>
+                        </td>
+                    </tr>
+                `).join('');
 
-                        tbodyOrders.innerHTML += `
-                            <tr>
-                                <td class="p-3 font-bold text-brandYellow">${order.orderId || order.id}</td>
-                                <td class="p-3">
-                                    <div class="font-bold text-white">${order.clientName || 'عميل'}</div>
-                                    <div class="text-xs text-gray-400">${order.clientPhone || ''}</div>
-                                </td>
-                                <td class="p-3">
-                                    <div class="font-bold text-white">${order.storeName || 'غير مسجل'}</div>
-                                </td>
-                                <td class="p-3 text-xs space-y-1">
-                                    <div><span class="text-gray-400">الوصف:</span> ${order.description || 'توصيل طلب'}</div>
-                                    <div><span class="text-gray-400">الحالة:</span> <span class="text-green-400 font-bold bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20">${order.status || 'تم الإرسال'}</span></div>
-                                    ${order.lat ? `<div><a href="${mapLink}" target="_blank" class="text-blue-400 underline"><i class="fa-solid fa-map-pin ml-1"></i> الموقع (${latVal}, ${lngVal})</a></div>` : ''}
-                                </td>
-                                <td class="p-3">
-                                    <span class="font-bold text-brandYellow">${(order.cost || 0).toLocaleString()} ج.س</span>
-                                </td>
-                                <td class="p-3 text-center space-x-2 space-x-reverse">
-                                    <button onclick="sendOrderToPublicDrivers('${order.id}', '${order.orderId || order.id}')" class="bg-green-500 text-brandDark font-bold px-3 py-1.5 rounded-lg hover:bg-green-400 transition text-xs shadow">تم الإرسال 🟢</button>
-                                    ${deleteBtnHTML}
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-            }
-
-            // تعبئة جدول المستخدمين مع الصلاحيات المطلوبة حصراً: (مندوب توصيل، مدير النظام، مسوقين)
-            if (tbodyUsers) {
-                tbodyUsers.innerHTML = '';
-                if (allUsers.length === 0) {
-                    tbodyUsers.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">لا توجد حسابات مسجلة.</td></tr>`;
-                } else {
-                    allUsers.forEach(user => {
-                        const currentRole = user.role || 'مندوب توصيل';
-                        const currentVehicle = user.vehicleType || 'غير محدد';
-                        tbodyUsers.innerHTML += `
-                            <tr>
-                                <td class="p-3">
-                                    <div class="font-bold text-white">${user.name}</div>
-                                    <div class="text-xs text-gray-400">${user.email}</div>
-                                </td>
-                                <td class="p-3 text-gray-300 text-xs">${user.phone}</td>
-                                <td class="p-3">
-                                    <select id="role_${user.id}" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
-                                        <option value="مندوب توصيل" ${currentRole === 'مندوب توصيل' ? 'selected' : ''}>مندوب توصيل</option>
-                                        <option value="مدير النظام" ${currentRole === 'مدير النظام' || currentRole === 'admin' ? 'selected' : ''}>مدير النظام</option>
-                                        <option value="مسوقين" ${currentRole === 'مسوقين' || currentRole === 'مسوق' ? 'selected' : ''}>مسوقين</option>
-                                    </select>
-                                </td>
-                                <td class="p-3">
-                                    <select id="veh_${user.id}" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-brandYellow text-xs outline-none focus:border-brandYellow">
-                                        <option value="غير محدد" ${currentVehicle === 'غير محدد' ? 'selected' : ''}>اختر نوع المركبة...</option>
-                                        <option value="مركبة تبع الشركة" ${currentVehicle === 'مركبة تبع الشركة' ? 'selected' : ''}>مركبة تبع الشركة (إشعار 30 ألف)</option>
-                                        <option value="مركبة ما تبع الشركة" ${currentVehicle === 'مركبة ما تبع الشركة' ? 'selected' : ''}>مركبة ما تبع الشركة (إشعار 10 آلاف)</option>
-                                    </select>
-                                </td>
-                                <td class="p-3 text-center">
-                                    <button onclick="saveUserChanges('${user.id}')" class="bg-brandYellow text-brandDark font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-yellow-400 transition shadow">حفظ الصلاحية</button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-            }
-
-            // تعبئة أرشيف الطلبات المحذوفة
-            if (tbodyArchive) {
-                tbodyArchive.innerHTML = '';
-                if (archivedOrders.length === 0) {
-                    tbodyArchive.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">الأرشيف فارغ.</td></tr>`;
-                } else {
-                    archivedOrders.forEach(arch => {
-                        tbodyArchive.innerHTML += `
-                            <tr>
-                                <td class="p-3 font-bold text-gray-400">${arch.orderId || arch.id}</td>
-                                <td class="p-3">${arch.clientName || 'غير متوفر'}</td>
-                                <td class="p-3">${arch.storeName || 'غير متوفر'}</td>
-                                <td class="p-3">${(arch.cost || 0).toLocaleString()} ج.س</td>
-                                <td class="p-3 text-center text-xs text-red-400 font-bold">محذوف ومؤرشف</td>
-                            </tr>
-                        `;
-                    });
-                }
-            }
+            tArchive.innerHTML = archivedOrders.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-gray-500">الأرشيف فارغ.</td></tr>` :
+                archivedOrders.map(a => `
+                    <tr>
+                        <td class="p-2.5 font-bold text-gray-400">${a.orderId || a.id}</td>
+                        <td class="p-2.5">${a.clientName || '-'}</td>
+                        <td class="p-2.5">${a.storeName || '-'}</td>
+                        <td class="p-2.5">${(a.cost || 0).toLocaleString()} ج</td>
+                    </tr>
+                `).join('');
         }
 
-        // إضافة طلب جديد مباشرة من اللوحة
         window.addNewOrderFromDashboard = async function() {
             const name = document.getElementById('newClientName').value.trim();
             const phone = document.getElementById('newClientPhone').value.trim();
@@ -503,123 +314,48 @@
             const cost = document.getElementById('newOrderCost').value.trim();
             const desc = document.getElementById('newOrderDesc').value.trim();
 
-            if(!name || !phone || !store || !cost) {
-                showCustomAlert('تنبيه', 'يرجى إكمال بيانات العميل والمتجر وتحديد القيمة.');
-                return;
-            }
+            if(!name || !phone || !store || !cost) { showCustomAlert('أكمل البيانات المطلوبة'); return; }
 
-            const newOrderId = 'FOR-' + Math.floor(1000 + Math.random() * 9000);
-            const newOrderObj = {
-                orderId: newOrderId,
-                clientName: name,
-                clientPhone: phone,
-                storeName: store,
-                cost: Number(cost),
-                description: desc || 'توصيل طلب سريع',
-                status: 'تم الإرسال',
-                createdAt: new Date().toISOString()
-            };
+            const newOrder = { orderId: 'FOR-' + Math.floor(1000 + Math.random() * 9000), clientName: name, clientPhone: phone, storeName: store, cost: Number(cost), description: desc || 'توصيل', status: 'تم الإرسال' };
+            
+            let local = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
+            local.push(newOrder);
+            localStorage.setItem('foru_all_orders', JSON.stringify(local));
+            try { await addDoc(collection(db, "orders"), newOrder); } catch(e){}
 
-            let allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
-            allOrders.push(newOrderObj);
-            localStorage.setItem('foru_all_orders', JSON.stringify(allOrders));
-
-            try {
-                await addDoc(collection(db, "orders"), newOrderObj);
-            } catch(e){}
-
-            document.getElementById('newClientName').value = '';
-            document.getElementById('newClientPhone').value = '';
-            document.getElementById('newStoreName').value = '';
-            document.getElementById('newOrderCost').value = '';
-            document.getElementById('newOrderDesc').value = '';
-
-            showCustomAlert('تم الإرسال بنجاح', `تم إنشاء الطلب (${newOrderId}) وإرساله للمناديب بوضع (تم الإرسال 🟢).`);
+            ['newClientName', 'newClientPhone', 'newStoreName', 'newOrderCost', 'newOrderDesc'].forEach(id => document.getElementById(id).value = '');
+            showCustomAlert('تم إرسال الطلب بنجاح');
             fetchCloudData();
         }
 
-        // حذف الطلب بشكل فعلي ونقله للأرشيف
-        window.deleteOrderToArchive = async function(docId, orderCode) {
-            let isAdmin = (currentUserRole === 'مدير النظام' || currentUserRole === 'admin' || currentUserRole === 'مدير');
-            if (!isAdmin) {
-                showCustomAlert('غير مسموح', 'عذراً، عملية الحذف الفعلي مخصصة لمدير النظام فقط.');
-                return;
-            }
-
-            let allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
-            const targetOrder = allOrders.find(o => o.orderId === orderCode || o.id === docId);
-
-            if (targetOrder) {
-                archivedOrders.push(targetOrder);
+        window.deleteOrder = async function(id, code) {
+            let local = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
+            const target = local.find(o => o.orderId === code || o.id === id) || allOrders.find(o => o.orderId === code || o.id === id);
+            if (target) {
+                archivedOrders.push(target);
                 localStorage.setItem('foru_archived_orders', JSON.stringify(archivedOrders));
-
-                allOrders = allOrders.filter(o => o.orderId !== orderCode && o.id !== docId);
-                localStorage.setItem('foru_all_orders', JSON.stringify(allOrders));
-
-                try {
-                    if(!docId.startsWith('FOR-')) {
-                        await deleteDoc(doc(db, "orders", docId));
-                    }
-                } catch(e){}
-
-                showCustomAlert('تم الحذف الفعلي والأرشفة', `تم حذف الطلب (${orderCode}) من النظام الأساسي ونقله للأرشيف بنجاح.`);
+                local = local.filter(o => o.orderId !== code && o.id !== id);
+                localStorage.setItem('foru_all_orders', JSON.stringify(local));
+                try { if(!id.startsWith('FOR-')) await deleteDoc(doc(db, "orders", id)); } catch(e){}
+                showCustomAlert('تم الحذف والأرشفة');
                 fetchCloudData();
             }
         }
 
-        // تفعيل وحفظ التعديلات الفعلية لصلاحيات المستخدم والمركبة وإصدار الإشعار المالي
-        window.saveUserChanges = async function(userId) {
-            const roleSelect = document.getElementById(`role_${userId}`);
-            const vehicleSelect = document.getElementById(`veh_${userId}`);
-            
-            const newRole = roleSelect ? roleSelect.value : 'مندوب توصيل';
-            const vehicleType = vehicleSelect ? vehicleSelect.value : 'غير محدد';
-            
-            let notificationAmount = 0;
-            if(vehicleType === 'مركبة تبع الشركة') {
-                notificationAmount = 30000;
-            } else if(vehicleType === 'مركبة ما تبع الشركة') {
-                notificationAmount = 10000;
-            }
-
-            // تحديث التخزين المحلي فوراً لضمان الاستجابة
-            let localUsers = JSON.parse(localStorage.getItem('foru_all_users') || '[]');
-            localUsers = localUsers.map(u => u.id === userId ? { ...u, role: newRole, vehicleType: vehicleType } : u);
-            localStorage.setItem('foru_all_users', JSON.stringify(localUsers));
+        window.saveUser = async function(userId) {
+            const role = document.getElementById(`role_${userId}`).value;
+            const veh = document.getElementById(`veh_${userId}`).value;
+            const fee = veh === 'مركبة تبع الشركة' ? 30000 : (veh === 'مركبة ما تبع الشركة' ? 10000 : 0);
 
             try {
-                await updateDoc(doc(db, "users", userId), { 
-                    role: newRole,
-                    vehicleType: vehicleType,
-                    dailyNotificationAmount: notificationAmount 
-                });
-            } catch (err) {
-                console.log("التحديث تم محلياً");
-            }
-
-            // التحقق الفعلي: إذا كان المستخدم المعدل هو الشخص نفسه وتم تحويله إلى مندوب توصيل، يتم نقله تلقائياً لصفحة المناديب لتجنب تداخل الصلاحيات
-            if (userId === currentUserId && newRole === 'مندوب توصيل') {
-                showCustomAlert('تم التحديث بنجاح', 'تم تغيير صلاحيتك إلى (مندوب توصيل)، جاري تحويلك لصفحة الميدان...');
-                setTimeout(() => {
-                    window.location.href = 'driver.html';
-                }, 1500);
-                return;
-            }
-
-            showCustomAlert('تم منح وتحديث الصلاحية بنجاح', `تم تحديث صلاحية المستخدم إلى (${newRole}) ونوع المركبة (${vehicleType}). وتم إرسال الإشعار المالي بقيمة (${notificationAmount.toLocaleString()} ج.س).`);
+                await updateDoc(doc(db, "users", userId), { role: role, vehicleType: veh, dailyNotificationAmount: fee });
+            } catch(e) {}
+            showCustomAlert('تم حفظ الصلاحية بنجاح');
             fetchCloudData();
         }
 
-        window.sendOrderToPublicDrivers = async function(docId, orderCode) {
-            showCustomAlert('تم الإرسال', `الطلب (${orderCode}) تم إرساله للمناديب وأصبح بحالة (تم الإرسال 🟢).`);
-            fetchCloudData();
-        }
-
-        window.logout = function() {
-            auth.signOut().then(() => {
-                window.location.href = 'index.html';
-            });
-        }
+        window.sendOrder = (id, code) => showCustomAlert(`الطلب (${code}) أرسل للمناديب`);
+        window.logout = () => auth.signOut().then(() => location.href = 'index.html');
     </script>
 </body>
 </html>
