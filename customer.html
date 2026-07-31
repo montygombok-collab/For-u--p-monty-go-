@@ -19,7 +19,7 @@
             }
         }
     </script>
-    <!-- Leaflet CSS للخرائط المجانية -->
+    <!-- Leaflet CSS للخرائط -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- FontAwesome icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -27,7 +27,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Cairo', sans-serif; }
-        #map { height: 350px; width: 100%; border-radius: 1rem; }
+        /* تخصيص الخريطة لتصبح داكنة تماماً ومتناسقة مع واجهة التطبيق */
+        #map { height: 350px; width: 100%; border-radius: 1rem; filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
     </style>
 </head>
 <body class="bg-brandDark text-white min-h-screen flex flex-col justify-between relative">
@@ -49,7 +50,7 @@
             
             <!-- قسم نموذج الطلب -->
             <div id="orderFormSection" class="flex flex-col gap-8">
-                <!-- 1. الخريطة -->
+                <!-- 1. الخريطة الداكنة -->
                 <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl flex flex-col space-y-4">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
@@ -103,19 +104,18 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm text-gray-300 mb-1">تصنيف الطلبية</label>
+                            <label class="block text-sm text-gray-300 mb-1">نوع الطلبية</label>
                             <select id="orderType" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none">
-                                <option value="طرد عام">طرد عام</option>
+                                <option value="توصيل عام">توصيل عام</option>
                                 <option value="إلكترونيات وأجهزة">إلكترونيات وأجهزة</option>
-                                <option value="أوراق ومستندات">أوراق ومستندات</option>
-                                <option value="هدايا وملابس">هدايا وملابس</option>
-                                <option value="مواد غذائية">مواد غذائية</option>
+                                <option value="مستندات وأوراق">مستندات وأوراق</option>
+                                <option value="ملابس وهدايا">ملابس وهدايا</option>
                             </select>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm text-gray-300 mb-1">اسم المنتج بالتفصيل (يتم تحليله ذكياً لتحديد السعر)</label>
+                        <label class="block text-sm text-gray-300 mb-1">اسم المنتج أو محتوى الطلب</label>
                         <input type="text" id="productName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none mb-2" placeholder="مثال: هاتف آيفون 13، طرد ملابس، أوراق رسمية...">
                         <textarea id="orderDesc" rows="2" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="أي تفاصيل إضافية للمندوب..."></textarea>
                     </div>
@@ -263,7 +263,7 @@
             return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
         }
 
-        // دالة تحليل اسم المنتج والبيانات لتحديد السعر الذكي
+        // دالة حساب السعر الذكي بناءً على تحليل اسم المنتج والبيانات المدخلة
         window.calculatePrice = function() {
             if (!marker) {
                 alert('الرجاء تحديد الموقع على الخريطة أولاً لحساب المسافة والسعر.');
@@ -280,26 +280,23 @@
                 return;
             }
 
-            // فحص ذكي لتحليل هل المنتج عبارة عن تليفون/هاتف بناءً على الكلمات المفتاحية
-            const phoneKeywords = ['تليفون', 'موبايل', 'هاتف', 'iphone', 'samsung', 'جوال', 'redmi', 'oppo', 'infinix', 'tecno', 'realme', 'الخصوص', 'برو', 'بلس'];
+            // الكشف الخفي عن الهواتف عبر الكلمات المفتاحية
+            const phoneKeywords = ['تليفون', 'موبايل', 'هاتف', 'iphone', 'samsung', 'جوال', 'redmi', 'oppo', 'infinix', 'tecno', 'realme', 'برو', 'بلس'];
             const isPhoneProduct = phoneKeywords.some(keyword => productName.includes(keyword) || storeType.includes('موبايل') || storeType.includes('هاتف'));
 
             let baseCost = 0;
 
             if (area === 'أم درمان') {
                 if (isPhoneProduct) {
-                    // التلفونات في أم درمان بين 20 إلى 25 ألف حسب المسافة
                     let phoneBase = 20000;
                     let distanceExtra = Math.min(5000, Math.round(calculatedDistance * 1000));
                     baseCost = phoneBase + distanceExtra;
                 } else {
-                    // الطلب العادي في أم درمان: تكلفة الكيلو 1000 جنيه
                     let normalPerKmRate = 1000;
                     baseCost = Math.round(calculatedDistance * normalPerKmRate);
-                    if (baseCost < 3000) baseCost = 3000; // حد أدنى للطلب العادي
+                    if (baseCost < 3000) baseCost = 3000;
                 }
             } else {
-                // مدن أخرى (الخرطوم، بحري)
                 if (isPhoneProduct) {
                     baseCost = 22000 + Math.round(calculatedDistance * 1200);
                 } else {
