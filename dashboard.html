@@ -103,7 +103,7 @@
                 </h2>
                 <div id="supportNoticeBox" class="hidden mb-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-yellow-300 text-xs flex items-center">
                     <i class="fa-solid fa-triangle-exclamation ml-2 text-base"></i>
-                    <span>ملاحظة: أنت تملك صلاحية "مسؤول دعم" للاطلاع ومتابعة حالة النظام فقط.</span>
+                    <span>ملاحظة: أنت تملك صلاحية محدودة للاطلاع ومتابعة حالة النظام فقط.</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-right text-sm min-w-[700px]">
@@ -125,15 +125,15 @@
             </div>
         </div>
 
-        <!-- تبويب إدارة المستخدمين والصلاحيات مع خيارات مركبة المندوب -->
+        <!-- تبويب إدارة المستخدمين والصلاحيات المحدث -->
         <div id="usersTabContent" class="space-y-6 hidden">
             <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-6">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-700 pb-4 gap-4">
                     <div>
                         <h2 class="text-xl font-bold flex items-center text-brandYellow">
-                            <i class="fa-solid fa-users-gear ml-2"></i> إدارة المستخدمين وصلاحيات النظام المتقدمة
+                            <i class="fa-solid fa-users-gear ml-2"></i> إدارة المستخدمين والصلاحيات المتقدمة
                         </h2>
-                        <p class="text-xs text-gray-400 mt-1">تحديد الأدوار، نوع مركبة المندوب، وإرسال الإشعارات اليومية التلقائية.</p>
+                        <p class="text-xs text-gray-400 mt-1">تحديد الأدوار المطلوبة (مندوب توصيل، مدير النظام، مسوقين)، نوع مركبة المندوب، وإرسال الإشعارات.</p>
                     </div>
                     <span id="usersCounterBadge" class="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1.5 rounded-xl text-xs font-bold">عدد المستخدمين: 0</span>
                 </div>
@@ -144,7 +144,7 @@
                             <tr>
                                 <th class="p-3">اسم المستخدم / البريد</th>
                                 <th class="p-3">رقم الهاتف</th>
-                                <th class="p-3">الصلاحية الحالية</th>
+                                <th class="p-3">الصلاحية الجديدة المطلوبة</th>
                                 <th class="p-3">نوع المركبة (للمناديب)</th>
                                 <th class="p-3 text-center">تحديث الصلاحية والمركبة</th>
                             </tr>
@@ -225,6 +225,7 @@
         let allUsers = [];
         let currentUserRole = '';
         let currentUserName = '';
+        let currentUserId = '';
 
         window.showCustomAlert = function(title, message) {
             document.getElementById('alertTitle').innerText = title;
@@ -267,19 +268,26 @@
             const createOrderCard = document.getElementById('createOrderCard');
             const supportNoticeBox = document.getElementById('supportNoticeBox');
 
-            if (role === 'مدير النظام' || role === 'admin' || role === 'مدير') {
+            // تطبيع الصلاحية للتعامل مع التسميات الجديدة بدقة وتجنب التداخل عند التحويل
+            const cleanRole = role ? role.trim() : '';
+
+            if (cleanRole === 'مدير النظام' || cleanRole === 'admin' || cleanRole === 'مدير') {
                 headerTitle.innerText = 'لوحة تحكم المدير العام';
                 roleBadge.innerText = 'صلاحية كاملة (إدارة النظام، الحذف، وتعديل الصلاحيات)';
                 if(createOrderCard) createOrderCard.style.display = 'block';
                 if(supportNoticeBox) supportNoticeBox.classList.add('hidden');
-            } else if (role === 'مسؤول دعم' || role === 'support') {
-                headerTitle.innerText = 'بوابة مسؤولي الدعم';
-                roleBadge.innerText = 'متابعة النظام واطلاع (بدون تعديل أو حذف)';
-                if(createOrderCard) createOrderCard.style.display = 'none';
-                if(supportNoticeBox) supportNoticeBox.classList.remove('hidden');
+            } else if (cleanRole === 'مندوب توصيل') {
+                // إذا تم تحويل مدير النظام الحالي إلى مندوب توصيل، يتم توجيهه مباشرة لصفحة المناديب الخاصة به لمنع بقائه بلوحة الإدارة
+                window.location.href = 'driver.html';
+                return;
+            } else if (cleanRole === 'مسوقين' || cleanRole === 'مسوق') {
+                headerTitle.innerText = 'بوابة المسوقين';
+                roleBadge.innerText = 'الصلاحية: مسوقين (متابعة المبيعات والتقارير)';
+                if(createOrderCard) createOrderCard.style.display = 'block';
+                if(supportNoticeBox) supportNoticeBox.classList.add('hidden');
             } else {
-                headerTitle.innerText = 'لوحة المشرفين';
-                roleBadge.innerText = `الصلاحية: ${role}`;
+                headerTitle.innerText = 'لوحة التحكم';
+                roleBadge.innerText = `الصلاحية: ${cleanRole}`;
                 if(createOrderCard) createOrderCard.style.display = 'block';
                 if(supportNoticeBox) supportNoticeBox.classList.add('hidden');
             }
@@ -288,6 +296,7 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
+                currentUserId = user.uid;
                 try {
                     const userRef = doc(db, "users", user.uid);
                     const userSnap = await getDoc(userRef);
@@ -376,7 +385,6 @@
             const tbodyUsers = document.getElementById('firestoreUsersTable');
             const tbodyArchive = document.getElementById('archiveOrdersTable');
 
-            const isSupportOnly = (currentUserRole === 'مسؤول دعم' || currentUserRole === 'support');
             const isAdmin = (currentUserRole === 'مدير النظام' || currentUserRole === 'admin' || currentUserRole === 'مدير');
 
             // تعبئة جدول الطلبات
@@ -418,7 +426,7 @@
                                     <span class="font-bold text-brandYellow">${(order.cost || 0).toLocaleString()} ج.س</span>
                                 </td>
                                 <td class="p-3 text-center space-x-2 space-x-reverse">
-                                    ${!isSupportOnly ? `<button onclick="sendOrderToPublicDrivers('${order.id}', '${order.orderId || order.id}')" class="bg-green-500 text-brandDark font-bold px-3 py-1.5 rounded-lg hover:bg-green-400 transition text-xs shadow">تم الإرسال 🟢</button>` : ''}
+                                    <button onclick="sendOrderToPublicDrivers('${order.id}', '${order.orderId || order.id}')" class="bg-green-500 text-brandDark font-bold px-3 py-1.5 rounded-lg hover:bg-green-400 transition text-xs shadow">تم الإرسال 🟢</button>
                                     ${deleteBtnHTML}
                                 </td>
                             </tr>
@@ -427,14 +435,14 @@
                 }
             }
 
-            // تعبئة جدول المستخدمين مع تفعيل الصلاحيات الفعلية وحفظها في فايربيز والتخزين المحلي
+            // تعبئة جدول المستخدمين مع الصلاحيات المطلوبة حصراً: (مندوب توصيل، مدير النظام، مسوقين)
             if (tbodyUsers) {
                 tbodyUsers.innerHTML = '';
                 if (allUsers.length === 0) {
                     tbodyUsers.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">لا توجد حسابات مسجلة.</td></tr>`;
                 } else {
                     allUsers.forEach(user => {
-                        const currentRole = user.role || 'عميل';
+                        const currentRole = user.role || 'مندوب توصيل';
                         const currentVehicle = user.vehicleType || 'غير محدد';
                         tbodyUsers.innerHTML += `
                             <tr>
@@ -445,11 +453,9 @@
                                 <td class="p-3 text-gray-300 text-xs">${user.phone}</td>
                                 <td class="p-3">
                                     <select id="role_${user.id}" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
-                                        <option value="عميل" ${currentRole === 'عميل' ? 'selected' : ''}>عميل</option>
                                         <option value="مندوب توصيل" ${currentRole === 'مندوب توصيل' ? 'selected' : ''}>مندوب توصيل</option>
-                                        <option value="مشرف طلبات" ${currentRole === 'مشرف طلبات' ? 'selected' : ''}>مشرف طلبات</option>
-                                        <option value="مسؤول دعم" ${currentRole === 'مسؤول دعم' ? 'selected' : ''}>مسؤول دعم</option>
-                                        <option value="مدير النظام" ${currentRole === 'مدير النظام' ? 'selected' : ''}>مدير النظام</option>
+                                        <option value="مدير النظام" ${currentRole === 'مدير النظام' || currentRole === 'admin' ? 'selected' : ''}>مدير النظام</option>
+                                        <option value="مسوقين" ${currentRole === 'مسوقين' || currentRole === 'مسوق' ? 'selected' : ''}>مسوقين</option>
                                     </select>
                                 </td>
                                 <td class="p-3">
@@ -566,7 +572,7 @@
             const roleSelect = document.getElementById(`role_${userId}`);
             const vehicleSelect = document.getElementById(`veh_${userId}`);
             
-            const newRole = roleSelect ? roleSelect.value : 'عميل';
+            const newRole = roleSelect ? roleSelect.value : 'مندوب توصيل';
             const vehicleType = vehicleSelect ? vehicleSelect.value : 'غير محدد';
             
             let notificationAmount = 0;
@@ -589,6 +595,15 @@
                 });
             } catch (err) {
                 console.log("التحديث تم محلياً");
+            }
+
+            // التحقق الفعلي: إذا كان المستخدم المعدل هو الشخص نفسه وتم تحويله إلى مندوب توصيل، يتم نقله تلقائياً لصفحة المناديب لتجنب تداخل الصلاحيات
+            if (userId === currentUserId && newRole === 'مندوب توصيل') {
+                showCustomAlert('تم التحديث بنجاح', 'تم تغيير صلاحيتك إلى (مندوب توصيل)، جاري تحويلك لصفحة الميدان...');
+                setTimeout(() => {
+                    window.location.href = 'driver.html';
+                }, 1500);
+                return;
             }
 
             showCustomAlert('تم منح وتحديث الصلاحية بنجاح', `تم تحديث صلاحية المستخدم إلى (${newRole}) ونوع المركبة (${vehicleType}). وتم إرسال الإشعار المالي بقيمة (${notificationAmount.toLocaleString()} ج.س).`);
