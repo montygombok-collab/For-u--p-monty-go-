@@ -125,7 +125,6 @@
             document.getElementById('themeIcon').className = isDark ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
         }
 
-        // استرجاع المظهر المحفوظ
         if (localStorage.getItem('theme') === 'light') {
             document.documentElement.classList.remove('dark');
             document.getElementById('themeIcon').className = 'fa-solid fa-sun';
@@ -146,15 +145,31 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) { location.href = 'index.html'; return; }
-            const snap = await getDoc(doc(db, "users", user.uid));
-            if (snap.exists()) {
-                const data = snap.data();
-                driverName = data.name || user.email.split('@')[0];
-                // التحقق مما إذا كانت المركبة تابعة للشركة
-                isCompanyVehicle = data.isCompanyVehicle || data.vehicleType === 'شركة' || data.companyVehicle === true;
-            } else {
+            
+            try {
+                const snap = await getDoc(doc(db, "users", user.uid));
+                if (snap.exists()) {
+                    const data = snap.data();
+                    
+                    // حماية وتوجيه صحيح حسب الصلاحية لمنع تداخل الصفحات
+                    const role = data.role ? data.role.toLowerCase() : '';
+                    if (role === 'admin' || role === 'مسؤول') {
+                        location.href = 'admin.html';
+                        return;
+                    } else if (role === 'merchant' || role === 'تاجر' || role === 'store') {
+                        location.href = 'merchant.html';
+                        return;
+                    }
+
+                    driverName = data.name || user.email.split('@')[0];
+                    isCompanyVehicle = data.isCompanyVehicle || data.vehicleType === 'شركة' || data.companyVehicle === true;
+                } else {
+                    driverName = user.email.split('@')[0];
+                }
+            } catch (e) {
                 driverName = user.email.split('@')[0];
             }
+
             document.getElementById('driverName').innerText = driverName;
             loadOrders();
             setInterval(loadOrders, 10000);
@@ -179,7 +194,6 @@
                 if (lastCount > 0 && active.length > lastCount) showAlert('🔔 طلب جديد متاح في البوابة!');
                 lastCount = active.length;
 
-                // حساب إشعار السداد الدائم اليومي (30 ألف لمركبة الشركة، 10 ألف لما دون ذلك)
                 const todayStr = new Date().toISOString().slice(0, 10);
                 const driverCompletedToday = orders.filter(o => {
                     const isMine = (o.assignedDriver === driverName || o.driverName === driverName);
@@ -201,7 +215,6 @@
                 const myOrder = orders.find(o => (o.assignedDriver === driverName || o.driverName === driverName) && o.status !== 'منجز' && o.status !== 'completed');
                 document.getElementById('activeNotice').classList.toggle('hidden', !myOrder);
 
-                // عرض طلبي الحالي
                 const myContainer = document.getElementById('myOrderContainer');
                 if (myOrder) {
                     const mapUrl = myOrder.lat ? `https://www.google.com/maps?q=${myOrder.lat},${myOrder.lng}` : '#';
@@ -225,7 +238,6 @@
                     myContainer.innerHTML = `<div class="p-6 text-gray-400 dark:text-gray-500 text-xs">لا يوجد طلب نشط حالياً.</div>`;
                 }
 
-                // عرض البوابة (إخفاء رقم الطلب واستبدال زر القبول بـ "إنجاز هذا الطلب")
                 const marketList = document.getElementById('marketList');
                 const available = active.filter(o => !o.assignedDriver && !o.driverName);
                 if (available.length === 0) {
@@ -301,7 +313,7 @@
             local = local.map(o => (o.orderId === code || o.id === id) ? { ...o, status: 'completed', completedDate: todayStr } : o);
             localStorage.setItem('foru_all_orders', JSON.stringify(local));
 
-            if (!id.startsWith('FOR-')) {
+            if (!id.setup && !id.startsWith('FOR-')) {
                 await updateDoc(doc(db, "orders", id), { status: 'completed', completedDate: todayStr });
             }
             showAlert('تم تسليم الطلب بنجاح.');
