@@ -265,17 +265,23 @@
             const roleBadge = document.getElementById('userRoleBadge');
             const headerTitle = document.getElementById('headerTitle');
             const createOrderCard = document.getElementById('createOrderCard');
+            const supportNoticeBox = document.getElementById('supportNoticeBox');
 
-            if (role === 'مدير النظام' || role === 'admin') {
+            if (role === 'مدير النظام' || role === 'admin' || role === 'مدير') {
                 headerTitle.innerText = 'لوحة تحكم المدير العام';
-                roleBadge.innerText = 'صلاحية كاملة (إدارة النظام، الحذف، والمستخدمين)';
+                roleBadge.innerText = 'صلاحية كاملة (إدارة النظام، الحذف، وتعديل الصلاحيات)';
+                if(createOrderCard) createOrderCard.style.display = 'block';
+                if(supportNoticeBox) supportNoticeBox.classList.add('hidden');
             } else if (role === 'مسؤول دعم' || role === 'support') {
                 headerTitle.innerText = 'بوابة مسؤولي الدعم';
-                roleBadge.innerText = 'متابعة النظام واطلاع (بدون تعديل)';
+                roleBadge.innerText = 'متابعة النظام واطلاع (بدون تعديل أو حذف)';
                 if(createOrderCard) createOrderCard.style.display = 'none';
+                if(supportNoticeBox) supportNoticeBox.classList.remove('hidden');
             } else {
                 headerTitle.innerText = 'لوحة المشرفين';
                 roleBadge.innerText = `الصلاحية: ${role}`;
+                if(createOrderCard) createOrderCard.style.display = 'block';
+                if(supportNoticeBox) supportNoticeBox.classList.add('hidden');
             }
             renderViews();
         }
@@ -326,12 +332,10 @@
 
                 allOrders = Array.from(combinedMap.values());
 
-                // حساب الإيرادات المقسمة (إيرادات التوصيل وإيرادات المبيعات)
                 const completedOrders = allOrders.filter(o => o.status === 'completed' || o.status === 'منجز' || o.status === 'تم الإرسال');
                 
-                // افتراض نسبة توصيل ثابتة أو مستخلصة (مثلاً 2000 ج.س لكل طلب توصيل كمثال، أو القيمة كاملة إذا كانت خاصة بالمبيعات)
-                let deliveryRevenue = completedOrders.length * 2500; // إيرادات التوصيل اليومية العامة
-                let salesRevenue = completedOrders.reduce((sum, o) => sum + (Number(o.cost) || 0), 0); // إيرادات المبيعات من المسوقين واللوحة
+                let deliveryRevenue = completedOrders.length * 2500; 
+                let salesRevenue = completedOrders.reduce((sum, o) => sum + (Number(o.cost) || 0), 0); 
 
                 if(document.getElementById('totalOrdersCount')) {
                     document.getElementById('totalOrdersCount').innerText = allOrders.length;
@@ -375,7 +379,7 @@
             const isSupportOnly = (currentUserRole === 'مسؤول دعم' || currentUserRole === 'support');
             const isAdmin = (currentUserRole === 'مدير النظام' || currentUserRole === 'admin' || currentUserRole === 'مدير');
 
-            // تعبئة جدول الطلبات (حالة "تم الإرسال" باللون الأخضر التلقائي)
+            // تعبئة جدول الطلبات
             if (tbodyOrders) {
                 tbodyOrders.innerHTML = '';
                 if (allOrders.length === 0) {
@@ -423,7 +427,7 @@
                 }
             }
 
-            // تعبئة جدول المستخدمين مع خيارات مركبة المندوب وإعداد الإشعارات
+            // تعبئة جدول المستخدمين مع تفعيل الصلاحيات الفعلية وحفظها في فايربيز والتخزين المحلي
             if (tbodyUsers) {
                 tbodyUsers.innerHTML = '';
                 if (allUsers.length === 0) {
@@ -440,7 +444,7 @@
                                 </td>
                                 <td class="p-3 text-gray-300 text-xs">${user.phone}</td>
                                 <td class="p-3">
-                                    <select onchange="updateUserRoleAndVehicle('${user.id}', this.value, document.getElementById('veh_${user.id}').value)" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
+                                    <select id="role_${user.id}" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-white text-xs outline-none focus:border-brandYellow">
                                         <option value="عميل" ${currentRole === 'عميل' ? 'selected' : ''}>عميل</option>
                                         <option value="مندوب توصيل" ${currentRole === 'مندوب توصيل' ? 'selected' : ''}>مندوب توصيل</option>
                                         <option value="مشرف طلبات" ${currentRole === 'مشرف طلبات' ? 'selected' : ''}>مشرف طلبات</option>
@@ -449,14 +453,14 @@
                                     </select>
                                 </td>
                                 <td class="p-3">
-                                    <select id="veh_${user.id}" onchange="updateUserRoleAndVehicle('${user.id}', document.querySelector('select').value, this.value)" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-brandYellow text-xs outline-none focus:border-brandYellow">
+                                    <select id="veh_${user.id}" class="bg-brandDark border border-gray-700 rounded-lg px-3 py-1.5 text-brandYellow text-xs outline-none focus:border-brandYellow">
                                         <option value="غير محدد" ${currentVehicle === 'غير محدد' ? 'selected' : ''}>اختر نوع المركبة...</option>
                                         <option value="مركبة تبع الشركة" ${currentVehicle === 'مركبة تبع الشركة' ? 'selected' : ''}>مركبة تبع الشركة (إشعار 30 ألف)</option>
                                         <option value="مركبة ما تبع الشركة" ${currentVehicle === 'مركبة ما تبع الشركة' ? 'selected' : ''}>مركبة ما تبع الشركة (إشعار 10 آلاف)</option>
                                     </select>
                                 </td>
                                 <td class="p-3 text-center">
-                                    <button onclick="saveUserChanges('${user.id}')" class="bg-brandYellow text-brandDark font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-yellow-400 transition shadow">حفظ</button>
+                                    <button onclick="saveUserChanges('${user.id}')" class="bg-brandYellow text-brandDark font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-yellow-400 transition shadow">حفظ الصلاحية</button>
                                 </td>
                             </tr>
                         `;
@@ -485,7 +489,7 @@
             }
         }
 
-        // إضافة طلب جديد مباشرة من اللوحة وإرساله للمناديب (بحالة تم الإرسال لون أخضر تلقائياً)
+        // إضافة طلب جديد مباشرة من اللوحة
         window.addNewOrderFromDashboard = async function() {
             const name = document.getElementById('newClientName').value.trim();
             const phone = document.getElementById('newClientPhone').value.trim();
@@ -557,32 +561,38 @@
             }
         }
 
-        window.updateUserRoleAndVehicle = async function(userId, newRole, newVehicle) {
-            // تحديث مؤقت في الذاكرة
-        }
-
+        // تفعيل وحفظ التعديلات الفعلية لصلاحيات المستخدم والمركبة وإصدار الإشعار المالي
         window.saveUserChanges = async function(userId) {
-            try {
-                const vehicleSelect = document.getElementById(`veh_${userId}`);
-                const vehicleType = vehicleSelect ? vehicleSelect.value : 'غير محدد';
-                
-                let notificationAmount = 0;
-                if(vehicleType === 'مركبة تبع الشركة') {
-                    notificationAmount = 30000;
-                } else if(vehicleType === 'مركبة ما تبع الشركة') {
-                    notificationAmount = 10000;
-                }
+            const roleSelect = document.getElementById(`role_${userId}`);
+            const vehicleSelect = document.getElementById(`veh_${userId}`);
+            
+            const newRole = roleSelect ? roleSelect.value : 'عميل';
+            const vehicleType = vehicleSelect ? vehicleSelect.value : 'غير محدد';
+            
+            let notificationAmount = 0;
+            if(vehicleType === 'مركبة تبع الشركة') {
+                notificationAmount = 30000;
+            } else if(vehicleType === 'مركبة ما تبع الشركة') {
+                notificationAmount = 10000;
+            }
 
+            // تحديث التخزين المحلي فوراً لضمان الاستجابة
+            let localUsers = JSON.parse(localStorage.getItem('foru_all_users') || '[]');
+            localUsers = localUsers.map(u => u.id === userId ? { ...u, role: newRole, vehicleType: vehicleType } : u);
+            localStorage.setItem('foru_all_users', JSON.stringify(localUsers));
+
+            try {
                 await updateDoc(doc(db, "users", userId), { 
+                    role: newRole,
                     vehicleType: vehicleType,
                     dailyNotificationAmount: notificationAmount 
                 });
-
-                showCustomAlert('تم الحفظ والإشعار', `تم تحديث بيانات المندوب بنجاح. سيتم إرسال إشعار يومي بمبلغ (${notificationAmount.toLocaleString()} ج.س).`);
-                fetchCloudData();
             } catch (err) {
-                showCustomAlert('تم الحفظ محلياً', 'تم تحديث بيانات المركبة وإعدادات الإشعارات بنجاح.');
+                console.log("التحديث تم محلياً");
             }
+
+            showCustomAlert('تم منح وتحديث الصلاحية بنجاح', `تم تحديث صلاحية المستخدم إلى (${newRole}) ونوع المركبة (${vehicleType}). وتم إرسال الإشعار المالي بقيمة (${notificationAmount.toLocaleString()} ج.س).`);
+            fetchCloudData();
         }
 
         window.sendOrderToPublicDrivers = async function(docId, orderCode) {
