@@ -47,9 +47,9 @@
     <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
         <div class="flex flex-col gap-8">
             
-            <!-- قسم نموذج الطلب (يختفي أو يظهر حسب الحالة) -->
+            <!-- قسم نموذج الطلب -->
             <div id="orderFormSection" class="flex flex-col gap-8">
-                <!-- 1. الخريطة في الأعلى مع زر تحديد الموقع الحالي -->
+                <!-- 1. الخريطة -->
                 <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl flex flex-col space-y-4">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
@@ -65,7 +65,7 @@
                     <div id="map"></div>
                 </div>
 
-                <!-- 2. نموذج إدخال بيانات الطلب في الأسفل -->
+                <!-- 2. نموذج إدخال البيانات -->
                 <div class="bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-4">
                     <h2 class="text-xl font-bold border-b border-gray-700 pb-3 flex items-center">
                         <i class="fa-solid fa-box-open text-brandYellow ml-2"></i> تفاصيل الطلب والمتجر
@@ -85,37 +85,42 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm text-gray-300 mb-1">اسم المتجر (المرسل)</label>
-                            <input type="text" id="storeName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: متجر شاهين الإلكتروني">
+                            <input type="text" id="storeName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: متجر شاهين">
                         </div>
                         <div>
-                            <label class="block text-sm text-gray-300 mb-1">رقم هاتف المتجر</label>
-                            <input type="tel" id="storePhone" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="09xxxxxxxx">
+                            <label class="block text-sm text-gray-300 mb-1">نوع المتجر</label>
+                            <input type="text" id="storeType" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: إلكترونيات، ملابس، مواد غذائية">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm text-gray-300 mb-1">المنطقة الجغرافية</label>
-                            <select id="orderArea" onchange="calculateSmartPricing()" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none">
-                                <option value="الخرطوم">الخرطوم</option>
+                            <label class="block text-sm text-gray-300 mb-1">المدينة / المنطقة</label>
+                            <select id="orderArea" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none">
                                 <option value="أم درمان" selected>أم درمان</option>
+                                <option value="الخرطوم">الخرطوم</option>
                                 <option value="بحري">بحري</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm text-gray-300 mb-1">نوع الطلبية / التصنيف</label>
-                            <select id="orderType" onchange="calculateSmartPricing()" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none">
-                                <option value="عادي">عادي / خفيف (ملابس، طرود عادية)</option>
-                                <option value="متوسط">متوسط القيمة (مستحضرات، هدايا)</option>
-                                <option value="هاتف">هاتف ذكي / موبايل (أمانة عالية)</option>
+                            <label class="block text-sm text-gray-300 mb-1">نوع الطلبية</label>
+                            <select id="orderType" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none">
+                                <option value="عادي">طلب عادي (ملابس، طرود، أوراق)</option>
+                                <option value="تلفون">تلفون / هاتف محمول (أمانة عالية)</option>
                             </select>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm text-gray-300 mb-1">وصف البضاعة (تحديث تلقائي للتليفونات)</label>
-                        <textarea id="orderDesc" oninput="detectPhoneAndPrice()" rows="2" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: طرد ملابس، أو كتابة تفاصيل الهاتف..."></textarea>
+                        <label class="block text-sm text-gray-300 mb-1">اسم المنتج / وصف البضاعة</label>
+                        <input type="text" id="productName" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none mb-2" placeholder="اسم المنتج بالتفصيل">
+                        <textarea id="orderDesc" rows="2" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="أي تفاصيل إضافية..."></textarea>
                     </div>
+
+                    <!-- زر تحديد السعر -->
+                    <button type="button" onclick="calculatePrice()" class="w-full bg-gray-800 border border-brandYellow text-brandYellow font-bold py-3 rounded-xl hover:bg-brandYellow hover:text-brandDark transition shadow-md flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-calculator"></i> تحديد السعر
+                    </button>
 
                     <div class="bg-brandDark p-4 rounded-2xl border border-gray-800 space-y-2">
                         <div class="flex justify-between text-sm text-gray-400">
@@ -123,7 +128,7 @@
                             <span id="distanceText" class="font-bold text-white">0 كم</span>
                         </div>
                         <div class="flex justify-between text-base font-bold text-brandYellow">
-                            <span>التكلفة الإجمالية (حسب التسعير الذكي):</span>
+                            <span>التكلفة الإجمالية:</span>
                             <span id="costText">0 جنيه</span>
                         </div>
                     </div>
@@ -134,7 +139,7 @@
                 </div>
             </div>
 
-            <!-- قسم تتبع الطلب المباشر في نفس الصفحة (يظهر بعد إرسال الطلب) -->
+            <!-- قسم تتبع الطلب -->
             <div id="orderTrackingSection" class="hidden bg-brandCard border border-gray-800 p-6 rounded-3xl shadow-xl space-y-6">
                 <div class="flex justify-between items-center border-b border-gray-700 pb-4">
                     <div>
@@ -148,14 +153,12 @@
                     </button>
                 </div>
 
-                <!-- صندوق حالة الطلب -->
                 <div class="bg-brandDark p-5 rounded-2xl border border-gray-800 space-y-4">
                     <div class="flex justify-between items-center">
                         <span class="text-sm text-gray-400">حالة الطلب الحالية:</span>
                         <span id="trackStatusBadge" class="bg-yellow-500/20 text-brandYellow border border-yellow-500/30 text-xs font-bold px-3 py-1 rounded-full">بانتظار مراجعة مشرف التسويق</span>
                     </div>
 
-                    <!-- معلومات مندوب التوصيل (تتحدث تلقائياً) -->
                     <div id="driverInfoBox" class="bg-[#1E1E1E] p-4 rounded-xl border border-gray-800 flex items-center justify-between">
                         <div class="flex items-center space-x-3 space-x-reverse">
                             <div class="w-12 h-12 bg-brandYellow/10 border border-brandYellow rounded-full flex items-center justify-center text-brandYellow text-lg">
@@ -168,10 +171,6 @@
                         </div>
                         <span class="text-xs text-gray-500" id="driverStatusTime">قيد الانتظار</span>
                     </div>
-                </div>
-
-                <div class="text-center">
-                    <p class="text-xs text-gray-400">تُحدث هذه الصفحة تلقائياً لمتابعة حالة اعتماد المشرف وإسناد المندوب.</p>
                 </div>
             </div>
 
@@ -211,53 +210,12 @@
         let selectedLat = null;
         let selectedLng = null;
         let calculatedDistance = 0;
-        let currentCalculatedCost = 0;
+        let finalCalculatedCost = 0;
         let activeOrderId = '';
         let trackingInterval = null;
 
         const companyLat = 15.5007;
         const companyLng = 32.5599;
-
-        // خوارزمية التسعير الذكي (تدمج المنطقة، المسافة، نوع الطلب، والتليفونات)
-        window.calculateSmartPricing = function() {
-            const area = document.getElementById('orderArea').value;
-            const type = document.getElementById('orderType').value;
-            
-            // رسوم أساسية لكل منطقة
-            let baseAreaFee = 3000;
-            if (area === 'الخرطوم') baseAreaFee = 4000;
-            else if (area === 'بحري') baseAreaFee = 3500;
-
-            // سعر الكيلومتر الواحد
-            const kmRate = 600;
-            const distanceCost = calculatedDistance * kmRate;
-
-            let subTotal = baseAreaFee + distanceCost;
-
-            // إذا كان الطلب هاتفاً ذكياً، يتم تثبيت أو ضبط السعر مباشرة ليكون بين 20 إلى 25 ألف كحد أدنى للمسؤولية
-            if (type === 'هاتف') {
-                currentCalculatedCost = Math.max(22000, Math.round(subTotal * 1.4));
-            } else if (type === 'متوسط') {
-                currentCalculatedCost = Math.round(subTotal * 1.2);
-            } else {
-                currentCalculatedCost = Math.round(subTotal);
-            }
-
-            document.getElementById('distanceText').innerText = calculatedDistance.toFixed(2) + ' كم';
-            document.getElementById('costText').innerText = currentCalculatedCost.toLocaleString() + ' جنيه';
-        }
-
-        // كشف تلقائي عبر الكلمات المفتاحية في الوصف (مثل تليفون، موبايل، آيفون، سامسونج)
-        window.detectPhoneAndPrice = function() {
-            const desc = document.getElementById('orderDesc').value.toLowerCase();
-            const phoneKeywords = ['تليفون', 'موبايل', 'هاتف', 'iphone', 'samsung', 'جوال', 'redmi', 'oppo', 'infinix'];
-            
-            const isPhone = phoneKeywords.some(keyword => desc.includes(keyword));
-            if (isPhone) {
-                document.getElementById('orderType').value = 'هاتف';
-            }
-            calculateSmartPricing();
-        }
 
         function updateLocationData(lat, lng) {
             selectedLat = lat;
@@ -271,7 +229,7 @@
             map.setView([selectedLat, selectedLng], 15);
 
             calculatedDistance = calculateDistance(companyLat, companyLng, selectedLat, selectedLng);
-            calculateSmartPricing();
+            document.getElementById('distanceText').innerText = calculatedDistance.toFixed(2) + ' كم';
         }
 
         map.on('click', function(e) {
@@ -285,12 +243,12 @@
                         updateLocationData(position.coords.latitude, position.coords.longitude);
                     },
                     (error) => {
-                        alert('تعسّر تحديد موقعك تلقائياً. تأكد من تفعيل خدمة الموقع (GPS) في متصفحك.');
+                        alert('تعسّر تحديد موقعك تلقائياً. تأكد من تفعيل خدمة الموقع (GPS).');
                     },
                     { enableHighAccuracy: true }
                 );
             } else {
-                alert('متصفحك لا يدعم خاصية تحديد الموقع الجغرافي.');
+                alert('متصفحك لا يدعم تحديد الموقع.');
             }
         };
 
@@ -302,22 +260,79 @@
             return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
         }
 
+        // دالة زر "تحديد السعر" بناءً على كل المعطيات (النوع، المسافة، المدينة، المتجر، المنتج)
+        window.calculatePrice = function() {
+            if (!marker) {
+                alert('الرجاء تحديد الموقع على الخريطة أولاً لحساب المسافة والسعر.');
+                return;
+            }
+
+            const area = document.getElementById('orderArea').value;
+            const orderType = document.getElementById('orderType').value;
+            const productName = document.getElementById('productName').value.trim();
+            const storeName = document.getElementById('storeName').value.trim();
+            const storeType = document.getElementById('storeType').value.trim();
+
+            if (!productName || !storeName) {
+                alert('الرجاء إدخال اسم المتجر واسم المنتج أولاً ليقوم النظام بحساب التسعير بدقة.');
+                return;
+            }
+
+            let baseCost = 0;
+
+            if (area === 'أم درمان') {
+                if (orderType === 'تلفون') {
+                    // التلفونات في أم درمان بين 20 إلى 25 ألف حسب المسافة
+                    let phoneBase = 20000;
+                    let distanceExtra = Math.min(5000, Math.round(calculatedDistance * 1000));
+                    baseCost = phoneBase + distanceExtra;
+                } else {
+                    // الطلب العادي في أم درمان: تكلفة الكيلو 1000 جنيه
+                    let normalPerKmRate = 1000;
+                    baseCost = Math.round(calculatedDistance * normalPerKmRate);
+                    // وضع حد أدنى منطقي للطلب العادي (مثلاً 3000 جنيه)
+                    if (baseCost < 3000) baseCost = 3000;
+                }
+            } else {
+                // مدن أخرى (الخرطوم أو بحري) مع اعتبار نوع الطلب والمسافة
+                if (orderType === 'تلفون') {
+                    baseCost = 22000 + Math.round(calculatedDistance * 1200);
+                } else {
+                    baseCost = 4000 + Math.round(calculatedDistance * 1200);
+                }
+            }
+
+            // تعديل طفيف بناءً على نوع المتجر إذا لزم الأمر لزيادة دقة النظام الشامل
+            if (storeType.includes('إلكترونيات') && orderType !== 'تلفون') {
+                baseCost = Math.round(baseCost * 1.15);
+            }
+
+            finalCalculatedCost = baseCost;
+            document.getElementById('costText').innerText = finalCalculatedCost.toLocaleString() + ' جنيه';
+        }
+
         window.submitOrder = function() {
             const name = document.getElementById('clientName').value.trim();
             const phone = document.getElementById('clientPhone').value.trim();
             const sName = document.getElementById('storeName').value.trim();
-            const sPhone = document.getElementById('storePhone').value.trim();
+            const sType = document.getElementById('storeType').value.trim();
+            const pName = document.getElementById('productName').value.trim();
             const desc = document.getElementById('orderDesc').value.trim();
             const area = document.getElementById('orderArea').value;
             const orderType = document.getElementById('orderType').value;
 
-            if(!name || !phone || !sName || !sPhone || !marker) {
-                alert('الرجاء إكمال كافة حقول العميل والمتجر، وتحديد الموقع على الخريطة.');
+            if(!name || !phone || !sName || !pName || !marker) {
+                alert('الرجاء إكمال كافة بيانات العميل والمتجر والمنتج، وتحديد الموقع على الخريطة.');
+                return;
+            }
+
+            if(finalCalculatedCost === 0) {
+                alert('الرجاء الضغط على زر "تحديد السعر" أولاً لحساب التكلفة قبل إرسال الطلب.');
                 return;
             }
 
             const btn = document.getElementById('submitBtn');
-            btn.innerText = "جاري إرسال الطلب إلى مشرف التسويق...";
+            btn.innerText = "جاري إرسال الطلب...";
             btn.disabled = true;
 
             activeOrderId = 'FOR-' + Math.floor(1000 + Math.random() * 9000);
@@ -327,36 +342,33 @@
                 clientName: name,
                 clientPhone: phone,
                 storeName: sName,
-                storePhone: sPhone,
+                storeType: sType,
+                productName: pName,
                 description: desc,
                 area: area,
                 orderType: orderType,
                 lat: selectedLat,
                 lng: selectedLng,
                 distance: calculatedDistance.toFixed(2),
-                cost: currentCalculatedCost,
-                status: 'pending_supervisor', // الحالة الأولية بانتظار المشرف
+                cost: finalCalculatedCost,
+                status: 'pending_supervisor',
                 driverName: '',
                 driverPhone: '',
                 createdAt: new Date().toISOString()
             };
 
-            // تخزين الطلب في LocalStorage ليتمكن المشرف والمناديب من رؤيته وتحديثه
             let allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
             allOrders.push(orderData);
             localStorage.setItem('foru_all_orders', JSON.stringify(allOrders));
 
-            // محاولة الحفظ في فايربيس في الخلفية
             try {
-                addDoc(collection(db, "orders"), orderData).catch(err => console.log("تخزين محلي لتجاوز السيرفر"));
+                addDoc(collection(db, "orders"), orderData).catch(err => console.log("تخزين محلي"));
             } catch (e) {}
 
-            // تحويل واجهة الصفحة لعرض قسم التتبع المباشر فوراً
             document.getElementById('orderFormSection').classList.add('hidden');
             document.getElementById('orderTrackingSection').classList.remove('hidden');
             document.getElementById('trackOrderIdDisplay').innerText = `رقم الطلب: ${activeOrderId}`;
 
-            // بدء المراقبة والتحديث التلقائي لحالة المندوب
             startLiveTracking();
         }
 
@@ -381,7 +393,7 @@
                     } else if(currentOrder.status === 'in_progress' || currentOrder.status === 'assigned' || currentOrder.status === 'قيد التوصيل') {
                         badge.innerText = "قيد التوصيل بواسطة المندوب";
                         badge.className = "bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-bold px-3 py-1 rounded-full";
-                        driverNameEl.innerText = `مندوب التوصيل: ${currentOrder.assignedDriver || currentOrder.driverName || 'أحمد المندوب'}`;
+                        driverNameEl.innerText = `مندوب التوصيل: ${currentOrder.assignedDriver || currentOrder.driverName || 'المندوب'}`;
                         driverPhoneEl.innerText = `رقم الهاتف: ${currentOrder.driverPhone || '0912345678'}`;
                         driverTimeEl.innerText = "في الطريق إليك";
                     } else if(currentOrder.status === 'completed') {
@@ -392,7 +404,7 @@
                         driverTimeEl.innerText = "مكتمل";
                     }
                 }
-            }, 2000); // تحديث كل ثانيتين تلقائياً
+            }, 2000);
         }
 
         window.resetNewOrder = function() {
@@ -401,6 +413,8 @@
             document.getElementById('orderFormSection').classList.remove('hidden');
             document.getElementById('submitBtn').innerText = "تأكيد وإرسال الطلب إلى مشرف التسويق";
             document.getElementById('submitBtn').disabled = false;
+            finalCalculatedCost = 0;
+            document.getElementById('costText').innerText = "0 جنيه";
         }
     </script>
 </body>
