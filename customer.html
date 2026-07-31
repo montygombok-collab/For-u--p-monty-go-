@@ -93,9 +93,28 @@
                         </div>
                     </div>
 
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">المنطقة الجغرافية</label>
+                            <select id="orderArea" onchange="calculateSmartPricing()" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none">
+                                <option value="الخرطوم">الخرطوم</option>
+                                <option value="أم درمان" selected>أم درمان</option>
+                                <option value="بحري">بحري</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-300 mb-1">نوع الطلبية / التصنيف</label>
+                            <select id="orderType" onchange="calculateSmartPricing()" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none">
+                                <option value="عادي">عادي / خفيف (ملابس، طرود عادية)</option>
+                                <option value="متوسط">متوسط القيمة (مستحضرات، هدايا)</option>
+                                <option value="هاتف">هاتف ذكي / موبايل (أمانة عالية)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div>
-                        <label class="block text-sm text-gray-300 mb-1">نوع البضاعة / الوصف</label>
-                        <textarea id="orderDesc" rows="2" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: طرد ملابس، أوراق مهمة..."></textarea>
+                        <label class="block text-sm text-gray-300 mb-1">وصف البضاعة (تحديث تلقائي للتليفونات)</label>
+                        <textarea id="orderDesc" oninput="detectPhoneAndPrice()" rows="2" class="w-full bg-brandDark border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-brandYellow outline-none" placeholder="مثال: طرد ملابس، أو كتابة تفاصيل الهاتف..."></textarea>
                     </div>
 
                     <div class="bg-brandDark p-4 rounded-2xl border border-gray-800 space-y-2">
@@ -104,7 +123,7 @@
                             <span id="distanceText" class="font-bold text-white">0 كم</span>
                         </div>
                         <div class="flex justify-between text-base font-bold text-brandYellow">
-                            <span>التكلفة الإجمالية:</span>
+                            <span>التكلفة الإجمالية (حسب التسعير الذكي):</span>
                             <span id="costText">0 جنيه</span>
                         </div>
                     </div>
@@ -191,13 +210,54 @@
         let marker = null;
         let selectedLat = null;
         let selectedLng = null;
-        const basePricePerKm = 500; 
         let calculatedDistance = 0;
+        let currentCalculatedCost = 0;
         let activeOrderId = '';
         let trackingInterval = null;
 
         const companyLat = 15.5007;
         const companyLng = 32.5599;
+
+        // خوارزمية التسعير الذكي (تدمج المنطقة، المسافة، نوع الطلب، والتليفونات)
+        window.calculateSmartPricing = function() {
+            const area = document.getElementById('orderArea').value;
+            const type = document.getElementById('orderType').value;
+            
+            // رسوم أساسية لكل منطقة
+            let baseAreaFee = 3000;
+            if (area === 'الخرطوم') baseAreaFee = 4000;
+            else if (area === 'بحري') baseAreaFee = 3500;
+
+            // سعر الكيلومتر الواحد
+            const kmRate = 600;
+            const distanceCost = calculatedDistance * kmRate;
+
+            let subTotal = baseAreaFee + distanceCost;
+
+            // إذا كان الطلب هاتفاً ذكياً، يتم تثبيت أو ضبط السعر مباشرة ليكون بين 20 إلى 25 ألف كحد أدنى للمسؤولية
+            if (type === 'هاتف') {
+                currentCalculatedCost = Math.max(22000, Math.round(subTotal * 1.4));
+            } else if (type === 'متوسط') {
+                currentCalculatedCost = Math.round(subTotal * 1.2);
+            } else {
+                currentCalculatedCost = Math.round(subTotal);
+            }
+
+            document.getElementById('distanceText').innerText = calculatedDistance.toFixed(2) + ' كم';
+            document.getElementById('costText').innerText = currentCalculatedCost.toLocaleString() + ' جنيه';
+        }
+
+        // كشف تلقائي عبر الكلمات المفتاحية في الوصف (مثل تليفون، موبايل، آيفون، سامسونج)
+        window.detectPhoneAndPrice = function() {
+            const desc = document.getElementById('orderDesc').value.toLowerCase();
+            const phoneKeywords = ['تليفون', 'موبايل', 'هاتف', 'iphone', 'samsung', 'جوال', 'redmi', 'oppo', 'infinix'];
+            
+            const isPhone = phoneKeywords.some(keyword => desc.includes(keyword));
+            if (isPhone) {
+                document.getElementById('orderType').value = 'هاتف';
+            }
+            calculateSmartPricing();
+        }
 
         function updateLocationData(lat, lng) {
             selectedLat = lat;
@@ -211,10 +271,7 @@
             map.setView([selectedLat, selectedLng], 15);
 
             calculatedDistance = calculateDistance(companyLat, companyLng, selectedLat, selectedLng);
-            const totalCost = Math.round(calculatedDistance * basePricePerKm);
-
-            document.getElementById('distanceText').innerText = calculatedDistance.toFixed(2) + ' كم';
-            document.getElementById('costText').innerText = totalCost.toLocaleString() + ' جنيه';
+            calculateSmartPricing();
         }
 
         map.on('click', function(e) {
@@ -251,6 +308,8 @@
             const sName = document.getElementById('storeName').value.trim();
             const sPhone = document.getElementById('storePhone').value.trim();
             const desc = document.getElementById('orderDesc').value.trim();
+            const area = document.getElementById('orderArea').value;
+            const orderType = document.getElementById('orderType').value;
 
             if(!name || !phone || !sName || !sPhone || !marker) {
                 alert('الرجاء إكمال كافة حقول العميل والمتجر، وتحديد الموقع على الخريطة.');
@@ -270,10 +329,12 @@
                 storeName: sName,
                 storePhone: sPhone,
                 description: desc,
+                area: area,
+                orderType: orderType,
                 lat: selectedLat,
                 lng: selectedLng,
                 distance: calculatedDistance.toFixed(2),
-                cost: Math.round(calculatedDistance * basePricePerKm),
+                cost: currentCalculatedCost,
                 status: 'pending_supervisor', // الحالة الأولية بانتظار المشرف
                 driverName: '',
                 driverPhone: '',
@@ -317,16 +378,16 @@
                         badge.className = "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-bold px-3 py-1 rounded-full";
                         driverNameEl.innerText = "مندوب التوصيل: لم يُسند بعد";
                         driverPhoneEl.innerText = "رقم الهاتف: --";
-                    } else if(currentOrder.status === 'in_progress' || currentOrder.status === 'assigned') {
+                    } else if(currentOrder.status === 'in_progress' || currentOrder.status === 'assigned' || currentOrder.status === 'قيد التوصيل') {
                         badge.innerText = "قيد التوصيل بواسطة المندوب";
                         badge.className = "bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-bold px-3 py-1 rounded-full";
-                        driverNameEl.innerText = `مندوب التوصيل: ${currentOrder.driverName || 'أحمد المندوب'}`;
+                        driverNameEl.innerText = `مندوب التوصيل: ${currentOrder.assignedDriver || currentOrder.driverName || 'أحمد المندوب'}`;
                         driverPhoneEl.innerText = `رقم الهاتف: ${currentOrder.driverPhone || '0912345678'}`;
                         driverTimeEl.innerText = "في الطريق إليك";
                     } else if(currentOrder.status === 'completed') {
                         badge.innerText = "تم تسليم الطلب بنجاح";
                         badge.className = "bg-green-500/20 text-green-400 border border-green-500/30 text-xs font-bold px-3 py-1 rounded-full";
-                        driverNameEl.innerText = `مندوب التوصيل: ${currentOrder.driverName || 'مكتمل'}`;
+                        driverNameEl.innerText = `مندوب التوصيل: ${currentOrder.assignedDriver || currentOrder.driverName || 'مكتمل'}`;
                         driverPhoneEl.innerText = "تم تسليم الشحنة بنجاح";
                         driverTimeEl.innerText = "مكتمل";
                     }
