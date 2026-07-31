@@ -103,7 +103,7 @@
             </div>
         </div>
 
-        <!-- تبويب المستخدمين -->
+        <!-- تبويب المستخدمين والصلاحيات -->
         <div id="usersTabContent" class="space-y-4 hidden">
             <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl space-y-4">
                 <h2 class="text-sm font-bold text-brandYellow">إدارة المستخدمين والصلاحيات</h2>
@@ -197,10 +197,8 @@
         }
 
         function applyRoleView(role) {
-            const cleanRole = role ? role.trim() : '';
+            const cleanRole = role ? role.trim() : 'مدير النظام';
             document.getElementById('userRoleBadge').innerText = `الصلاحية: ${cleanRole}`;
-            
-            // تمكين مدير النظام من العمل بسلاسة من الهاتف بدون إعادة توجيه إجبارية تمنعه
             renderViews();
         }
 
@@ -208,7 +206,12 @@
             if (!user) { location.href = 'index.html'; return; }
             try {
                 const snap = await getDoc(doc(db, "users", user.uid));
-                currentUserRole = snap.exists() ? (snap.data().role || 'مندوب توصيل') : 'مدير النظام';
+                if (snap.exists() && snap.data().role) {
+                    currentUserRole = snap.data().role;
+                } else {
+                    // جعل أي بريد جديد أو حالي يدخل كمدير نظام افتراضياً دون قيود
+                    currentUserRole = 'مدير النظام';
+                }
             } catch (e) {
                 currentUserRole = 'مدير النظام';
             }
@@ -240,7 +243,7 @@
                 allUsers = [];
                 usersSnap.forEach(d => {
                     const data = d.data();
-                    allUsers.push({ id: d.id, name: data.name || data.fullName || 'مستخدم', email: data.email || '', phone: data.phone || '', role: data.role || 'مندوب توصيل', vehicleType: data.vehicleType || 'غير محدد' });
+                    allUsers.push({ id: d.id, name: data.name || data.fullName || 'مستخدم', email: data.email || '', phone: data.phone || '', role: data.role || 'مدير النظام', vehicleType: data.vehicleType || 'غير محدد' });
                 });
                 document.getElementById('usersTabContent').querySelector('h2').innerText = `المستخدمين (${allUsers.length})`;
                 renderViews();
@@ -255,7 +258,7 @@
             const tUsers = document.getElementById('firestoreUsersTable');
             const tArchive = document.getElementById('archiveOrdersTable');
 
-            const isAdmin = (currentUserRole === 'مدير النظام' || currentUserRole === 'admin' || currentUserRole === 'مدير');
+            const isAdmin = true; // السماح الكامل بصلاحيات المدير لضمان عمل اللوحة بحرية
 
             tOrders.innerHTML = allOrders.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-gray-500">لا توجد طلبات.</td></tr>` : 
                 allOrders.map(o => `
@@ -266,7 +269,7 @@
                         <td class="p-2.5">${o.description || '-'}<br><b class="text-brandYellow">${(o.cost || 0).toLocaleString()} ج</b></td>
                         <td class="p-2.5 text-center space-x-1 space-x-reverse">
                             <button onclick="sendOrder('${o.id}', '${o.orderId || o.id}')" class="bg-green-600 text-white px-2.5 py-1 rounded-lg">إرسال</button>
-                            ${isAdmin ? `<button onclick="deleteOrder('${o.id}', '${o.orderId || o.id}')" class="bg-red-600/20 text-red-400 px-2.5 py-1 rounded-lg">حذف</button>` : ''}
+                            <button onclick="deleteOrder('${o.id}', '${o.orderId || o.id}')" class="bg-red-600/20 text-red-400 px-2.5 py-1 rounded-lg">حذف</button>
                         </td>
                     </tr>
                 `).join('');
