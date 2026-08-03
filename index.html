@@ -3,8 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>For-U | لوحة التحكم - مدير النظام</title>
+    <title>For-U | فور يو - نصلك قبل ما تطلب</title>
     
+    <!-- حارس التوجيه الفوري لمنع ظهور الصفحة الرئيسية وتحويل المدير للداشبورد فوراً عند الرفرش -->
+    <script>
+        (function() {
+            const savedRole = localStorage.getItem('foru_user_role');
+            if (savedRole && (savedRole.includes('مدير') || savedRole.includes('مشرف') || savedRole === 'admin')) {
+                if (!window.location.href.includes('dashboard.html')) {
+                    window.location.replace('dashboard.html');
+                }
+            }
+        })();
+    </script>
+
     <!-- الوسوم الخاصة بإظهار شعار المنصة واسمها بالكامل على الهواتف والأجهزة -->
     <link rel="icon" type="image/png" href="image.jpg">
     <link rel="apple-touch-icon" href="image.jpg">
@@ -21,100 +33,165 @@
     <style>
         body { 
             font-family: 'Cairo', sans-serif; 
+            overflow: hidden; 
+            height: 100vh;
         }
     </style>
 </head>
-<body class="bg-[#121212] text-white min-h-screen flex flex-col selection:bg-[#FFB800] selection:text-[#121212]">
+<body class="bg-[#121212] text-white h-screen flex flex-col justify-between selection:bg-[#FFB800] selection:text-[#121212]">
 
     <!-- شاشة التحميل -->
     <div id="loadingOverlay" class="fixed inset-0 bg-[#121212] z-50 flex flex-col items-center justify-center space-y-4 transition-opacity duration-300">
         <div class="w-16 h-16 border-4 border-[#FFB800]/20 border-t-[#FFB800] rounded-full animate-spin"></div>
-        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحقق من الصلاحيات وتحميل لوحة التحكم...</p>
+        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحقق من الحساب وتوجيهك...</p>
     </div>
 
-    <!-- الهيدر العلوي للوحة التحكم -->
-    <header class="p-4 sm:p-6 bg-[#1E1E1E] border-b border-gray-800 flex justify-between items-center shadow-lg">
-        <div class="flex items-center space-x-3 space-x-reverse">
-            <div class="w-12 h-12 bg-[#FFB800] text-[#121212] rounded-2xl flex items-center justify-center font-black text-xl shadow-md">
-                4U
-            </div>
-            <div>
-                <h1 class="text-lg font-bold">لوحة التحكم</h1>
-                <p class="text-xs text-[#FFB800]">الصلاحية: مدير النظام</p>
+    <!-- الهيدر العلوي -->
+    <header class="p-4 sm:p-6 flex justify-between items-center border-b border-gray-800/60">
+        <div class="flex items-center space-x-2 space-x-reverse">
+            <!-- معلومات المستخدم تظهر عند تسجيل الدخول -->
+            <div id="userProfileDisplay" class="hidden items-center space-x-2 space-x-reverse bg-[#1E1E1E] border border-gray-800 px-3 py-1.5 rounded-xl shadow-lg">
+                <i class="fa-solid fa-circle-user text-[#FFB800] text-lg"></i>
+                <span id="userNameSpan" class="text-xs text-white font-semibold"></span>
+                <button onclick="logoutUser()" class="bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold px-2.5 py-1 rounded-lg hover:bg-red-500/30 transition mr-1">
+                    خروج
+                </button>
             </div>
         </div>
 
-        <div>
-            <button onclick="logoutUser()" class="bg-red-500/20 border border-red-500/50 text-red-400 text-xs font-bold px-3 py-2 rounded-xl hover:bg-red-500/30 transition flex items-center shadow-md">
-                <i class="fa-solid fa-right-from-bracket ml-1.5"></i> خروج
-            </button>
+        <div class="flex space-x-2 space-x-reverse items-center">
+            <div id="authButtonsContainer" class="flex space-x-2 space-x-reverse">
+                <button id="loginHeaderBtn" onclick="openAuthModal('login')" class="bg-[#1E1E1E] border border-gray-700 text-[#FFB800] text-sm font-bold px-4 py-2 rounded-xl hover:bg-gray-800 transition shadow-md flex items-center">
+                    <i class="fa-solid fa-right-to-bracket ml-2"></i> تسجيل الدخول
+                </button>
+            </div>
         </div>
     </header>
 
-    <!-- المحتوى الرئيسي للوحة التحكم -->
-    <main class="flex-grow p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-6">
-        
-        <!-- إحصائيات سريعة -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div class="bg-[#1E1E1E] border border-gray-800 p-4 rounded-2xl shadow-md text-center">
-                <p class="text-xs text-gray-400 mb-1">إجمالي الطلبات</p>
-                <h3 id="totalOrdersCount" class="text-2xl font-black text-[#FFB800]">0</h3>
-            </div>
-            <div class="bg-[#1E1E1E] border border-gray-800 p-4 rounded-2xl shadow-md text-center">
-                <p class="text-xs text-gray-400 mb-1">المكتملة</p>
-                <h3 id="completedOrdersCount" class="text-2xl font-black text-green-400">0</h3>
-            </div>
-            <div class="bg-[#1E1E1E] border border-gray-800 p-4 rounded-2xl shadow-md text-center">
-                <p class="text-xs text-gray-400 mb-1">إيرادات التوصيل</p>
-                <h3 class="text-2xl font-black text-blue-400">0 ج</h3>
-            </div>
-            <div class="bg-[#1E1E1E] border border-gray-800 p-4 rounded-2xl shadow-md text-center">
-                <p class="text-xs text-gray-400 mb-1">إيرادات المبيعات</p>
-                <h3 class="text-2xl font-black text-purple-400">0 ج</h3>
-            </div>
-        </div>
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-grow flex items-center justify-center px-6 overflow-y-auto py-4">
+        <div class="max-w-md w-full text-center flex flex-col items-center">
+            
+            <span class="bg-[#FFB800]/10 text-[#FFB800] text-xs font-semibold px-3 py-1 rounded-full border border-[#FFB800]/20 inline-block mb-3">
+                🚀 نصلك قبل ما تطلب 
+            </span>
 
-        <!-- قسم إرسال طلب جديد للمناديب -->
-        <div class="bg-[#1E1E1E] border border-gray-800 p-5 rounded-3xl shadow-xl">
-            <h3 class="text-base font-bold mb-4 text-[#FFB800] flex items-center">
-                <i class="fa-solid fa-paper-plane ml-2"></i> إرسال طلب جديد للمناديب
-            </h3>
-            <form id="newOrderForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">اسم العميل</label>
-                    <input type="text" id="orderCustomerName" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="محمد أحمد">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">هاتف العميل</label>
-                    <input type="text" id="orderCustomerPhone" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="0912345678">
-                </div>
-                <div class="sm:col-span-2">
-                    <label class="block text-xs text-gray-400 mb-1">اسم المتجر / العنوان</label>
-                    <input type="text" id="orderStoreName" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="متجر السعادة - السوق العربي">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">القيمة (جنيه)</label>
-                    <input type="number" id="orderPrice" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="5000">
-                </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">تفاصيل الطلب</label>
-                    <input type="text" id="orderDetailsService" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="وجبة عشاء مع المشروب">
-                </div>
-                <div class="sm:col-span-2 mt-2">
-                    <button type="submit" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg text-sm flex items-center justify-center">
-                        <i class="fa-solid fa-truck-fast ml-2"></i> نشر الطلب للمناديب الآن
+            <div class="mb-4 flex flex-col items-center">
+                <img src="image.jpg" alt="For-U Logo" class="w-20 h-20 object-cover rounded-2xl shadow-2xl border-2 border-[#FFB800]/40 mb-3 animate-pulse">
+                <h1 class="text-3xl font-black tracking-wider mb-1">فور يو <span class="text-[#FFB800] text-base">FOR-U</span></h1>
+                <p class="text-xs text-gray-400">توصيل طلباتك بسرعة وأمان</p>
+            </div>
+
+            <p class="text-gray-400 text-sm mb-6 max-w-sm leading-relaxed">
+                اطلب توصيل لطلباتك واعرض بضاعتك ومنتجاتك  
+            </p>
+
+            <!-- الأزرار الرئيسية -->
+            <div class="w-full flex flex-col space-y-3">
+                <div id="centerActionContainer" class="flex flex-col space-y-3">
+                    <!-- الحالة الافتراضية قبل الدخول -->
+                    <button id="mainAuthActionBtn" onclick="openAuthModal('login')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-box-open ml-2"></i> ابدأ الآن / تسجيل الدخول
                     </button>
                 </div>
-            </form>
-        </div>
 
+                <!-- أزرار الخدمات بالترتيب والتوجيهات الجديدة (تظهر بعد تسجيل الدخول) -->
+                <div id="loggedServicesContainer" class="hidden flex flex-col space-y-3 w-full">
+                    <button onclick="window.location.href='customer.html'" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-cart-shopping ml-2"></i> اطلب توصيل
+                    </button>
+                    <button onclick="window.location.href='track.html'" class="w-full bg-[#1E1E1E] border border-gray-700 text-white font-bold py-3.5 px-6 rounded-2xl hover:bg-gray-800 transition shadow-lg flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-location-crosshairs ml-2"></i> تتبع طلب
+                    </button>
+                    <button onclick="window.location.href='marketplace.html'" class="w-full bg-[#1E1E1E] border border-[#FFB800] text-[#FFB800] font-bold py-3.5 px-6 rounded-2xl hover:bg-[#FFB800]/10 transition shadow-lg flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-store ml-2"></i> السوق
+                    </button>
+                    <button onclick="window.location.href='store-dashboard.html'" class="w-full bg-[#1E1E1E] border border-gray-600 text-gray-300 font-bold py-3.5 px-6 rounded-2xl hover:bg-gray-800 transition shadow-lg flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-shop ml-2"></i> اعرض متجرك
+                    </button>
+                </div>
+            </div>
+
+        </div>
     </main>
+
+    <!-- نافذة المصادقة -->
+    <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-md w-full relative shadow-2xl">
+            
+            <div class="text-center mb-5">
+                <img src="image.jpg" alt="For-U Logo" class="w-14 h-14 object-cover mx-auto rounded-xl mb-2 shadow-lg border border-[#FFB800]/30">
+                <h3 id="modalTitle" class="text-xl font-bold">تسجيل الدخول / إنشاء حساب</h3>
+                <p id="modalSubtitle" class="text-xs text-gray-400 mt-1">يرجى تسجيل الدخول والمضي قدماً</p>
+            </div>
+
+            <div class="space-y-3 mb-3">
+                <button type="button" onclick="loginWithGoogle()" class="w-full bg-white text-gray-800 font-bold py-3 px-4 rounded-xl hover:bg-gray-100 transition shadow flex items-center justify-center space-x-3 space-x-reverse text-sm">
+                    <i class="fa-brands fa-google text-red-500 text-lg"></i>
+                    <span>التسجيل أو الدخول بواسطة Google</span>
+                </button>
+            </div>
+
+            <div class="relative flex py-2 items-center">
+                <div class="flex-grow border-t border-gray-700"></div>
+                <span class="flex-shrink mx-4 text-gray-500 text-xs">سجل بالبريد الإلكتروني</span>
+                <div class="flex-grow border-t border-gray-700"></div>
+            </div>
+
+            <form id="authForm" class="space-y-3 mt-2" onsubmit="handleEmailAuth(event)">
+                <div id="nameFieldContainer" class="hidden">
+                    <label class="block text-xs text-gray-300 mb-1">الاسم الكامل</label>
+                    <input type="text" id="fullName" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="محمد أحمد">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">البريد الإلكتروني</label>
+                    <input type="email" id="email" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="name@foru.com">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-300 mb-1">كلمة المرور</label>
+                    <input type="password" id="password" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="••••••••">
+                </div>
+                <button type="submit" id="submitBtnText" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg mt-1 text-sm">
+                    دخول 
+                </button>
+            </form>
+
+            <div class="text-center mt-4 text-xs text-gray-400">
+                <span id="switchPrompt">ليس لديك حساب؟</span>
+                <button type="button" onclick="toggleAuthMode()" id="switchBtnText" class="text-[#FFB800] font-bold mr-1 hover:underline">إنشاء حساب جديد</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة التنبيه -->
+    <div id="customAlertModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
+            <div id="alertIconContainer" class="w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h4 id="alertTitle" class="text-xl font-bold mb-2">تنبيه النظام</h4>
+            <p id="alertMessage" class="text-gray-300 text-sm mb-6 leading-relaxed">رسالة التنبيه هنا...</p>
+            <button onclick="closeCustomAlert()" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg">
+                حسنًا، شكرًا
+            </button>
+        </div>
+    </div>
 
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            GoogleAuthProvider,
+            signInWithPopup,
+            signInWithEmailAndPassword, 
+            createUserWithEmailAndPassword, 
+            signOut,
+            setPersistence,
+            browserLocalPersistence
+        } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
@@ -130,56 +207,188 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // إخفاء شاشة التحميل بمجرد جهوزية الصفحة
-        window.addEventListener('DOMContentLoaded', () => {
-            const loader = document.getElementById('loadingOverlay');
-            if (loader) {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.remove(), 300);
-            }
+        setPersistence(auth, browserLocalPersistence).catch((error) => {
+            console.error("Auth persistence error:", error);
         });
 
-        // دالة تسجيل الخروج المحسنة والنظيفة
-        window.logoutUser = function() {
-            localStorage.removeItem('foru_user_name');
-            localStorage.removeItem('foru_user_email');
-            localStorage.removeItem('foru_user_role');
-            localStorage.clear();
+        let currentMode = 'login';
 
-            signOut(auth).then(() => {
-                window.location.replace('index.html');
-            }).catch((error) => {
-                console.error("خطأ أثناء تسجيل الخروج:", error);
-                window.location.replace('index.html');
-            });
+        // دالة فحص وتوجيه المستخدم بناءً على الصلاحية بدقة عبر جميع الأجهزة
+        function redirectBasedOnRole(role) {
+            const normalizedRole = role ? role.trim() : 'مدير النظام';
+            
+            if (normalizedRole === 'مندوب' || normalizedRole === 'مندوب توصيل') {
+                window.location.href = 'driver.html';
+            } else if (normalizedRole === 'مشرف' || normalizedRole === 'مشرف طلبات' || normalizedRole === 'مدير' || normalizedRole === 'مدير نظام' || normalizedRole === 'admin') {
+                window.location.href = 'dashboard.html';
+            } else {
+                const loader = document.getElementById('loadingOverlay');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 300);
+                }
+            }
+        }
+
+        async function handleUserSessionUI(user, customName = '') {
+            try {
+                const userRef = doc(db, "users", user.uid);
+                const userSnap = await getDoc(userRef);
+                
+                let role = 'مدير النظام'; 
+                let userName = customName || user.displayName || (user.email ? user.email.split('@')[0] : 'مستخدم');
+
+                if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    role = userData.role || 'مدير النظام';
+                    userName = userData.name || userName;
+                } else {
+                    await setDoc(userRef, {
+                        uid: user.uid,
+                        name: userName,
+                        email: user.email || '',
+                        phone: 'غير مسجل',
+                        role: 'مدير النظام',
+                        createdAt: new Date().toISOString()
+                    });
+                }
+
+                localStorage.setItem('foru_user_name', userName);
+                localStorage.setItem('foru_user_email', user.email || '');
+                localStorage.setItem('foru_user_role', role);
+
+                redirectBasedOnRole(role);
+
+                document.getElementById('userNameSpan').innerText = userName;
+                document.getElementById('userProfileDisplay').classList.remove('hidden');
+                document.getElementById('userProfileDisplay').classList.add('flex');
+                document.getElementById('loginHeaderBtn').style.display = 'none';
+
+                document.getElementById('mainAuthActionBtn').style.display = 'none';
+                document.getElementById('loggedServicesContainer').classList.remove('hidden');
+                document.getElementById('loggedServicesContainer').classList.add('flex');
+
+                document.getElementById('authModal').classList.remove('flex');
+                document.getElementById('authModal').classList.add('hidden');
+
+            } catch (error) {
+                console.error("خطأ في جلب بيانات المستخدم:", error);
+                const loader = document.getElementById('loadingOverlay');
+                if(loader) loader.remove();
+            }
+        }
+
+        window.showCustomAlert = function(title, message, isError = false) {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            const iconContainer = document.getElementById('alertIconContainer');
+            if (isError) {
+                iconContainer.className = "w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-red-400 text-2xl";
+                iconContainer.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+            } else {
+                iconContainer.className = "w-16 h-16 bg-[#FFB800]/10 border border-[#FFB800]/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-[#FFB800] text-2xl";
+                iconContainer.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            }
+            const alertModal = document.getElementById('customAlertModal');
+            alertModal.classList.remove('hidden');
+            alertModal.classList.add('flex');
         };
 
-        // معالجة إرسال طلب جديد للمناديب وحفظه في Firestore
-        document.getElementById('newOrderForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const customerName = document.getElementById('orderCustomerName').value;
-            const customerPhone = document.getElementById('orderCustomerPhone').value;
-            const storeName = document.getElementById('orderStoreName').value;
-            const price = document.getElementById('orderPrice').value;
-            const details = document.getElementById('orderDetailsService').value;
+        window.closeCustomAlert = function() {
+            document.getElementById('customAlertModal').classList.remove('flex');
+            document.getElementById('customAlertModal').classList.add('hidden');
+        };
 
-            try {
-                await addDoc(collection(db, "orders"), {
-                    customerName,
-                    customerPhone,
-                    storeName,
-                    price,
-                    details,
-                    status: 'جديد',
-                    createdAt: new Date().toISOString()
+        window.openAuthModal = function(mode) {
+            currentMode = mode;
+            updateModalUI();
+            document.getElementById('authModal').classList.remove('hidden');
+            document.getElementById('authModal').classList.add('flex');
+        };
+
+        window.toggleAuthMode = function() {
+            currentMode = currentMode === 'login' ? 'register' : 'login';
+            updateModalUI();
+        };
+
+        function updateModalUI() {
+            const title = document.getElementById('modalTitle');
+            const nameField = document.getElementById('nameFieldContainer');
+            const submitBtn = document.getElementById('submitBtnText');
+            const switchPrompt = document.getElementById('switchPrompt');
+            const switchBtn = document.getElementById('switchBtnText');
+
+            if (currentMode === 'register') {
+                title.innerText = 'إنشاء حساب جديد';
+                nameField.classList.remove('hidden');
+                submitBtn.innerText = 'تسجيل الحساب';
+                switchPrompt.innerText = 'لديك حساب بالفعل؟';
+                switchBtn.innerText = 'تسجيل الدخول';
+            } else {
+                title.innerText = 'تسجيل الدخول';
+                nameField.classList.add('hidden');
+                submitBtn.innerText = 'دخول بالنظام';
+                switchPrompt.innerText = 'ليس لديك حساب؟';
+                switchBtn.innerText = 'إنشاء حساب جديد';
+            }
+        }
+
+        window.loginWithGoogle = function() {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider)
+                .then(async (result) => {
+                    if (result && result.user) {
+                        await handleUserSessionUI(result.user);
+                    }
+                })
+                .catch((error) => {
+                    showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
                 });
-                alert('✅ تم نشر الطلب للمناديب بنجاح!');
-                document.getElementById('newOrderForm').reset();
-            } catch (error) {
-                console.error("خطأ في إضافة الطلب:", error);
-                alert('❌ حدث خطأ أثناء إرسال الطلب.');
+        };
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await handleUserSessionUI(user);
+            } else {
+                const loader = document.getElementById('loadingOverlay');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 300);
+                }
             }
         });
+
+        window.handleEmailAuth = function(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const customNameInput = document.getElementById('fullName').value;
+
+            if (currentMode === 'register') {
+                createUserWithEmailAndPassword(auth, email, password)
+                    .then(async (userCredential) => {
+                        await handleUserSessionUI(userCredential.user, customNameInput);
+                    })
+                    .catch((error) => {
+                        showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.message, true);
+                    });
+            } else {
+                signInWithEmailAndPassword(auth, email, password)
+                    .then(async (userCredential) => {
+                        await handleUserSessionUI(userCredential.user);
+                    })
+                    .catch((error) => {
+                        showCustomAlert('خطأ في الدخول', '❌ البريد غير مسجل أو كلمة المرور خاطئة.', true);
+                    });
+            }
+        };
+
+        window.logoutUser = function() {
+            signOut(auth).then(() => {
+                localStorage.clear();
+                window.location.reload();
+            });
+        };
     </script>
 </body>
 </html>
