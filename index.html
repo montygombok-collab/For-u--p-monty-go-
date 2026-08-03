@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>For-U | فور يو - نصلك قبل ما تطلب</title>
     
+    <!-- حارس التوجيه الفوري لمنع ظهور الصفحة الرئيسية وتحويل المدير للداشبورد فوراً عند الرفرش -->
+    <script>
+        (function() {
+            const savedRole = localStorage.getItem('foru_user_role');
+            if (savedRole && (savedRole.includes('مدير') || savedRole.includes('مشرف') || savedRole === 'admin')) {
+                if (!window.location.href.includes('dashboard.html')) {
+                    window.location.replace('dashboard.html');
+                }
+            }
+        })();
+    </script>
+
     <!-- الوسوم الخاصة بإظهار شعار المنصة واسمها بالكامل على الهواتف والأجهزة -->
     <link rel="icon" type="image/png" href="image.jpg">
     <link rel="apple-touch-icon" href="image.jpg">
@@ -223,7 +235,7 @@
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
                 
-                let role = 'مدير النظام'; // جعل الحسابات تسجل وتفتح مباشرة كمدير نظام افتراضياً لمنع مشاكل الصلاحيات
+                let role = 'مدير النظام'; 
                 let userName = customName || user.displayName || (user.email ? user.email.split('@')[0] : 'مستخدم');
 
                 if (userSnap.exists()) {
