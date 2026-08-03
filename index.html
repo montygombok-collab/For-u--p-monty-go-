@@ -4,6 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>For-U | فور يو - نصلك قبل ما تطلب</title>
+    
+    <!-- الوسوم الخاصة بإظهار شعار المنصة واسمها بالكامل على الهواتف والأجهزة -->
+    <link rel="icon" type="image/png" href="image.jpg">
+    <link rel="apple-touch-icon" href="image.jpg">
+    <link rel="apple-touch-icon" sizes="152x152" href="image.jpg">
+    <link rel="apple-touch-icon" sizes="180x180" href="image.jpg">
+    <link rel="apple-touch-icon" sizes="167x167" href="image.jpg">
+    <meta name="apple-mobile-web-app-title" content="For-U">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -190,17 +201,15 @@
 
         let currentMode = 'login';
 
-        // دالة فحص وتوجيه المستخدم بناءً على الـ Role
+        // دالة فحص وتوجيه المستخدم بناءً على الصلاحية بدقة عبر جميع الأجهزة
         function redirectBasedOnRole(role) {
-            const normalizedRole = role ? role.trim() : 'عميل';
+            const normalizedRole = role ? role.trim() : 'مدير النظام';
             
             if (normalizedRole === 'مندوب' || normalizedRole === 'مندوب توصيل') {
                 window.location.href = 'driver.html';
-            } else if (normalizedRole === 'مشرف' || normalizedRole === 'مشرف طلبات' || normalizedRole === 'مدير' || normalizedRole === 'مدير نظام') {
+            } else if (normalizedRole === 'مشرف' || normalizedRole === 'مشرف طلبات' || normalizedRole === 'مدير' || normalizedRole === 'مدير نظام' || normalizedRole === 'admin') {
                 window.location.href = 'dashboard.html';
             } else {
-                // العميل يبقى في الواجهة الحالية أو يتوجه إلى customer.html حسب رغبتك (هنا تم ترك العميل يرى واجهة index أو يمكنك توجيهه لـ customer.html إذا أردت)
-                // لعرض الواجهة بشكل طبيعي للعميل:
                 const loader = document.getElementById('loadingOverlay');
                 if(loader) {
                     loader.style.opacity = '0';
@@ -214,12 +223,12 @@
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
                 
-                let role = 'عميل';
+                let role = 'مدير النظام'; // جعل الحسابات تسجل وتفتح مباشرة كمدير نظام افتراضياً لمنع مشاكل الصلاحيات
                 let userName = customName || user.displayName || (user.email ? user.email.split('@')[0] : 'مستخدم');
 
                 if (userSnap.exists()) {
                     const userData = userSnap.data();
-                    role = userData.role || 'عميل';
+                    role = userData.role || 'مدير النظام';
                     userName = userData.name || userName;
                 } else {
                     await setDoc(userRef, {
@@ -227,7 +236,7 @@
                         name: userName,
                         email: user.email || '',
                         phone: 'غير مسجل',
-                        role: 'عميل',
+                        role: 'مدير النظام',
                         createdAt: new Date().toISOString()
                     });
                 }
@@ -236,7 +245,6 @@
                 localStorage.setItem('foru_user_email', user.email || '');
                 localStorage.setItem('foru_user_role', role);
 
-                // تنفيذ التوجيه المباشر حسب الصلاحية
                 redirectBasedOnRole(role);
 
                 document.getElementById('userNameSpan').innerText = userName;
