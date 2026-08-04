@@ -162,7 +162,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const app = initializeApp({
@@ -209,7 +209,6 @@
                 if (snap.exists() && snap.data().role) {
                     currentUserRole = snap.data().role;
                 } else {
-                    // جعل أي بريد جديد أو حالي يدخل كمدير نظام افتراضياً دون قيود
                     currentUserRole = 'مدير النظام';
                 }
             } catch (e) {
@@ -257,8 +256,6 @@
             const tOrders = document.getElementById('firestoreOrdersTable');
             const tUsers = document.getElementById('firestoreUsersTable');
             const tArchive = document.getElementById('archiveOrdersTable');
-
-            const isAdmin = true; // السماح الكامل بصلاحيات المدير لضمان عمل اللوحة بحرية
 
             tOrders.innerHTML = allOrders.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-gray-500">لا توجد طلبات.</td></tr>` : 
                 allOrders.map(o => `
@@ -358,7 +355,10 @@
         }
 
         window.sendOrder = (id, code) => showCustomAlert(`الطلب (${code}) أرسل للمناديب`);
-        window.logout = () => auth.signOut().then(() => location.href = 'index.html');
+        window.logout = () => {
+            localStorage.clear();
+            auth.signOut().then(() => location.href = 'index.html');
+        };
     </script>
 </body>
 </html>
