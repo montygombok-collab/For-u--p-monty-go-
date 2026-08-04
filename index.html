@@ -89,13 +89,12 @@
             <!-- الأزرار الرئيسية -->
             <div class="w-full flex flex-col space-y-3">
                 <div id="centerActionContainer" class="flex flex-col space-y-3">
-                    <!-- الحالة الافتراضية قبل الدخول -->
                     <button id="mainAuthActionBtn" onclick="openAuthModal('login')" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
                         <i class="fa-solid fa-box-open ml-2"></i> ابدأ الآن / تسجيل الدخول
                     </button>
                 </div>
 
-                <!-- أزرار الخدمات بالترتيب والتوجيهات الجديدة (تظهر بعد تسجيل الدخول) -->
+                <!-- أزرار الخدمات (تظهر بعد تسجيل الدخول) -->
                 <div id="loggedServicesContainer" class="hidden flex flex-col space-y-3 w-full">
                     <button onclick="window.location.href='customer.html'" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
                         <i class="fa-solid fa-cart-shopping ml-2"></i> اطلب توصيل
@@ -213,13 +212,12 @@
 
         let currentMode = 'login';
 
-        // دالة فحص وتوجيه المستخدم بناءً على الصلاحية بدقة عبر جميع الأجهزة
         function redirectBasedOnRole(role) {
             const normalizedRole = role ? role.trim() : 'مدير النظام';
             
             if (normalizedRole === 'مندوب' || normalizedRole === 'مندوب توصيل') {
                 window.location.href = 'driver.html';
-            } else if (normalizedRole === 'مشرف' || normalizedRole === 'مشرف طلبات' || normalizedRole === 'مدير' || normalizedRole === 'مدير نظام' || normalizedRole === 'admin') {
+            } else if (normalizedRole.includes('مشرف') || normalizedRole.includes('مدير') || normalizedRole === 'admin') {
                 window.location.href = 'dashboard.html';
             } else {
                 const loader = document.getElementById('loadingOverlay');
