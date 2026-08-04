@@ -4,6 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة الميدان | For-U</title>
+    
+    <!-- حارس التحقق الفوري من الصلاحيات لمنع الدخول غير المصرح به -->
+    <script>
+        (function() {
+            const savedRole = localStorage.getItem('foru_user_role');
+            if (savedRole) {
+                const role = savedRole.trim();
+                // إذا لم يكن المستخدم مندوباً، يتم توجيهه للصفحة المناسبة لصلاحيته فوراً
+                if (role.includes('مدير') || role.includes('مشرف') || role === 'admin') {
+                    window.location.replace('dashboard.html');
+                } else if (role === 'مسوقين' || role === 'مسوق') {
+                    window.location.replace('Marketers.html');
+                } else if (role !== 'مندوب توصيل' && role !== 'مندوب') {
+                    window.location.replace('index.html');
+                }
+            }
+        })();
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -23,6 +42,12 @@
 </head>
 <body class="bg-gray-100 dark:bg-[#121212] text-gray-800 dark:text-white min-h-screen flex flex-col justify-between transition-colors duration-300">
 
+    <!-- شاشة التحقق والتحميل -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-[#121212] z-50 flex flex-col items-center justify-center space-y-4 transition-opacity duration-300">
+        <div class="w-16 h-16 border-4 border-[#FFB800]/20 border-t-[#FFB800] rounded-full animate-spin"></div>
+        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحقق من صلاحيات المندوب...</p>
+    </div>
+
     <!-- الهيدر المبسط -->
     <header class="p-4 flex justify-between items-center border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-[#121212]">
         <div class="flex items-center gap-3">
@@ -38,14 +63,14 @@
             </button>
             <button onclick="switchView('market')" id="btnMarket" class="bg-[#FFB800] text-[#121212] text-xs font-bold px-3 py-2 rounded-xl transition">البوابة</button>
             <button onclick="switchView('myOrder')" id="btnMyOrder" class="bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition">طلباتي</button>
-            <button onclick="auth.signOut().then(()=>location.href='index.html')" class="text-gray-400 hover:text-red-400 text-xs px-2 py-2"><i class="fa-solid fa-right-from-bracket"></i></button>
+            <button onclick="logoutUser()" class="text-gray-400 hover:text-red-400 text-xs px-2 py-2"><i class="fa-solid fa-right-from-bracket"></i></button>
         </div>
     </header>
 
     <!-- المحتوى -->
     <main class="flex-grow container mx-auto px-4 py-6 max-w-2xl space-y-4">
         
-        <!-- إشعار السداد اليومي الدائم (حسب نوع المركبة: 30 ألف للتابعة للشركة، 10 ألف لما دون ذلك) -->
+        <!-- إشعار السداد اليومي الدائم -->
         <div id="dailyPaymentNotice" class="hidden bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-3">
             <div class="text-xs text-yellow-600 dark:text-yellow-300 space-y-1 text-center sm:text-right">
                 <div class="font-bold flex items-center justify-center sm:justify-start gap-1">
@@ -101,7 +126,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const app = initializeApp({
@@ -143,34 +168,59 @@
             document.getElementById('btnMyOrder').className = v === 'myOrder' ? "bg-[#FFB800] text-[#121212] text-xs font-bold px-3 py-2 rounded-xl transition" : "bg-white dark:bg-[#1E1E1E] border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold px-3 py-2 rounded-xl transition";
         }
 
+        window.logoutUser = function() {
+            signOut(auth).then(() => {
+                localStorage.clear();
+                window.location.href = 'index.html';
+            });
+        }
+
         onAuthStateChanged(auth, async (user) => {
-            if (!user) { location.href = 'index.html'; return; }
+            if (!user) { 
+                window.location.href = 'index.html'; 
+                return; 
+            }
             
             try {
                 const snap = await getDoc(doc(db, "users", user.uid));
                 if (snap.exists()) {
                     const data = snap.data();
+                    const role = data.role ? data.role.trim() : 'عميل';
                     
-                    // حماية وتوجيه صحيح حسب الصلاحية لمنع تداخل الصفحات
-                    const role = data.role ? data.role.toLowerCase() : '';
-                    if (role === 'admin' || role === 'مسؤول') {
-                        location.href = 'admin.html';
+                    localStorage.setItem('foru_user_role', role);
+                    localStorage.setItem('foru_user_name', data.name || user.email.split('@')[0]);
+
+                    // التحقق الصارم من الصلاحية داخل قاعدة البيانات وتوجيه غير المندوبين
+                    if (role.includes('مدير') || role.includes('مشرف') || role === 'admin') {
+                        window.location.replace('dashboard.html');
                         return;
-                    } else if (role === 'merchant' || role === 'تاجر' || role === 'store') {
-                        location.href = 'merchant.html';
+                    } else if (role === 'مسوقين' || role === 'مسوق') {
+                        window.location.replace('Marketers.html');
+                        return;
+                    } else if (role !== 'مندوب توصيل' && role !== 'مندوب') {
+                        window.location.replace('index.html');
                         return;
                     }
 
                     driverName = data.name || user.email.split('@')[0];
                     isCompanyVehicle = data.isCompanyVehicle || data.vehicleType === 'شركة' || data.companyVehicle === true;
                 } else {
-                    driverName = user.email.split('@')[0];
+                    window.location.replace('index.html');
+                    return;
                 }
             } catch (e) {
-                driverName = user.email.split('@')[0];
+                console.error("خطأ في التحقق من الصلاحيات:", e);
             }
 
             document.getElementById('driverName').innerText = driverName;
+            
+            // إخفاء شاشة التحميل بعد التحقق الناجح
+            const loader = document.getElementById('loadingOverlay');
+            if(loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.remove(), 300);
+            }
+
             loadOrders();
             setInterval(loadOrders, 10000);
         });
