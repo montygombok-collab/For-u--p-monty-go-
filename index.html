@@ -123,6 +123,10 @@
                     <i class="fa-brands fa-google text-red-500 text-lg"></i>
                     <span>المتابعة بواسطة Google</span>
                 </button>
+                <button type="button" onclick="loginWithFacebook()" class="w-full bg-[#1877f2] text-white font-bold py-3 px-4 rounded-xl hover:bg-[#166fe5] transition shadow flex items-center justify-center space-x-3 space-x-reverse text-sm">
+                    <i class="fa-brands fa-facebook-f text-white text-lg"></i>
+                    <span>المتابعة بواسطة Facebook</span>
+                </button>
             </div>
 
             <div class="relative flex py-2 items-center">
@@ -175,6 +179,7 @@
             getAuth, 
             onAuthStateChanged, 
             GoogleAuthProvider,
+            FacebookAuthProvider,
             signInWithPopup,
             signInWithEmailAndPassword, 
             createUserWithEmailAndPassword, 
@@ -319,6 +324,19 @@
 
         window.loginWithGoogle = function() {
             const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider)
+                .then(async (result) => {
+                    if (result && result.user) {
+                        await handleUserSessionUI(result.user);
+                    }
+                })
+                .catch((error) => {
+                    showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
+                });
+        };
+
+        window.loginWithFacebook = function() {
+            const provider = new FacebookAuthProvider();
             signInWithPopup(auth, provider)
                 .then(async (result) => {
                     if (result && result.user) {
