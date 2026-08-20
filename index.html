@@ -217,7 +217,6 @@
             } else if (cleanRole === 'مسوقين' || cleanRole === 'مسوق') {
                 window.location.replace('Marketers.html');
             } else {
-                // أي عميل آخر أو حساب غير مخصص يبقى في index.html وتظهر له خدمات العملاء
                 const loader = document.getElementById('loadingOverlay');
                 if(loader) {
                     loader.style.opacity = '0';
@@ -235,11 +234,12 @@
                 let userName = customName || user.displayName || (user.email ? user.email.split('@')[0] : 'مستخدم');
 
                 if (userSnap.exists()) {
+                    // الحساب موجود مسبقاً: يتم جلب بياناته وتسجيل دخوله تلقائياً[cite: 6]
                     const userData = userSnap.data();
                     role = userData.role || 'عميل';
                     userName = userData.name || userName;
                 } else {
-                    // الحساب الجديد الافتراضي يسجل كعميل
+                    // الحساب غير موجود نهائياً: يتم إنشاؤه وتسجيل دخوله تلقائياً[cite: 6]
                     await setDoc(userRef, {
                         uid: user.uid,
                         name: userName,
