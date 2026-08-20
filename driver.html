@@ -11,7 +11,6 @@
             const savedRole = localStorage.getItem('foru_user_role');
             if (savedRole) {
                 const role = savedRole.trim();
-                // إذا لم يكن المستخدم مندوباً، يتم توجيهه للصفحة المناسبة لصلاحيته فوراً
                 if (role.includes('مدير') || role.includes('مشرف') || role === 'admin') {
                     window.location.replace('dashboard.html');
                 } else if (role === 'مسوقين' || role === 'مسوق') {
@@ -81,23 +80,30 @@
             <button onclick="payDailyDues()" class="w-full sm:w-auto bg-[#FFB800] text-[#121212] font-bold px-4 py-2 rounded-xl text-xs whitespace-nowrap">تم السداد</button>
         </div>
 
-        <!-- البوابة (الطلبات المتاحة) -->
+        <!-- البوابة (الطلبات المتاحة مرتبة حسب الأقرب) -->
         <div id="marketView" class="space-y-4">
             <div class="flex justify-between items-center">
-                <h2 class="text-sm font-bold text-[#FFB800]"><i class="fa-solid fa-motorcycle ml-1"></i> الطلبات المتاحة</h2>
+                <h2 class="text-sm font-bold text-[#FFB800]"><i class="fa-solid fa-motorcycle ml-1"></i> الطلبات المتاحة (حسب الأقرب لموقعك)</h2>
                 <button onclick="loadOrders()" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-rotate"></i> تحديث</button>
             </div>
             <div id="activeNotice" class="hidden p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-600 dark:text-blue-300 text-xs flex justify-between items-center">
-                <span>لديك طلب قيد التوصيل حالياً.</span>
+                <span id="activeNoticeText">لديك طلبات قيد التوصيل حالياً.</span>
                 <button onclick="switchView('myOrder')" class="underline font-bold">عرض</button>
             </div>
-            <div id="marketList" class="space-y-3 text-xs text-gray-500 dark:text-gray-400 text-center py-6">جاري التحميل...</div>
+            <div id="marketList" class="space-y-3 text-xs text-gray-500 dark:text-gray-400 text-center py-6">جاري تحديد الموقع وجلب الطلبات...</div>
         </div>
 
-        <!-- طلباتي الحالية -->
-        <div id="myOrderView" class="space-y-4 hidden">
-            <h2 class="text-sm font-bold text-[#FFB800]"><i class="fa-solid fa-box-open ml-1"></i> طلبي الحالي</h2>
-            <div id="myOrderContainer" class="space-y-4 text-xs text-gray-500 dark:text-gray-400 text-center py-6">ليس لديك طلب نشط.</div>
+        <!-- طلباتي الحالية والمنجزة اليوم -->
+        <div id="myOrderView" class="space-y-6 hidden">
+            <div class="space-y-3">
+                <h2 class="text-sm font-bold text-[#FFB800]"><i class="fa-solid fa-box-open ml-1"></i> طلباتي الحالية النشطة (حد أقصى 2)</h2>
+                <div id="myOrderContainer" class="space-y-3 text-xs text-gray-500 dark:text-gray-400 text-center py-4">ليس لديك طلبات نشطة.</div>
+            </div>
+
+            <div class="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-800">
+                <h2 class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-circle-check ml-1"></i> الطلبات المنجزة اليوم</h2>
+                <div id="todayCompletedContainer" class="space-y-3 text-xs text-gray-500 dark:text-gray-400 text-center py-4">لم تقم بإنجاز أي طلب اليوم حتى الآن.</div>
+            </div>
         </div>
 
     </main>
@@ -127,7 +133,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const app = initializeApp({
             apiKey: "AIzaSyB-5YFGfzldH3OyWOH7z96vCbUd0isw6aM",
@@ -141,6 +147,31 @@
         const db = getFirestore(app);
 
         let driverName = '', lastCount = 0, isCompanyVehicle = false;
+        let currentDriverLat = null, currentDriverLng = null;
+
+        // حساب المسافة بين نقطتين جغرافيت بالكيلومتر (Haversine formula)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            if (!lat1 || !lon1 || !lat2 || !lon2) return 9999;
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // جلب موقع المندوب الحالي تلقائياً
+        function updateDriverLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    currentDriverLat = position.coords.latitude;
+                    currentDriverLng = position.coords.longitude;
+                    loadOrders(); // إعادة الترتيب بمجرد توفر الموقع
+                }, () => {}, { enableHighAccuracy: true });
+            }
+        }
 
         window.toggleDarkMode = function() {
             const html = document.documentElement;
@@ -190,7 +221,6 @@
                     localStorage.setItem('foru_user_role', role);
                     localStorage.setItem('foru_user_name', data.name || user.email.split('@')[0]);
 
-                    // التحقق الصارم من الصلاحية داخل قاعدة البيانات وتوجيه غير المندوبين
                     if (role.includes('مدير') || role.includes('مشرف') || role === 'admin') {
                         window.location.replace('dashboard.html');
                         return;
@@ -214,14 +244,19 @@
 
             document.getElementById('driverName').innerText = driverName;
             
-            // إخفاء شاشة التحميل بعد التحقق الناجح
             const loader = document.getElementById('loadingOverlay');
             if(loader) {
                 loader.style.opacity = '0';
                 setTimeout(() => loader.remove(), 300);
             }
 
+            updateDriverLocation();
             loadOrders();
+
+            // تحديث تلقائي حقيقي بدون ضغط عبر Firestore Real-time Listener وفترات زمنية
+            onSnapshot(collection(db, "orders"), () => {
+                loadOrders();
+            });
             setInterval(loadOrders, 10000);
         });
 
@@ -245,10 +280,20 @@
                 lastCount = active.length;
 
                 const todayStr = new Date().toISOString().slice(0, 10);
+                
+                // طلبات المندوب الحالية النشطة
+                const myActiveOrders = orders.filter(o => {
+                    const isMine = (o.assignedDriver === driverName || o.driverName === driverName);
+                    const isNotDone = (o.status !== 'منجز' && o.status !== 'completed');
+                    return isMine && isNotDone;
+                });
+
+                // طلبات المندوب المنجزة اليوم
                 const driverCompletedToday = orders.filter(o => {
                     const isMine = (o.assignedDriver === driverName || o.driverName === driverName);
                     const isDone = (o.status === 'منجز' || o.status === 'completed');
-                    return isMine && isDone;
+                    const isToday = o.completedDate === todayStr;
+                    return isMine && (isDone && isToday);
                 });
 
                 const requiredFee = isCompanyVehicle ? 30000 : 10000;
@@ -262,43 +307,77 @@
                     paymentNotice.classList.add('hidden');
                 }
 
-                const myOrder = orders.find(o => (o.assignedDriver === driverName || o.driverName === driverName) && o.status !== 'منجز' && o.status !== 'completed');
-                document.getElementById('activeNotice').classList.toggle('hidden', !myOrder);
-
-                const myContainer = document.getElementById('myOrderContainer');
-                if (myOrder) {
-                    const mapUrl = myOrder.lat ? `https://www.google.com/maps?q=${myOrder.lat},${myOrder.lng}` : '#';
-                    myContainer.innerHTML = `
-                        <div class="bg-white dark:bg-[#1E1E1E] border border-[#FFB800] p-4 rounded-2xl space-y-3 text-right shadow">
-                            <div class="flex justify-between text-xs">
-                                <span class="text-[#FFB800] font-bold">طلب توصيل نشط</span>
-                                <span class="text-emerald-500 dark:text-emerald-400 font-bold">قيد التوصيل</span>
-                            </div>
-                            <div class="text-xs space-y-1 text-gray-700 dark:text-gray-300">
-                                <div><b>المتجر:</b> ${myOrder.storeName || '-'}</div>
-                                <div><b>المبلغ:</b> <span class="text-[#FFB800] font-bold">${(myOrder.cost || 0)} جنيه</span></div>
-                                <div><b>الوصف:</b> ${myOrder.description || '-'}</div>
-                            </div>
-                            <div class="flex gap-2 pt-2">
-                                <a href="${mapUrl}" target="_blank" class="flex-1 bg-blue-600 text-white text-center py-2 rounded-xl text-xs font-bold">الخريطة</a>
-                                <button onclick="completeOrder('${myOrder.id}', '${myOrder.orderId}')" class="flex-1 bg-green-600 text-white py-2 rounded-xl text-xs font-bold">تم التسليم</button>
-                            </div>
-                        </div>`;
+                const activeNotice = document.getElementById('activeNotice');
+                if (myActiveOrders.length > 0) {
+                    activeNotice.classList.remove('hidden');
+                    document.getElementById('activeNoticeText').innerText = `لديك (${myActiveOrders.length}) طلب قيد التوصيل حالياً.`;
                 } else {
-                    myContainer.innerHTML = `<div class="p-6 text-gray-400 dark:text-gray-500 text-xs">لا يوجد طلب نشط حالياً.</div>`;
+                    activeNotice.classList.add('hidden');
                 }
 
+                // عرض الطلبات الحالية النشطة
+                const myContainer = document.getElementById('myOrderContainer');
+                if (myActiveOrders.length > 0) {
+                    myContainer.innerHTML = myActiveOrders.map(myOrder => {
+                        const mapUrl = myOrder.lat ? `https://www.google.com/maps?q=${myOrder.lat},${myOrder.lng}` : '#';
+                        return `
+                            <div class="bg-white dark:bg-[#1E1E1E] border border-[#FFB800] p-4 rounded-2xl space-y-3 text-right shadow">
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-[#FFB800] font-bold">طلب توصيل نشط</span>
+                                    <span class="text-emerald-500 dark:text-emerald-400 font-bold">قيد التوصيل</span>
+                                </div>
+                                <div class="text-xs space-y-1 text-gray-700 dark:text-gray-300">
+                                    <div><b>المتجر:</b> ${myOrder.storeName || '-'}</div>
+                                    <div><b>المبلغ:</b> <span class="text-[#FFB800] font-bold">${(myOrder.cost || 0)} جنيه</span></div>
+                                    <div><b>الوصف:</b> ${myOrder.description || '-'}</div>
+                                </div>
+                                <div class="flex gap-2 pt-2">
+                                    <a href="${mapUrl}" target="_blank" class="flex-1 bg-blue-600 text-white text-center py-2 rounded-xl text-xs font-bold">الخريطة</a>
+                                    <button onclick="completeOrder('${myOrder.id}', '${myOrder.orderId}')" class="flex-1 bg-green-600 text-white py-2 rounded-xl text-xs font-bold">تم التسليم</button>
+                                </div>
+                            </div>`;
+                    }).join('');
+                } else {
+                    myContainer.innerHTML = `<div class="p-6 text-gray-400 dark:text-gray-500 text-xs">لا توجد طلبات نشطة حالياً.</div>`;
+                }
+
+                // عرض الطلبات المنجزة اليوم
+                const todayCompletedContainer = document.getElementById('todayCompletedContainer');
+                if (driverCompletedToday.length > 0) {
+                    todayCompletedContainer.innerHTML = driverCompletedToday.map(doneOrder => `
+                        <div class="bg-white dark:bg-[#1E1E1E] border border-emerald-500/40 p-3 rounded-2xl space-y-2 text-right shadow">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-emerald-400 font-bold">تم إنجازه وتسليمه</span>
+                                <span class="text-gray-400">${(doneOrder.cost || 0)} جنيه</span>
+                            </div>
+                            <div class="text-xs text-gray-600 dark:text-gray-300">
+                                <div><b>المتجر:</b> ${doneOrder.storeName || '-'}</div>
+                                <div><b>التفاصيل:</b> ${doneOrder.description || '-'}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    todayCompletedContainer.innerHTML = `<div class="p-4 text-gray-400 dark:text-gray-500 text-xs">لم تقم بإنجاز أي طلب اليوم.</div>`;
+                }
+
+                // فلترة الطلبات المتاحة (التي لم يُعن لها مندوب بعد) وترتيبها حسب الأقرب مسافة
                 const marketList = document.getElementById('marketList');
-                const available = active.filter(o => !o.assignedDriver && !o.driverName);
+                let available = active.filter(o => !o.assignedDriver && !o.driverName);
+
+                available = available.map(o => {
+                    const dist = calculateDistance(currentDriverLat, currentDriverLng, o.lat, o.lng);
+                    return { ...o, distance: dist };
+                }).sort((a, b) => a.distance - b.distance);
+
                 if (available.length === 0) {
-                    marketList.innerHTML = `<div class="p-6 text-gray-400 dark:text-gray-500 text-xs">لا توجد طلبات متاحة.</div>`;
+                    marketList.innerHTML = `<div class="p-6 text-gray-400 dark:text-gray-500 text-xs">لا توجد طلبات متاحة حالياً.</div>`;
                     return;
                 }
 
                 marketList.innerHTML = available.map(o => `
                     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 p-4 rounded-2xl space-y-2 text-right shadow">
                         <div class="flex justify-between text-xs">
-                            <span class="text-[#FFB800] font-bold">طلب متاح للتوصيل</span>
+                            <span class="text-[#FFB800] font-bold">طلب متاح للتوصيل ${o.distance !== 9999 ? `(يبعد ~${o.distance.toFixed(1)} كم)` : ''}</span>
                             <span class="text-gray-500 dark:text-gray-400">${(o.cost || 0)} جنيه</span>
                         </div>
                         <div class="text-xs text-gray-700 dark:text-gray-300">
@@ -344,8 +423,13 @@
 
         window.claimOrder = async function(id, code) {
             let local = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
-            const hasActive = local.some(o => (o.assignedDriver === driverName || o.driverName === driverName) && o.status !== 'منجز' && o.status !== 'completed');
-            if (hasActive) { showAlert('لديك طلب نشط بالفعل.'); return; }
+            
+            // قيد الـ 2 طلب كحد أقصى في اللحظة
+            const myActiveCount = local.filter(o => (o.assignedDriver === driverName || o.driverName === driverName) && o.status !== 'منجز' && o.status !== 'completed').length;
+            if (myActiveCount >= 2) { 
+                showAlert('عذراً، لا يمكنك أخذ أكثر من طلبين نشطين في نفس اللحظة.'); 
+                return; 
+            }
 
             local = local.map(o => (o.orderId === code || o.id === id) ? { ...o, assignedDriver: driverName, driverName: driverName, status: 'قيد التوصيل' } : o);
             localStorage.setItem('foru_all_orders', JSON.stringify(local));
@@ -363,12 +447,12 @@
             local = local.map(o => (o.orderId === code || o.id === id) ? { ...o, status: 'completed', completedDate: todayStr } : o);
             localStorage.setItem('foru_all_orders', JSON.stringify(local));
 
-            if (!id.setup && !id.startsWith('FOR-')) {
+            if (!id.startsWith('FOR-')) {
                 await updateDoc(doc(db, "orders", id), { status: 'completed', completedDate: todayStr });
             }
-            showAlert('تم تسليم الطلب بنجاح.');
+            showAlert('تم تسليم الطلب بنجاح وإضافته لطلباتك المنجزة اليوم.');
             loadOrders();
-            switchView('market');
+            switchView('myOrder');
         }
     </script>
 </body>
