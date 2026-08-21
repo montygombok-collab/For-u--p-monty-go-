@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>For-U | فور يو - نصلك قبل ما تطلب</title>
-    
-    <!-- حارس التوجيه الذكي الفوري بناءً على الصلاحيات -->
     <script>
         (function() {
             const savedRole = localStorage.getItem('foru_user_role');
@@ -41,7 +39,7 @@
     <!-- شاشة التحميل -->
     <div id="loadingOverlay" class="fixed inset-0 bg-[#121212] z-50 flex flex-col items-center justify-center space-y-4 transition-opacity duration-300">
         <div class="w-16 h-16 border-4 border-[#FFB800]/20 border-t-[#FFB800] rounded-full animate-spin"></div>
-        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحقق من الصلاحيات وتوجيهك...</p>
+        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري تسجيل الدخول</p>
     </div>
 
     <!-- الهيدر العلوي -->
@@ -90,7 +88,7 @@
                     </button>
                 </div>
 
-                <!-- الخدمات المتاحة للعملاء العاديين -->
+                <!-- الخدمات المتاحة للعملاء العاديين (تم تفعيل صلاحيات العميل العادي) -->
                 <div id="loggedServicesContainer" class="hidden flex flex-col space-y-3 w-full">
                     <button onclick="window.location.href='customer.html'" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
                         <i class="fa-solid fa-cart-shopping ml-2"></i> اطلب توصيل
@@ -206,7 +204,6 @@
 
         let currentMode = 'login';
 
-        // الدالة المسؤولة عن التوجيه الدقيق حسب الصلاحية
         function redirectBasedOnRole(role) {
             const cleanRole = role ? role.trim() : 'عميل';
             
@@ -234,12 +231,10 @@
                 let userName = customName || user.displayName || (user.email ? user.email.split('@')[0] : 'مستخدم');
 
                 if (userSnap.exists()) {
-                    // الحساب موجود مسبقاً: يتم جلب بياناته وتسجيل دخوله تلقائياً[cite: 6]
                     const userData = userSnap.data();
                     role = userData.role || 'عميل';
                     userName = userData.name || userName;
                 } else {
-                    // الحساب غير موجود نهائياً: يتم إنشاؤه وتسجيل دخوله تلقائياً[cite: 6]
                     await setDoc(userRef, {
                         uid: user.uid,
                         name: userName,
