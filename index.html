@@ -139,14 +139,14 @@
                         <option value="النيل الأبيض">ولاية النيل الأبيض</option>
                         <option value="النيل الأزرق">ولاية النيل الأزرق</option>
                         <option value="الجزيرة">ولاية الجزيرة</option>
-                        <option value="كردفان الكبرى - شمال كردفان">شمال كردفان</option>
-                        <option value="كردفان الكبرى - غرب كردفان">غرب كردفان</option>
-                        <option value="كردفان الكبرى - جنوب كردفان">جنوب كردفان</option>
-                        <option value="دارفور الكبرى - شمال دارفور">شمال دارفور</option>
-                        <option value="دارفور الكبرى - جنوب دارفور">جنوب دارفور</option>
-                        <option value="دارفور الكبرى - شرق دارفور">شرق دارفور</option>
-                        <option value="دارفور الكبرى - غرب دارفور">غرب دارفور</option>
-                        <option value="دارفور الكبرى - وسط دارفور">وسط دارفور</option>
+                        <option value="شمال كردفان">شمال كردفان</option>
+                        <option value="غرب كردفان">غرب كردفان</option>
+                        <option value="جنوب كردفان">جنوب كردفان</option>
+                        <option value="شمال دارفور">شمال دارفور</option>
+                        <option value="جنوب دارفور">جنوب دارفور</option>
+                        <option value="شرق دارفور">شرق دارفور</option>
+                        <option value="غرب دارفور">غرب دارفور</option>
+                        <option value="وسط دارفور">وسط دارفور</option>
                     </select>
                 </div>
 
@@ -244,14 +244,14 @@
             if (currentMode === 'register') {
                 title.innerText = 'إنشاء حساب جديد';
                 if(nameField) nameField.classList.remove('hidden');
-                if(stateField) stateField.classList.remove('hidden');
+                if(stateField) nameField.classList.remove('hidden');
                 if(submitBtn) submitBtn.innerText = 'تسجيل الحساب';
                 if(switchPrompt) switchPrompt.innerText = 'لديك حساب بالفعل؟';
                 if(switchBtn) switchBtn.innerText = 'تسجيل الدخول';
             } else {
                 title.innerText = 'تسجيل الدخول';
                 if(nameField) nameField.classList.add('hidden');
-                if(stateField) stateField.classList.add('hidden');
+                if(stateField) nameField.classList.add('hidden');
                 if(submitBtn) submitBtn.innerText = 'دخول بالنظام';
                 if(switchPrompt) switchPrompt.innerText = 'ليس لديك حساب؟';
                 if(switchBtn) switchBtn.innerText = 'إنشاء حساب جديد';
@@ -399,34 +399,46 @@
             }
         });
 
-        window.handleEmailAuth = function(event) {
+        // دالة الدخول / الإنشاء الذكية الموحدة (تسجل دخول بأي طريقة سواء كان الحساب موجوداً أو تم إنشاؤه الآن)
+        window.handleEmailAuth = async function(event) {
             event.preventDefault();
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            const customNameInput = document.getElementById('fullName').value;
-            const selectedState = document.getElementById('userState').value;
+            const customNameInput = document.getElementById('fullName').value.trim() || email.split('@')[0];
+            const selectedState = document.getElementById('userState').value || 'غير محدد';
 
-            if (currentMode === 'register') {
-                if (!selectedState) {
-                    showCustomAlert('تنبيه', 'الرجاء اختيار الولاية التابع لها.');
-                    return;
+            try {
+                // المحاولة الأولى: محاولة إنشاء الحساب الجديد
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await handleUserSessionUI(userCredential.user, customNameInput, selectedState);
+            } catch (error) {
+                // إذا كان الحساب موجوداً مسبقاً، يقوم النظام فوراً بتسجيل الدخول بدلاً من إظهار أي خطأ
+                if (error.code === 'auth/email-already-in-use') {
+                    try {
+                        const loginCredential = await signInWithEmailAndPassword(auth, email, password);
+                        await handleUserSessionUI(loginCredential.user);
+                    } catch (loginError) {
+                        showCustomAlert('تنبيه', 'كلمة المرور غير صحيحة لهذا البريد المسجل مسبقاً.');
+                    }
+                } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                    // إذا كان في وضع الدخول وكلمة المرور خطأ
+                    try {
+                        const loginCredential = await signInWithEmailAndPassword(auth, email, password);
+                        await handleUserSessionUI(loginCredential.user);
+                    } catch (e) {
+                        showCustomAlert('تنبيه', 'البريد الإلكتروني أو كلمة المرور غير صحيحة.');
+                    }
+                } else if (error.code === 'auth/weak-password') {
+                    showCustomAlert('تنبيه', 'كلمة المرور قصيرة جداً، يجب أن تكون 6 أحرف على الأقل.');
+                } else {
+                    // كحل احتياطي نهائي، حاول الدخول مباشرة إذا فشل الإنشاء لأي سبب آخر
+                    try {
+                        const loginCredential = await signInWithEmailAndPassword(auth, email, password);
+                        await handleUserSessionUI(loginCredential.user);
+                    } catch (finalError) {
+                        showCustomAlert('تنبيه', 'حدث خطأ في عملية الدخول. تأكد من صحة البريد وكلمة المرور.');
+                    }
                 }
-                createUserWithEmailAndPassword(auth, email, password)
-                    .then(async (userCredential) => {
-                        await handleUserSessionUI(userCredential.user, customNameInput, selectedState);
-                    })
-                    .catch((error) => {
-                        // إظهار كود الخطأ التقني لسهولة معرفة السبب إن وجد
-                        showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.code);
-                    });
-            } else {
-                signInWithEmailAndPassword(auth, email, password)
-                    .then(async (userCredential) => {
-                        await handleUserSessionUI(userCredential.user);
-                    })
-                    .catch((error) => {
-                        showCustomAlert('خطأ في الدخول', '❌ البريد غير مسجل أو كلمة المرور خاطئة.');
-                    });
             }
         };
 
