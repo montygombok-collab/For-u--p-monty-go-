@@ -4,28 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>For-U | فور يو - نصلك قبل ما تطلب</title>
-    <script>
-        (function() {
-            try {
-                const savedRole = localStorage.getItem('foru_user_role');
-                if (savedRole) {
-                    const role = savedRole.trim();
-                    const currentPath = window.location.pathname;
-
-                    if ((role === 'مندوب توصيل' || role === 'مندوب') && !currentPath.includes('driver.html')) {
-                        window.location.replace('driver.html');
-                    } else if ((role.includes('مدير') || role.includes('مشرف') || role === 'admin') && !currentPath.includes('dashboard.html')) {
-                        window.location.replace('dashboard.html');
-                    } else if ((role === 'مسوقين' || role === 'مسوق') && !currentPath.includes('Marketers.html')) {
-                        window.location.replace('Marketers.html');
-                    }
-                }
-            } catch (e) {
-                console.error("Auth redirect error:", e);
-            }
-        })();
-    </script>
-
+    
     <!-- الوسوم الخاصة بإظهار شعار المنصة -->
     <link rel="icon" type="image/png" href="image.jpg">
     <link rel="apple-touch-icon" href="image.jpg">
@@ -42,7 +21,7 @@
 </head>
 <body class="bg-[#121212] text-white h-screen flex flex-col justify-between selection:bg-[#FFB800] selection:text-[#121212]">
 
-    <!-- شاشة التحميل -->
+    <!-- شاشة التحميل (تختفي فوراً بضمان زمني لمنع التعليق) -->
     <div id="loadingOverlay" class="fixed inset-0 bg-[#121212] z-50 flex flex-col items-center justify-center space-y-4 transition-opacity duration-300">
         <div class="w-16 h-16 border-4 border-[#FFB800]/20 border-t-[#FFB800] rounded-full animate-spin"></div>
         <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحميل...</p>
@@ -94,7 +73,7 @@
                     </button>
                 </div>
 
-                <!-- الخدمات المتاحة للعملاء العاديين -->
+                <!-- الخدمات المتاحة بعد الدخول -->
                 <div id="loggedServicesContainer" class="hidden flex flex-col space-y-3 w-full">
                     <button onclick="window.location.href='customer.html'" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
                         <i class="fa-solid fa-cart-shopping ml-2"></i> اطلب توصيل
@@ -176,7 +155,7 @@
         </div>
     </div>
 
-    <!-- دوال عامة لواجهة المستخدم لضمان عمل الأزرار حتى قبل اكتمال جافاسكريبت الفايربيس -->
+    <!-- دوال واجهة المستخدم الأساسية -->
     <script>
         let currentMode = 'login';
 
@@ -188,10 +167,10 @@
             }
         }
 
-        // مؤقت أمان لإزالة شاشة التحميل البيضاء تلقائياً خلال ثانيتين إن لم تكتمل الاستجابة
-        setTimeout(removeLoader, 2000);
+        // مؤقت أمان لإزالة شاشة التحميل خلال ثوانٍ معدودة مهما كانت الظروف
+        setTimeout(removeLoader, 1500);
 
-        window.showCustomAlert = function(title, message, isError = false) {
+        window.showCustomAlert = function(title, message) {
             const titleEl = document.getElementById('alertTitle');
             const msgEl = document.getElementById('alertMessage');
             if(titleEl) titleEl.innerText = title;
@@ -283,20 +262,7 @@
 
         setPersistence(auth, browserLocalPersistence).catch(console.error);
 
-        function redirectBasedOnRole(role) {
-            const cleanRole = role ? role.trim() : 'عميل';
-            
-            if (cleanRole === 'مندوب توصيل' || cleanRole === 'مندوب') {
-                window.location.replace('driver.html');
-            } else if (cleanRole.includes('مدير') || cleanRole.includes('مشرف') || cleanRole === 'admin') {
-                window.location.replace('dashboard.html');
-            } else if (cleanRole === 'مسوقين' || cleanRole === 'مسوق') {
-                window.location.replace('Marketers.html');
-            } else {
-                removeLoader();
-            }
-        }
-
+        // دالة لتحديث واجهة المستخدم عند نجاح تسجيل الدخول دون التسبب في شاشة بيضاء
         async function handleUserSessionUI(user, customName = '') {
             try {
                 const userRef = doc(db, "users", user.uid);
@@ -324,8 +290,20 @@
                 localStorage.setItem('foru_user_email', user.email || '');
                 localStorage.setItem('foru_user_role', role);
 
-                redirectBasedOnRole(role);
+                // التحقق من الرتبة في حال كانت تتطلب توجيه لصفحات خاصة
+                const cleanRole = role.trim();
+                if (cleanRole === 'مندوب توصيل' || cleanRole === 'مندوب') {
+                    window.location.replace('driver.html');
+                    return;
+                } else if (cleanRole.includes('مدير') || cleanRole.includes('مشرف') || cleanRole === 'admin') {
+                    window.location.replace('dashboard.html');
+                    return;
+                } else if (cleanRole === 'مسوقين' || cleanRole === 'مسوق') {
+                    window.location.replace('Marketers.html');
+                    return;
+                }
 
+                // للعملاء العاديين: عرض الواجهة بسلاسة وإخفاء نموذج الدخول
                 const nameSpan = document.getElementById('userNameSpan');
                 const profileDisplay = document.getElementById('userProfileDisplay');
                 const loginHeaderBtn = document.getElementById('loginHeaderBtn');
@@ -349,6 +327,8 @@
                     authModal.classList.add('hidden');
                 }
 
+                removeLoader();
+
             } catch (error) {
                 console.error("خطأ في جلب بيانات المستخدم:", error);
                 removeLoader();
@@ -364,7 +344,7 @@
                     }
                 })
                 .catch((error) => {
-                    showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
+                    showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message);
                 });
         };
 
@@ -377,7 +357,7 @@
                     }
                 })
                 .catch((error) => {
-                    showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
+                    showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message);
                 });
         };
 
@@ -401,7 +381,7 @@
                         await handleUserSessionUI(userCredential.user, customNameInput);
                     })
                     .catch((error) => {
-                        showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.message, true);
+                        showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.message);
                     });
             } else {
                 signInWithEmailAndPassword(auth, email, password)
@@ -409,7 +389,7 @@
                         await handleUserSessionUI(userCredential.user);
                     })
                     .catch((error) => {
-                        showCustomAlert('خطأ في الدخول', '❌ البريد غير مسجل أو كلمة المرور خاطئة.', true);
+                        showCustomAlert('خطأ في الدخول', '❌ البريد غير مسجل أو كلمة المرور خاطئة.');
                     });
             }
         };
