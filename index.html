@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>For-U | فور يو - نصلك قبل ما تطلب</title>
     
+    <!-- حارس التوجيه الذكي الفوري بناءً على الصلاحيات -->
+    <script>
+        (function() {
+            const savedRole = localStorage.getItem('foru_user_role');
+            if (savedRole) {
+                const role = savedRole.trim();
+                const currentPath = window.location.pathname;
+
+                if ((role === 'مندوب توصيل' || role === 'مندوب') && !currentPath.includes('driver.html')) {
+                    window.location.replace('driver.html');
+                } else if ((role.includes('مدير') || role.includes('مشرف') || role === 'admin') && !currentPath.includes('dashboard.html')) {
+                    window.location.replace('dashboard.html');
+                } else if ((role === 'مسوقين' || role === 'مسوق') && !currentPath.includes('Marketers.html')) {
+                    window.location.replace('Marketers.html');
+                }
+            }
+        })();
+    </script>
+
     <!-- الوسوم الخاصة بإظهار شعار المنصة -->
     <link rel="icon" type="image/png" href="image.jpg">
     <link rel="apple-touch-icon" href="image.jpg">
@@ -15,16 +34,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <style> 
-        body { font-family: 'Cairo', sans-serif; background-color: #121212; color: #ffffff; } 
-    </style>
+    <style> body { font-family: 'Cairo', sans-serif; } </style>
 </head>
 <body class="bg-[#121212] text-white h-screen flex flex-col justify-between selection:bg-[#FFB800] selection:text-[#121212]">
 
-    <!-- شاشة التحميل (تختفي فوراً بضمان زمني لمنع التعليق) -->
+    <!-- شاشة التحميل -->
     <div id="loadingOverlay" class="fixed inset-0 bg-[#121212] z-50 flex flex-col items-center justify-center space-y-4 transition-opacity duration-300">
         <div class="w-16 h-16 border-4 border-[#FFB800]/20 border-t-[#FFB800] rounded-full animate-spin"></div>
-        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحميل...</p>
+        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحقق من الصلاحيات وتوجيهك...</p>
     </div>
 
     <!-- الهيدر العلوي -->
@@ -73,7 +90,7 @@
                     </button>
                 </div>
 
-                <!-- الخدمات المتاحة بعد الدخول -->
+                <!-- الخدمات المتاحة للعملاء العاديين -->
                 <div id="loggedServicesContainer" class="hidden flex flex-col space-y-3 w-full">
                     <button onclick="window.location.href='customer.html'" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
                         <i class="fa-solid fa-cart-shopping ml-2"></i> اطلب توصيل
@@ -94,7 +111,7 @@
 
     <!-- نافذة المصادقة -->
     <div id="authModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-md w-full relative shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div class="bg-[#1E1E1E] border border-gray-800 rounded-3xl p-6 max-w-md w-full relative shadow-2xl">
             <div class="text-center mb-5">
                 <img src="image.jpg" alt="For-U Logo" class="w-14 h-14 object-cover mx-auto rounded-xl mb-2 shadow-lg border border-[#FFB800]/30">
                 <h3 id="modalTitle" class="text-xl font-bold">تسجيل الدخول / إنشاء حساب</h3>
@@ -123,33 +140,6 @@
                     <label class="block text-xs text-gray-300 mb-1">الاسم الكامل</label>
                     <input type="text" id="fullName" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="محمد أحمد">
                 </div>
-
-                <!-- قائمة ولايات السودان -->
-                <div id="stateFieldContainer" class="hidden">
-                    <label class="block text-xs text-gray-300 mb-1">الولاية</label>
-                    <select id="userState" class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition">
-                        <option value="" disabled selected>اختر ولايتك</option>
-                        <option value="الخرطوم">ولاية الخرطوم</option>
-                        <option value="نهر النيل">ولاية نهر النيل</option>
-                        <option value="البحر الأحمر">ولاية البحر الأحمر</option>
-                        <option value="الشمالية">الولاية الشمالية</option>
-                        <option value="كسلا">ولاية كسلا</option>
-                        <option value="القضارف">ولاية القضارف</option>
-                        <option value="سنار">ولاية سنار</option>
-                        <option value="النيل الأبيض">ولاية النيل الأبيض</option>
-                        <option value="النيل الأزرق">ولاية النيل الأزرق</option>
-                        <option value="الجزيرة">ولاية الجزيرة</option>
-                        <option value="كردفان الكبرى - شمال كردفان">شمال كردفان</option>
-                        <option value="كردفان الكبرى - غرب كردفان">غرب كردفان</option>
-                        <option value="كردفان الكبرى - جنوب كردفان">جنوب كردفان</option>
-                        <option value="دارفور الكبرى - شمال دارفور">شمال دارفور</option>
-                        <option value="دارفور الكبرى - جنوب دارفور">جنوب دارفور</option>
-                        <option value="دارفور الكبرى - شرق دارفور">شرق دارفور</option>
-                        <option value="دارفور الكبرى - غرب دارفور">غرب دارفور</option>
-                        <option value="دارفور الكبرى - وسط دارفور">وسط دارفور</option>
-                    </select>
-                </div>
-
                 <div>
                     <label class="block text-xs text-gray-300 mb-1">البريد الإلكتروني</label>
                     <input type="email" id="email" required class="w-full bg-[#121212] border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#FFB800] outline-none transition" placeholder="name@foru.com">
@@ -181,83 +171,6 @@
             <button onclick="closeCustomAlert()" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3 rounded-xl hover:bg-yellow-400 transition shadow-lg">حسنًا</button>
         </div>
     </div>
-
-    <!-- دوال واجهة المستخدم الأساسية -->
-    <script>
-        let currentMode = 'login';
-
-        function removeLoader() {
-            const loader = document.getElementById('loadingOverlay');
-            if (loader) {
-                loader.style.opacity = '0';
-                setTimeout(() => loader.remove(), 300);
-            }
-        }
-
-        setTimeout(removeLoader, 1500);
-
-        window.showCustomAlert = function(title, message) {
-            const titleEl = document.getElementById('alertTitle');
-            const msgEl = document.getElementById('alertMessage');
-            if(titleEl) titleEl.innerText = title;
-            if(msgEl) msgEl.innerText = message;
-            const alertModal = document.getElementById('customAlertModal');
-            if(alertModal) {
-                alertModal.classList.remove('hidden');
-                alertModal.classList.add('flex');
-            }
-        };
-
-        window.closeCustomAlert = function() {
-            const alertModal = document.getElementById('customAlertModal');
-            if(alertModal) {
-                alertModal.classList.remove('flex');
-                alertModal.classList.add('hidden');
-            }
-        };
-
-        window.openAuthModal = function(mode) {
-            currentMode = mode;
-            updateModalUI();
-            const modal = document.getElementById('authModal');
-            if(modal) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            }
-        };
-
-        window.toggleAuthMode = function() {
-            currentMode = currentMode === 'login' ? 'register' : 'login';
-            updateModalUI();
-        };
-
-        function updateModalUI() {
-            const title = document.getElementById('modalTitle');
-            const nameField = document.getElementById('nameFieldContainer');
-            const stateField = document.getElementById('stateFieldContainer');
-            const submitBtn = document.getElementById('submitBtnText');
-            const switchPrompt = document.getElementById('switchPrompt');
-            const switchBtn = document.getElementById('switchBtnText');
-
-            if (!title) return;
-
-            if (currentMode === 'register') {
-                title.innerText = 'إنشاء حساب جديد';
-                if(nameField) nameField.classList.remove('hidden');
-                if(stateField) stateField.classList.remove('hidden');
-                if(submitBtn) submitBtn.innerText = 'تسجيل الحساب';
-                if(switchPrompt) switchPrompt.innerText = 'لديك حساب بالفعل؟';
-                if(switchBtn) switchBtn.innerText = 'تسجيل الدخول';
-            } else {
-                title.innerText = 'تسجيل الدخول';
-                if(nameField) nameField.classList.add('hidden');
-                if(stateField) stateField.classList.add('hidden');
-                if(submitBtn) submitBtn.innerText = 'دخول بالنظام';
-                if(switchPrompt) switchPrompt.innerText = 'ليس لديك حساب؟';
-                if(switchBtn) switchBtn.innerText = 'إنشاء حساب جديد';
-            }
-        }
-    </script>
 
     <!-- Firebase SDKs -->
     <script type="module">
@@ -291,27 +204,47 @@
 
         setPersistence(auth, browserLocalPersistence).catch(console.error);
 
-        async function handleUserSessionUI(user, customName = '', customState = 'غير محدد') {
+        let currentMode = 'login';
+
+        // الدالة المسؤولة عن التوجيه الدقيق حسب الصلاحية
+        function redirectBasedOnRole(role) {
+            const cleanRole = role ? role.trim() : 'عميل';
+            
+            if (cleanRole === 'مندوب توصيل' || cleanRole === 'مندوب') {
+                window.location.replace('driver.html');
+            } else if (cleanRole.includes('مدير') || cleanRole.includes('مشرف') || cleanRole === 'admin') {
+                window.location.replace('dashboard.html');
+            } else if (cleanRole === 'مسوقين' || cleanRole === 'مسوق') {
+                window.location.replace('Marketers.html');
+            } else {
+                const loader = document.getElementById('loadingOverlay');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 300);
+                }
+            }
+        }
+
+        async function handleUserSessionUI(user, customName = '') {
             try {
                 const userRef = doc(db, "users", user.uid);
                 const userSnap = await getDoc(userRef);
                 
                 let role = 'عميل'; 
                 let userName = customName || user.displayName || (user.email ? user.email.split('@')[0] : 'مستخدم');
-                let userState = customState;
 
                 if (userSnap.exists()) {
+                    // الحساب موجود مسبقاً: يتم جلب بياناته وتسجيل دخوله تلقائياً[cite: 6]
                     const userData = userSnap.data();
                     role = userData.role || 'عميل';
                     userName = userData.name || userName;
-                    userState = userData.state || userState;
                 } else {
+                    // الحساب غير موجود نهائياً: يتم إنشاؤه وتسجيل دخوله تلقائياً[cite: 6]
                     await setDoc(userRef, {
                         uid: user.uid,
                         name: userName,
                         email: user.email || '',
                         phone: 'غير مسجل',
-                        state: userState,
                         role: 'عميل',
                         createdAt: new Date().toISOString()
                     });
@@ -320,48 +253,72 @@
                 localStorage.setItem('foru_user_name', userName);
                 localStorage.setItem('foru_user_email', user.email || '');
                 localStorage.setItem('foru_user_role', role);
-                localStorage.setItem('foru_user_state', userState);
 
-                const cleanRole = role.trim();
-                if (cleanRole === 'مندوب توصيل' || cleanRole === 'مندوب') {
-                    window.location.replace('driver.html');
-                    return;
-                } else if (cleanRole.includes('مدير') || cleanRole.includes('مشرف') || cleanRole === 'admin') {
-                    window.location.replace('dashboard.html');
-                    return;
-                } else if (cleanRole === 'مسوقين' || cleanRole === 'مسوق') {
-                    window.location.replace('Marketers.html');
-                    return;
-                }
+                redirectBasedOnRole(role);
 
-                const nameSpan = document.getElementById('userNameSpan');
-                const profileDisplay = document.getElementById('userProfileDisplay');
-                const loginHeaderBtn = document.getElementById('loginHeaderBtn');
-                const mainActionBtn = document.getElementById('mainAuthActionBtn');
-                const loggedServices = document.getElementById('loggedServicesContainer');
-                const authModal = document.getElementById('authModal');
+                document.getElementById('userNameSpan').innerText = userName;
+                document.getElementById('userProfileDisplay').classList.remove('hidden');
+                document.getElementById('userProfileDisplay').classList.add('flex');
+                document.getElementById('loginHeaderBtn').style.display = 'none';
 
-                if(nameSpan) nameSpan.innerText = userName + (userState ? ` (${userState})` : '');
-                if(profileDisplay) {
-                    profileDisplay.classList.remove('hidden');
-                    profileDisplay.classList.add('flex');
-                }
-                if(loginHeaderBtn) loginHeaderBtn.style.display = 'none';
-                if(mainActionBtn) mainActionBtn.style.display = 'none';
-                if(loggedServices) {
-                    loggedServices.classList.remove('hidden');
-                    loggedServices.classList.add('flex');
-                }
-                if(authModal) {
-                    authModal.classList.remove('flex');
-                    authModal.classList.add('hidden');
-                }
+                document.getElementById('mainAuthActionBtn').style.display = 'none';
+                document.getElementById('loggedServicesContainer').classList.remove('hidden');
+                document.getElementById('loggedServicesContainer').classList.add('flex');
 
-                removeLoader();
+                document.getElementById('authModal').classList.remove('flex');
+                document.getElementById('authModal').classList.add('hidden');
 
             } catch (error) {
                 console.error("خطأ في جلب بيانات المستخدم:", error);
-                removeLoader();
+                const loader = document.getElementById('loadingOverlay');
+                if(loader) loader.remove();
+            }
+        }
+
+        window.showCustomAlert = function(title, message, isError = false) {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertMessage').innerText = message;
+            const alertModal = document.getElementById('customAlertModal');
+            alertModal.classList.remove('hidden');
+            alertModal.classList.add('flex');
+        };
+
+        window.closeCustomAlert = function() {
+            document.getElementById('customAlertModal').classList.remove('flex');
+            document.getElementById('customAlertModal').classList.add('hidden');
+        };
+
+        window.openAuthModal = function(mode) {
+            currentMode = mode;
+            updateModalUI();
+            document.getElementById('authModal').classList.remove('hidden');
+            document.getElementById('authModal').classList.add('flex');
+        };
+
+        window.toggleAuthMode = function() {
+            currentMode = currentMode === 'login' ? 'register' : 'login';
+            updateModalUI();
+        };
+
+        function updateModalUI() {
+            const title = document.getElementById('modalTitle');
+            const nameField = document.getElementById('nameFieldContainer');
+            const submitBtn = document.getElementById('submitBtnText');
+            const switchPrompt = document.getElementById('switchPrompt');
+            const switchBtn = document.getElementById('switchBtnText');
+
+            if (currentMode === 'register') {
+                title.innerText = 'إنشاء حساب جديد';
+                nameField.classList.remove('hidden');
+                submitBtn.innerText = 'تسجيل الحساب';
+                switchPrompt.innerText = 'لديك حساب بالفعل؟';
+                switchBtn.innerText = 'تسجيل الدخول';
+            } else {
+                title.innerText = 'تسجيل الدخول';
+                nameField.classList.add('hidden');
+                submitBtn.innerText = 'دخول بالنظام';
+                switchPrompt.innerText = 'ليس لديك حساب؟';
+                switchBtn.innerText = 'إنشاء حساب جديد';
             }
         }
 
@@ -374,7 +331,7 @@
                     }
                 })
                 .catch((error) => {
-                    showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message);
+                    showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
                 });
         };
 
@@ -387,7 +344,7 @@
                     }
                 })
                 .catch((error) => {
-                    showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message);
+                    showCustomAlert('خطأ في تسجيل الدخول', '❌ خطأ: ' + error.message, true);
                 });
         };
 
@@ -395,7 +352,11 @@
             if (user) {
                 await handleUserSessionUI(user);
             } else {
-                removeLoader();
+                const loader = document.getElementById('loadingOverlay');
+                if(loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 300);
+                }
             }
         });
 
@@ -404,20 +365,14 @@
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const customNameInput = document.getElementById('fullName').value;
-            const selectedState = document.getElementById('userState').value;
 
             if (currentMode === 'register') {
-                if (!selectedState) {
-                    showCustomAlert('تنبيه', 'الرجاء اختيار الولاية التابع لها.');
-                    return;
-                }
                 createUserWithEmailAndPassword(auth, email, password)
                     .then(async (userCredential) => {
-                        await handleUserSessionUI(userCredential.user, customNameInput, selectedState);
+                        await handleUserSessionUI(userCredential.user, customNameInput);
                     })
                     .catch((error) => {
-                        // إظهار كود الخطأ التقني لسهولة معرفة السبب إن وجد
-                        showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.code);
+                        showCustomAlert('خطأ في الإنشاء', '❌ خطأ: ' + error.message, true);
                     });
             } else {
                 signInWithEmailAndPassword(auth, email, password)
@@ -425,7 +380,7 @@
                         await handleUserSessionUI(userCredential.user);
                     })
                     .catch((error) => {
-                        showCustomAlert('خطأ في الدخول', '❌ البريد غير مسجل أو كلمة المرور خاطئة.');
+                        showCustomAlert('خطأ في الدخول', '❌ البريد غير مسجل أو كلمة المرور خاطئة.', true);
                     });
             }
         };
