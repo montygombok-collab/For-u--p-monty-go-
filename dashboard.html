@@ -35,8 +35,9 @@
         </div>
         <div class="flex items-center space-x-2 space-x-reverse flex-wrap justify-center">
             <button onclick="switchTab('ordersTab')" id="btnOrdersTab" class="bg-brandYellow text-brandDark font-bold text-xs px-3 py-2 rounded-xl transition">الطلبات</button>
+            <button onclick="switchTab('driversTab')" id="btnDriversTab" class="bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition">مناديب التوصيل</button>
             <button onclick="switchTab('usersTab')" id="btnUsersTab" class="bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition">المستخدمين</button>
-            <button onclick="switchTab('archiveTab')" id="btnArchiveTab" class="bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition">الأرشيف</button>
+            <button onclick="switchTab('archiveTab')" id="btnArchiveTab" class="bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition">الأرشيف والإحصائيات</button>
             <button onclick="logout()" class="text-red-400 text-xs flex items-center bg-brandCard border border-red-500/30 px-3 py-2 rounded-xl">
                 <i class="fa-solid fa-right-from-bracket ml-1"></i> خروج
             </button>
@@ -46,23 +47,31 @@
     <!-- المحتوى -->
     <main class="flex-grow container mx-auto px-4 py-6 max-w-7xl space-y-6">
         
-        <!-- الإحصائيات -->
+        <!-- الإحصائيات الشاملة -->
         <section class="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl">
                 <p class="text-xs text-gray-400">إجمالي الطلبات</p>
                 <h3 id="totalOrdersCount" class="text-xl font-black text-brandYellow mt-1">0</h3>
             </div>
             <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl">
-                <p class="text-xs text-gray-400">المكتملة</p>
-                <h3 id="completedOrdersCount" class="text-xl font-black text-green-400 mt-1">0</h3>
-            </div>
-            <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl">
-                <p class="text-xs text-gray-400">إيرادات التوصيل</p>
-                <h3 id="deliveryRevenueCount" class="text-lg font-black text-blue-400 mt-1">0</h3>
+                <p class="text-xs text-gray-400">توصيل اليوم / الشهر / السنوي</p>
+                <h3 id="deliveryRevenueCount" class="text-xs font-bold text-blue-400 mt-2 space-y-1">
+                    <div>اليومي: <span id="revDaily">0 ج</span></div>
+                    <div>الشهري: <span id="revMonthly">0 ج</span></div>
+                    <div>السنوي: <span id="revYearly">0 ج</span></div>
+                </h3>
             </div>
             <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl">
                 <p class="text-xs text-gray-400">إيرادات المبيعات</p>
                 <h3 id="salesRevenueCount" class="text-lg font-black text-emerald-400 mt-1">0</h3>
+            </div>
+            <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl flex flex-col justify-between">
+                <p class="text-xs text-gray-400">إعدادات الإيراد اليومي للمناديب</p>
+                <div class="space-y-1 mt-1 text-[11px]">
+                    <div class="flex justify-between items-center"><span>شركة:</span> <input type="number" id="feeCompany" class="w-16 bg-brandDark border border-gray-700 rounded px-1 text-center text-brandYellow" value="30000"></div>
+                    <div class="flex justify-between items-center"><span>خاصة:</span> <input type="number" id="feePrivate" class="w-16 bg-brandDark border border-gray-700 rounded px-1 text-center text-brandYellow" value="10000"></div>
+                </div>
+                <button onclick="saveFeesSettings()" class="mt-2 bg-brandYellow text-brandDark font-bold py-1 rounded text-[10px]">حفظ الرسوم</button>
             </div>
         </section>
 
@@ -103,18 +112,41 @@
             </div>
         </div>
 
+        <!-- تبويب مناديب التوصيل (قائمة مستقلة) -->
+        <div id="driversTabContent" class="space-y-4 hidden">
+            <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl space-y-4">
+                <h2 class="text-sm font-bold text-brandYellow"><i class="fa-solid fa-motorcycle ml-1"></i> إدارة مناديب التوصيل وعمال الميدان</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-xs min-w-[650px]">
+                        <thead class="bg-brandDark text-gray-400 border-b border-gray-700">
+                            <tr>
+                                <th class="p-2.5">المندوب</th>
+                                <th class="p-2.5">الهاتف</th>
+                                <th class="p-2.5">نوع المركبة</th>
+                                <th class="p-2.5">حالة السداد اليومي</th>
+                                <th class="p-2.5 text-center">إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="driversTableBody" class="divide-y divide-gray-800">
+                            <tr><td colspan="5" class="p-4 text-center text-gray-500">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- تبويب المستخدمين والصلاحيات -->
         <div id="usersTabContent" class="space-y-4 hidden">
             <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl space-y-4">
-                <h2 class="text-sm font-bold text-brandYellow">إدارة المستخدمين والصلاحيات</h2>
+                <h2 class="text-sm font-bold text-brandYellow">إدارة المستخدمين والصلاحيات العامة</h2>
                 <div class="overflow-x-auto">
                     <table class="w-full text-right text-xs min-w-[650px]">
                         <thead class="bg-brandDark text-gray-400 border-b border-gray-700">
                             <tr>
                                 <th class="p-2.5">المستخدم</th>
                                 <th class="p-2.5">الهاتف</th>
-                                <th class="p-2.5">الصلاحية</th>
-                                <th class="p-2.5">المركبة</th>
+                                <th class="p-2.5">الصلاحية (تشمل عميل عادي)</th>
+                                <th class="p-2.5">نوع المركبة</th>
                                 <th class="p-2.5 text-center">حفظ</th>
                             </tr>
                         </thead>
@@ -129,7 +161,7 @@
         <!-- تبويب الأرشيف -->
         <div id="archiveTabContent" class="space-y-4 hidden">
             <div class="bg-brandCard border border-gray-800 p-4 rounded-2xl">
-                <h2 class="text-sm font-bold text-yellow-500 mb-3">أرشيف الطلبات المحذوفة</h2>
+                <h2 class="text-sm font-bold text-yellow-500 mb-3">أرشيف الطلبات المحذوفة والمنتهية (تدوير دوري كل 24 ساعة)</h2>
                 <div class="overflow-x-auto">
                     <table class="w-full text-right text-xs min-w-[500px]">
                         <thead class="bg-brandDark text-gray-400 border-b border-gray-700">
@@ -138,10 +170,11 @@
                                 <th class="p-2.5">العميل</th>
                                 <th class="p-2.5">المتجر</th>
                                 <th class="p-2.5">القيمة</th>
+                                <th class="p-2.5">تاريخ الأرشفة</th>
                             </tr>
                         </thead>
                         <tbody id="archiveOrdersTable" class="divide-y divide-gray-800">
-                            <tr><td colspan="4" class="p-4 text-center text-gray-500">الأرشيف فارغ.</td></tr>
+                            <tr><td colspan="5" class="p-4 text-center text-gray-500">الأرشيف فارغ.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -189,8 +222,8 @@
         }
 
         window.switchTab = (tab) => {
-            ['ordersTabContent', 'usersTabContent', 'archiveTabContent'].forEach(t => document.getElementById(t).classList.add('hidden'));
-            ['btnOrdersTab', 'btnUsersTab', 'btnArchiveTab'].forEach(b => document.getElementById(b).className = "bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition");
+            ['ordersTabContent', 'driversTabContent', 'usersTabContent', 'archiveTabContent'].forEach(t => document.getElementById(t).classList.add('hidden'));
+            ['btnOrdersTab', 'btnDriversTab', 'btnUsersTab', 'btnArchiveTab'].forEach(b => document.getElementById(b).className = "bg-brandCard border border-gray-700 text-gray-300 font-bold text-xs px-3 py-2 rounded-xl transition");
             
             document.getElementById(tab + 'Content').classList.remove('hidden');
             document.getElementById('btn' + tab.charAt(0).toUpperCase() + tab.slice(1)).className = "bg-brandYellow text-brandDark font-bold text-xs px-3 py-2 rounded-xl transition";
@@ -227,6 +260,9 @@
                 const local = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
                 archivedOrders = JSON.parse(localStorage.getItem('foru_archived_orders') || '[]');
                 
+                // تدوير الأرشيف كل 24 ساعة للطلبات اليومية ونقلها للمتوسطات الشهرية والسنوية
+                checkDailyArchiveRotation(local);
+
                 const map = new Map();
                 firestoreOrders.forEach(o => map.set(o.orderId || o.id, o));
                 local.forEach(o => { if (!map.has(o.orderId)) map.set(o.orderId, o); });
@@ -234,17 +270,28 @@
 
                 const completed = allOrders.filter(o => o.status === 'completed' || o.status === 'منجز' || o.status === 'تم الإرسال');
                 document.getElementById('totalOrdersCount').innerText = allOrders.length;
-                document.getElementById('completedOrdersCount').innerText = completed.length;
-                document.getElementById('deliveryRevenueCount').innerText = (completed.length * 2500).toLocaleString() + ' ج';
+                
+                // حساب إيرادات التوصيل (يومي، شهري، سنوي)
+                const todayStr = new Date().toISOString().slice(0, 10);
+                const currentMonthStr = todayStr.slice(0, 7);
+                const currentYearStr = todayStr.slice(0, 4);
+
+                const dailyRev = completed.filter(o => (o.completedDate || todayStr) === todayStr).length * 2500;
+                const monthlyRev = completed.filter(o => (o.completedDate || todayStr).startsWith(currentMonthStr)).length * 2500;
+                const yearlyRev = completed.filter(o => (o.completedDate || todayStr).startsWith(currentYearStr)).length * 2500;
+
+                document.getElementById('revDaily').innerText = dailyRev.toLocaleString() + ' ج';
+                document.getElementById('revMonthly').innerText = monthlyRev.toLocaleString() + ' ج';
+                document.getElementById('revYearly').innerText = yearlyRev.toLocaleString() + ' ج';
+
                 document.getElementById('salesRevenueCount').innerText = completed.reduce((s, o) => s + (Number(o.cost) || 0), 0).toLocaleString() + ' ج';
 
                 const usersSnap = await getDocs(collection(db, "users"));
                 allUsers = [];
                 usersSnap.forEach(d => {
                     const data = d.data();
-                    allUsers.push({ id: d.id, name: data.name || data.fullName || 'مستخدم', email: data.email || '', phone: data.phone || '', role: data.role || 'مدير النظام', vehicleType: data.vehicleType || 'غير محدد' });
+                    allUsers.push({ id: d.id, name: data.name || data.fullName || 'مستخدم', email: data.email || '', phone: data.phone || '', role: data.role || 'عميل', vehicleType: data.vehicleType || 'غير محدد' });
                 });
-                document.getElementById('usersTabContent').querySelector('h2').innerText = `المستخدمين (${allUsers.length})`;
                 renderViews();
             } catch (e) {
                 allOrders = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
@@ -252,8 +299,29 @@
             }
         }
 
+        function checkDailyArchiveRotation(localOrders) {
+            const lastCheck = localStorage.getItem('foru_last_archive_date');
+            const todayStr = new Date().toISOString().slice(0, 10);
+            if (lastCheck !== todayStr) {
+                // تدوير الطلبات المنتهية في نهاية اليوم للشهري والسنوي
+                const expired = localOrders.filter(o => o.status === 'completed' && o.completedDate !== todayStr);
+                expired.forEach(o => archivedOrders.push({ ...o, archivedDate: todayStr }));
+                localStorage.setItem('foru_archived_orders', JSON.stringify(archivedOrders));
+                localStorage.setItem('foru_last_archive_date', todayStr);
+            }
+        }
+
+        window.saveFeesSettings = function() {
+            const cFee = document.getElementById('feeCompany').value;
+            const pFee = document.getElementById('feePrivate').value;
+            localStorage.setItem('foru_fee_company', cFee);
+            localStorage.setItem('foru_fee_private', pFee);
+            showCustomAlert('تم حفظ تعديلات رسوم الإيراد اليومي بنجاح');
+        }
+
         function renderViews() {
             const tOrders = document.getElementById('firestoreOrdersTable');
+            const tDrivers = document.getElementById('driversTableBody');
             const tUsers = document.getElementById('firestoreUsersTable');
             const tArchive = document.getElementById('archiveOrdersTable');
 
@@ -271,6 +339,18 @@
                     </tr>
                 `).join('');
 
+            const driversList = allUsers.filter(u => u.role === 'مندوب توصيل' || u.role === 'مندوب');
+            tDrivers.innerHTML = driversList.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-gray-500">لا توجد مناديب توصيل مسجلين.</td></tr>` :
+                driversList.map(d => `
+                    <tr>
+                        <td class="p-2.5 font-bold">${d.name}<br><span class="text-[10px] text-gray-400">${d.email}</span></td>
+                        <td class="p-2.5">${d.phone || 'غير متوفر'}</td>
+                        <td class="p-2.5 text-brandYellow">${d.vehicleType}</td>
+                        <td class="p-2.5 text-emerald-400">نشط ميدانياً</td>
+                        <td class="p-2.5 text-center"><button onclick="switchTab('usersTab')" class="bg-gray-700 text-white px-2.5 py-1 rounded">إدارة</button></td>
+                    </tr>
+                `).join('');
+
             tUsers.innerHTML = allUsers.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-gray-500">لا توجد حسابات.</td></tr>` :
                 allUsers.map(u => `
                     <tr>
@@ -278,7 +358,8 @@
                         <td class="p-2.5">${u.phone}</td>
                         <td class="p-2.5">
                             <select id="role_${u.id}" class="bg-brandDark border border-gray-700 rounded p-1 text-white">
-                                <option value="مندوب توصيل" ${u.role === 'مندوب توصيل' ? 'selected' : ''}>مندوب توصيل</option>
+                                <option value="عميل" ${u.role === 'عميل' || !u.role ? 'selected' : ''}>عميل عادي</option>
+                                <option value="مندوب توصيل" ${u.role === 'مندوب توصيل' || u.role === 'مندوب' ? 'selected' : ''}>مندوب توصيل</option>
                                 <option value="مدير النظام" ${u.role === 'مدير النظام' || u.role === 'admin' ? 'selected' : ''}>مدير النظام</option>
                                 <option value="مسوقين" ${u.role === 'مسوقين' || u.role === 'مسوق' ? 'selected' : ''}>مسوقين</option>
                             </select>
@@ -286,8 +367,8 @@
                         <td class="p-2.5">
                             <select id="veh_${u.id}" class="bg-brandDark border border-gray-700 rounded p-1 text-brandYellow">
                                 <option value="غير محدد" ${u.vehicleType === 'غير محدد' ? 'selected' : ''}>اختر المركبة</option>
-                                <option value="مركبة تبع الشركة" ${u.vehicleType === 'مركبة تبع الشركة' ? 'selected' : ''}>تبعة للشركة (30 ألف)</option>
-                                <option value="مركبة ما تبع الشركة" ${u.vehicleType === 'مركبة ما تبع الشركة' ? 'selected' : ''}>خاصة (10 آلاف)</option>
+                                <option value="مركبة تبع الشركة" ${u.vehicleType === 'مركبة تبع الشركة' ? 'selected' : ''}>تبعة للشركة</option>
+                                <option value="مركبة ما تبع الشركة" ${u.vehicleType === 'مركبة ما تبع الشركة' ? 'selected' : ''}>خاصة</option>
                             </select>
                         </td>
                         <td class="p-2.5 text-center">
@@ -296,13 +377,14 @@
                     </tr>
                 `).join('');
 
-            tArchive.innerHTML = archivedOrders.length === 0 ? `<tr><td colspan="4" class="p-4 text-center text-gray-500">الأرشيف فارغ.</td></tr>` :
+            tArchive.innerHTML = archivedOrders.length === 0 ? `<tr><td colspan="5" class="p-4 text-center text-gray-500">الأرشيف فارغ.</td></tr>` :
                 archivedOrders.map(a => `
                     <tr>
                         <td class="p-2.5 font-bold text-gray-400">${a.orderId || a.id}</td>
                         <td class="p-2.5">${a.clientName || '-'}</td>
                         <td class="p-2.5">${a.storeName || '-'}</td>
                         <td class="p-2.5">${(a.cost || 0).toLocaleString()} ج</td>
+                        <td class="p-2.5 text-gray-400">${a.archivedDate || 'يومي'}</td>
                     </tr>
                 `).join('');
         }
@@ -332,7 +414,7 @@
             let local = JSON.parse(localStorage.getItem('foru_all_orders') || '[]');
             const target = local.find(o => o.orderId === code || o.id === id) || allOrders.find(o => o.orderId === code || o.id === id);
             if (target) {
-                archivedOrders.push(target);
+                archivedOrders.push({ ...target, archivedDate: new Date().toISOString().slice(0, 10) });
                 localStorage.setItem('foru_archived_orders', JSON.stringify(archivedOrders));
                 local = local.filter(o => o.orderId !== code && o.id !== id);
                 localStorage.setItem('foru_all_orders', JSON.stringify(local));
@@ -345,7 +427,9 @@
         window.saveUser = async function(userId) {
             const role = document.getElementById(`role_${userId}`).value;
             const veh = document.getElementById(`veh_${userId}`).value;
-            const fee = veh === 'مركبة تبع الشركة' ? 30000 : (veh === 'مركبة ما تبع الشركة' ? 10000 : 0);
+            const feeCompany = Number(localStorage.getItem('foru_fee_company') || 30000);
+            const feePrivate = Number(localStorage.getItem('foru_fee_private') || 10000);
+            const fee = veh === 'مركبة تبع الشركة' ? feeCompany : (veh === 'مركبة ما تبع الشركة' ? feePrivate : 0);
 
             try {
                 await updateDoc(doc(db, "users", userId), { role: role, vehicleType: veh, dailyNotificationAmount: fee });
