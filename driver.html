@@ -83,26 +83,26 @@
         <!-- البوابة (الطلبات المتاحة مرتبة حسب الأقرب) -->
         <div id="marketView" class="space-y-4">
             <div class="flex justify-between items-center">
-                <h2 class="text-sm font-bold text-[#FFB800]"><i class="fa-solid fa-motorcycle ml-1"></i> الطلبات المتاحة (حسب الأقرب لموقعك)[cite: 8]</h2>
+                <h2 class="text-sm font-bold text-[#FFB800]"><i class="fa-solid fa-motorcycle ml-1"></i> الطلبات المتاحة (حسب الأقرب لموقعك)</h2>
                 <button onclick="loadOrders()" class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white"><i class="fa-solid fa-rotate"></i> تحديث</button>
             </div>
             <div id="activeNotice" class="hidden p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-600 dark:text-blue-300 text-xs flex justify-between items-center">
                 <span id="activeNoticeText">لديك طلبات قيد التوصيل حالياً.</span>
                 <button onclick="switchView('myOrder')" class="underline font-bold">عرض</button>
             </div>
-            <div id="marketList" class="space-y-3 text-xs text-gray-500 dark:text-gray-400 text-center py-6">جاري تحديد الموقع وجلب الطلبات...[cite: 8]</div>
+            <div id="marketList" class="space-y-3 text-xs text-gray-500 dark:text-gray-400 text-center py-6">جاري تحديد الموقع وجلب الطلبات...</div>
         </div>
 
         <!-- طلباتي الحالية والمنجزة اليوم -->
         <div id="myOrderView" class="space-y-6 hidden">
             <div class="space-y-3">
-                <h2 class="text-sm font-bold text-[#FFB800]"><i class="fa-solid fa-box-open ml-1"></i> طلباتي الحالية النشطة (حد أقصى 2)[cite: 8]</h2>
-                <div id="myOrderContainer" class="space-y-3 text-xs text-gray-500 dark:text-gray-400 text-center py-4">ليس لديك طلبات نشطة.[cite: 8]</div>
+                <h2 class="text-sm font-bold text-[#FFB800]"><i class="fa-solid fa-box-open ml-1"></i> طلباتي الحالية النشطة (حد أقصى 2)</h2>
+                <div id="myOrderContainer" class="space-y-3 text-xs text-gray-500 dark:text-gray-400 text-center py-4">ليس لديك طلبات نشطة.</div>
             </div>
 
             <div class="space-y-3 pt-4 border-t border-gray-200 dark:border-gray-800">
-                <h2 class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-circle-check ml-1"></i> الطلبات المنجزة اليوم (تختفي بنهاية اليوم)[cite: 8]</h2>
-                <div id="todayCompletedContainer" class="space-y-3 text-xs text-gray-500 dark:text-gray-400 text-center py-4">لم تقم بإنجاز أي طلب اليوم حتى الآن.[cite: 8]</div>
+                <h2 class="text-sm font-bold text-emerald-400"><i class="fa-solid fa-circle-check ml-1"></i> الطلبات المنجزة اليوم (تختفي بنهاية اليوم)</h2>
+                <div id="todayCompletedContainer" class="space-y-3 text-xs text-gray-500 dark:text-gray-400 text-center py-4">لم تقم بإنجاز أي طلب اليوم حتى الآن.</div>
             </div>
         </div>
 
@@ -112,7 +112,7 @@
     <div id="detailsModal" class="fixed inset-0 bg-black/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 rounded-2xl p-5 max-w-sm w-full text-right space-y-3 shadow-2xl">
             <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-2">
-                <h3 class="text-xs font-bold text-[#FFB800]">تفاصيل الطلب الكاملة[cite: 8]</h3>
+                <h3 class="text-xs font-bold text-[#FFB800]">تفاصيل الطلب الكاملة</h3>
                 <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-800 dark:hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="modalDetailsContent" class="text-xs space-y-2 text-gray-600 dark:text-gray-300"></div>
@@ -128,7 +128,7 @@
         </div>
     </div>
 
-    <footer class="p-3 text-center border-t border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-600 text-[10px]">For-U &copy; 2026[cite: 8]</footer>
+    <footer class="p-3 text-center border-t border-gray-200 dark:border-gray-800 text-gray-400 dark:text-gray-600 text-[10px]">For-U &copy; 2026</footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -273,7 +273,7 @@
                 const orders = Array.from(map.values());
                 const active = orders.filter(o => o.status !== 'منجز' && o.status !== 'completed');
 
-                if (lastCount > 0 && active.length > lastCount) showAlert('🔔 طلب جديد متاح في البوابة![cite: 8]');
+                if (lastCount > 0 && active.length > lastCount) showAlert('🔔 طلب جديد متاح في البوابة!');
                 lastCount = active.length;
 
                 const todayStr = new Date().toISOString().slice(0, 10);
@@ -291,7 +291,6 @@
                     return isMine && (isDone && isToday);
                 });
 
-                // سحب الرسوم المتزامنة من إعدادات لوحة التحكم المحدثة
                 const feeCompany = Number(localStorage.getItem('foru_fee_company') || 30000);
                 const feePrivate = Number(localStorage.getItem('foru_fee_private') || 10000);
                 const requiredFee = driverVehicleType === 'مركبة تبع الشركة' ? feeCompany : feePrivate;
@@ -301,7 +300,7 @@
 
                 if (driverCompletedToday.length > 0 && lastPaidDate !== todayStr) {
                     paymentNotice.classList.remove('hidden');
-                    document.getElementById('paymentDetailsText').innerText = `المطلوب سداده اليوم (${driverVehicleType}): ${requiredFee.toLocaleString()} جنيه[cite: 8]`;
+                    document.getElementById('paymentDetailsText').innerText = `المطلوب سداده اليوم (${driverVehicleType}): ${requiredFee.toLocaleString()} جنيه`;
                 } else {
                     paymentNotice.classList.add('hidden');
                 }
@@ -309,7 +308,7 @@
                 const activeNotice = document.getElementById('activeNotice');
                 if (myActiveOrders.length > 0) {
                     activeNotice.classList.remove('hidden');
-                    document.getElementById('activeNoticeText').innerText = `لديك (${myActiveOrders.length}) طلب قيد التوصيل حالياً.[cite: 8]`;
+                    document.getElementById('activeNoticeText').innerText = `لديك (${myActiveOrders.length}) طلب قيد التوصيل حالياً.`;
                 } else {
                     activeNotice.classList.add('hidden');
                 }
@@ -321,22 +320,22 @@
                         return `
                             <div class="bg-white dark:bg-[#1E1E1E] border border-[#FFB800] p-4 rounded-2xl space-y-3 text-right shadow">
                                 <div class="flex justify-between text-xs">
-                                    <span class="text-[#FFB800] font-bold">طلب توصيل نشط[cite: 8]</span>
-                                    <span class="text-emerald-500 dark:text-emerald-400 font-bold">قيد التوصيل[cite: 8]</span>
+                                    <span class="text-[#FFB800] font-bold">طلب توصيل نشط</span>
+                                    <span class="text-emerald-500 dark:text-emerald-400 font-bold">قيد التوصيل</span>
                                 </div>
                                 <div class="text-xs space-y-1 text-gray-700 dark:text-gray-300">
-                                    <div><b>المتجر:</b> ${myOrder.storeName || '-'}[cite: 8]</div>
-                                    <div><b>المبلغ:</b> <span class="text-[#FFB800] font-bold">${(myOrder.cost || 0)} جنيه</span>[cite: 8]</div>
-                                    <div><b>الوصف:</b> ${myOrder.description || '-'}[cite: 8]</div>
+                                    <div><b>المتجر:</b> ${myOrder.storeName || '-'}</div>
+                                    <div><b>المبلغ:</b> <span class="text-[#FFB800] font-bold">${(myOrder.cost || 0)} جنيه</span></div>
+                                    <div><b>الوصف:</b> ${myOrder.description || '-'}</div>
                                 </div>
                                 <div class="flex gap-2 pt-2">
-                                    <a href="${mapUrl}" target="_blank" class="flex-1 bg-blue-600 text-white text-center py-2 rounded-xl text-xs font-bold">الخريطة[cite: 8]</a>
-                                    <button onclick="completeOrder('${myOrder.id}', '${myOrder.orderId}')" class="flex-1 bg-green-600 text-white py-2 rounded-xl text-xs font-bold">تم التسليم[cite: 8]</button>
+                                    <a href="${mapUrl}" target="_blank" class="flex-1 bg-blue-600 text-white text-center py-2 rounded-xl text-xs font-bold">الخريطة</a>
+                                    <button onclick="completeOrder('${myOrder.id}', '${myOrder.orderId}')" class="flex-1 bg-green-600 text-white py-2 rounded-xl text-xs font-bold">تم التسليم</button>
                                 </div>
                             </div>`;
                     }).join('');
                 } else {
-                    myContainer.innerHTML = `<div class="p-6 text-gray-400 dark:text-gray-500 text-xs">لا توجد طلبات نشطة حالياً.[cite: 8]</div>`;
+                    myContainer.innerHTML = `<div class="p-6 text-gray-400 dark:text-gray-500 text-xs">لا توجد طلبات نشطة حالياً.</div>`;
                 }
 
                 const todayCompletedContainer = document.getElementById('todayCompletedContainer');
@@ -344,17 +343,17 @@
                     todayCompletedContainer.innerHTML = driverCompletedToday.map(doneOrder => `
                         <div class="bg-white dark:bg-[#1E1E1E] border border-emerald-500/40 p-3 rounded-2xl space-y-2 text-right shadow">
                             <div class="flex justify-between text-xs">
-                                <span class="text-emerald-400 font-bold">تم إنجازه وتسليمه[cite: 8]</span>
-                                <span class="text-gray-400">${(doneOrder.cost || 0)} جنيه[cite: 8]</span>
+                                <span class="text-emerald-400 font-bold">تم إنجازه وتسليمه</span>
+                                <span class="text-gray-400">${(doneOrder.cost || 0)} جنيه</span>
                             </div>
                             <div class="text-xs text-gray-600 dark:text-gray-300">
-                                <div><b>المتجر:</b> ${doneOrder.storeName || '-'}[cite: 8]</div>
-                                <div><b>التفاصيل:</b> ${doneOrder.description || '-'}[cite: 8]</div>
+                                <div><b>المتجر:</b> ${doneOrder.storeName || '-'}</div>
+                                <div><b>التفاصيل:</b> ${doneOrder.description || '-'}</div>
                             </div>
                         </div>
                     `).join('');
                 } else {
-                    todayCompletedContainer.innerHTML = `<div class="p-4 text-gray-400 dark:text-gray-500 text-xs">لم تقم بإنجاز أي طلب اليوم.[cite: 8]</div>`;
+                    todayCompletedContainer.innerHTML = `<div class="p-4 text-gray-400 dark:text-gray-500 text-xs">لم تقم بإنجاز أي طلب اليوم.</div>`;
                 }
 
                 const marketList = document.getElementById('marketList');
@@ -366,23 +365,23 @@
                 }).sort((a, b) => a.distance - b.distance);
 
                 if (available.length === 0) {
-                    marketList.innerHTML = `<div class="p-6 text-gray-400 dark:text-gray-500 text-xs">لا توجد طلبات متاحة حالياً.[cite: 8]</div>`;
+                    marketList.innerHTML = `<div class="p-6 text-gray-400 dark:text-gray-500 text-xs">لا توجد طلبات متاحة حالياً.</div>`;
                     return;
                 }
 
                 marketList.innerHTML = available.map(o => `
                     <div class="bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-gray-800 p-4 rounded-2xl space-y-2 text-right shadow">
                         <div class="flex justify-between text-xs">
-                            <span class="text-[#FFB800] font-bold">طلب متاح للتوصيل ${o.distance !== 9999 ? `(يبعد ~${o.distance.toFixed(1)} كم)` : ''}[cite: 8]</span>
-                            <span class="text-gray-500 dark:text-gray-400">${(o.cost || 0)} جنيه[cite: 8]</span>
+                            <span class="text-[#FFB800] font-bold">طلب متاح للتوصيل ${o.distance !== 9999 ? `(يبعد ~${o.distance.toFixed(1)} كم)` : ''}</span>
+                            <span class="text-gray-500 dark:text-gray-400">${(o.cost || 0)} جنيه</span>
                         </div>
                         <div class="text-xs text-gray-700 dark:text-gray-300">
-                            <div><b>المتجر:</b> ${o.storeName || '-'}[cite: 8]</div>
-                            <div><b>الوصف:</b> ${o.description || '-'}[cite: 8]</div>
+                            <div><b>المتجر:</b> ${o.storeName || '-'}</div>
+                            <div><b>الوصف:</b> ${o.description || '-'}</div>
                         </div>
                         <div class="flex gap-2 pt-2">
-                            <button onclick='openDetailsModal(${JSON.stringify(o).replace(/'/g, "&apos;")})' class="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white py-2 rounded-xl text-xs font-bold">تفاصيل الطلب[cite: 8]</button>
-                            <button onclick="claimOrder('${o.id}', '${o.orderId}')" class="flex-1 bg-[#FFB800] text-[#121212] py-2 rounded-xl text-xs font-bold">إنجاز هذا الطلب[cite: 8]</button>
+                            <button onclick='openDetailsModal(${JSON.stringify(o).replace(/'/g, "&apos;")})' class="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white py-2 rounded-xl text-xs font-bold">تفاصيل الطلب</button>
+                            <button onclick="claimOrder('${o.id}', '${o.orderId}')" class="flex-1 bg-[#FFB800] text-[#121212] py-2 rounded-xl text-xs font-bold">إنجاز هذا الطلب</button>
                         </div>
                     </div>
                 `).join('');
@@ -393,13 +392,13 @@
         window.openDetailsModal = function(order) {
             const content = document.getElementById('modalDetailsContent');
             content.innerHTML = `
-                <div><b>المتجر:</b> ${order.storeName || '-'}[cite: 8]</div>
-                <div><b>هاتف المتجر:</b> ${order.storePhone || 'غير متوفر'}[cite: 8]</div>
-                <div><b>اسم العميل:</b> ${order.clientName || '-'}[cite: 8]</div>
-                <div><b>هاتف العميل:</b> ${order.clientPhone || 'غير متوفر'}[cite: 8]</div>
-                <div><b>العنوان:</b> ${order.address || 'غير محدد'}[cite: 8]</div>
-                <div><b>الوصف والتفاصيل:</b> ${order.description || '-'}[cite: 8]</div>
-                <div><b>المبلغ المطلوب:</b> <span class="text-[#FFB800] font-bold">${(order.cost || 0)} جنيه</span>[cite: 8]</div>
+                <div><b>المتجر:</b> ${order.storeName || '-'}</div>
+                <div><b>هاتف المتجر:</b> ${order.storePhone || 'غير متوفر'}</div>
+                <div><b>اسم العميل:</b> ${order.clientName || '-'}</div>
+                <div><b>هاتف العميل:</b> ${order.clientPhone || 'غير متوفر'}</div>
+                <div><b>العنوان:</b> ${order.address || 'غير محدد'}</div>
+                <div><b>الوصف والتفاصيل:</b> ${order.description || '-'}</div>
+                <div><b>المبلغ المطلوب:</b> <span class="text-[#FFB800] font-bold">${(order.cost || 0)} جنيه</span></div>
             `;
             document.getElementById('detailsModal').classList.remove('hidden');
             document.getElementById('detailsModal').classList.add('flex');
@@ -413,7 +412,7 @@
         window.payDailyDues = function() {
             const todayStr = new Date().toISOString().slice(0, 10);
             localStorage.setItem(`paid_date_${driverName}`, todayStr);
-            showAlert('تم تسجيل سداد المستحقات اليومية بنجاح.[cite: 8]');
+            showAlert('تم تسجيل سداد المستحقات اليومية بنجاح.');
             loadOrders();
         }
 
@@ -422,7 +421,7 @@
             
             const myActiveCount = local.filter(o => (o.assignedDriver === driverName || o.driverName === driverName) && o.status !== 'منجز' && o.status !== 'completed').length;
             if (myActiveCount >= 2) { 
-                showAlert('عذراً، لا يمكنك أخذ أكثر من طلبين نشطين في نفس اللحظة.[cite: 8]'); 
+                showAlert('عذراً، لا يمكنك أخذ أكثر من طلبين نشطين في نفس اللحظة.'); 
                 return; 
             }
 
@@ -445,7 +444,7 @@
             if (!id.startsWith('FOR-')) {
                 await updateDoc(doc(db, "orders", id), { status: 'completed', completedDate: todayStr });
             }
-            showAlert('تم تسليم الطلب بنجاح وإضافته لطلباتك المنجزة اليوم.[cite: 8]');
+            showAlert('تم تسليم الطلب بنجاح وإضافته لطلباتك المنجزة اليوم.');
             loadOrders();
             switchView('myOrder');
         }
