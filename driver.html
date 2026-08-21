@@ -146,10 +146,9 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        let driverName = '', lastCount = 0, isCompanyVehicle = false;
+        let driverName = '', lastCount = 0, driverVehicleType = 'مركبة ما تبع الشركة';
         let currentDriverLat = null, currentDriverLng = null;
 
-        // حساب المسافة بين نقطتين جغرافيت بالكيلومتر (Haversine formula)[cite: 8]
         function calculateDistance(lat1, lon1, lat2, lon2) {
             if (!lat1 || !lon1 || !lat2 || !lon2) return 9999;
             const R = 6371; 
@@ -162,7 +161,6 @@
             return R * c;
         }
 
-        // جلب موقع المندوب الحالي تلقائياً[cite: 8]
         function updateDriverLocation() {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(position => {
@@ -233,7 +231,7 @@
                     }
 
                     driverName = data.name || user.email.split('@')[0];
-                    isCompanyVehicle = data.isCompanyVehicle || data.vehicleType === 'شركة' || data.companyVehicle === true;
+                    driverVehicleType = data.vehicleType || 'مركبة ما تبع الشركة';
                 } else {
                     window.location.replace('index.html');
                     return;
@@ -280,28 +278,30 @@
 
                 const todayStr = new Date().toISOString().slice(0, 10);
                 
-                // طلبات المندوب الحالية النشطة[cite: 8]
                 const myActiveOrders = orders.filter(o => {
                     const isMine = (o.assignedDriver === driverName || o.driverName === driverName);
                     const isNotDone = (o.status !== 'منجز' && o.status !== 'completed');
                     return isMine && isNotDone;
                 });
 
-                // الطلبات المنجزة اليوم فقط (تختفي تلقائياً بمجرد اختلاف تاريخ اليوم)[cite: 8]
                 const driverCompletedToday = orders.filter(o => {
                     const isMine = (o.assignedDriver === driverName || o.driverName === driverName);
                     const isDone = (o.status === 'منجز' || o.status === 'completed');
-                    const isToday = (o.completedDate === todayStr); // شرط مطابقة تاريخ اليوم لتختفي بنهايته
+                    const isToday = (o.completedDate === todayStr);
                     return isMine && (isDone && isToday);
                 });
 
-                const requiredFee = isCompanyVehicle ? 30000 : 10000;
+                // سحب الرسوم المتزامنة من إعدادات لوحة التحكم المحدثة
+                const feeCompany = Number(localStorage.getItem('foru_fee_company') || 30000);
+                const feePrivate = Number(localStorage.getItem('foru_fee_private') || 10000);
+                const requiredFee = driverVehicleType === 'مركبة تبع الشركة' ? feeCompany : feePrivate;
+
                 const paymentNotice = document.getElementById('dailyPaymentNotice');
                 const lastPaidDate = localStorage.getItem(`paid_date_${driverName}`);
 
                 if (driverCompletedToday.length > 0 && lastPaidDate !== todayStr) {
                     paymentNotice.classList.remove('hidden');
-                    document.getElementById('paymentDetailsText').innerText = `المطلوب سداده اليوم (${isCompanyVehicle ? 'مركبة شركة' : 'مركبة خاصة'}): ${requiredFee.toLocaleString()} جنيه[cite: 8]`;
+                    document.getElementById('paymentDetailsText').innerText = `المطلوب سداده اليوم (${driverVehicleType}): ${requiredFee.toLocaleString()} جنيه[cite: 8]`;
                 } else {
                     paymentNotice.classList.add('hidden');
                 }
@@ -314,7 +314,6 @@
                     activeNotice.classList.add('hidden');
                 }
 
-                // عرض الطلبات الحالية النشطة[cite: 8]
                 const myContainer = document.getElementById('myOrderContainer');
                 if (myActiveOrders.length > 0) {
                     myContainer.innerHTML = myActiveOrders.map(myOrder => {
@@ -340,7 +339,6 @@
                     myContainer.innerHTML = `<div class="p-6 text-gray-400 dark:text-gray-500 text-xs">لا توجد طلبات نشطة حالياً.[cite: 8]</div>`;
                 }
 
-                // عرض الطلبات المنجزة اليوم[cite: 8]
                 const todayCompletedContainer = document.getElementById('todayCompletedContainer');
                 if (driverCompletedToday.length > 0) {
                     todayCompletedContainer.innerHTML = driverCompletedToday.map(doneOrder => `
@@ -359,7 +357,6 @@
                     todayCompletedContainer.innerHTML = `<div class="p-4 text-gray-400 dark:text-gray-500 text-xs">لم تقم بإنجاز أي طلب اليوم.[cite: 8]</div>`;
                 }
 
-                // فلترة الطلبات المتاحة وترتيبها حسب الأقرب مسافة[cite: 8]
                 const marketList = document.getElementById('marketList');
                 let available = active.filter(o => !o.assignedDriver && !o.driverName);
 
