@@ -6,18 +6,22 @@
     <title>For-U | فور يو - نصلك قبل ما تطلب</title>
     <script>
         (function() {
-            const savedRole = localStorage.getItem('foru_user_role');
-            if (savedRole) {
-                const role = savedRole.trim();
-                const currentPath = window.location.pathname;
+            try {
+                const savedRole = localStorage.getItem('foru_user_role');
+                if (savedRole) {
+                    const role = savedRole.trim();
+                    const currentPath = window.location.pathname;
 
-                if ((role === 'مندوب توصيل' || role === 'مندوب') && !currentPath.includes('driver.html')) {
-                    window.location.replace('driver.html');
-                } else if ((role.includes('مدير') || role.includes('مشرف') || role === 'admin') && !currentPath.includes('dashboard.html')) {
-                    window.location.replace('dashboard.html');
-                } else if ((role === 'مسوقين' || role === 'مسوق') && !currentPath.includes('Marketers.html')) {
-                    window.location.replace('Marketers.html');
+                    if ((role === 'مندوب توصيل' || role === 'مندوب') && !currentPath.includes('driver.html')) {
+                        window.location.replace('driver.html');
+                    } else if ((role.includes('مدير') || role.includes('مشرف') || role === 'admin') && !currentPath.includes('dashboard.html')) {
+                        window.location.replace('dashboard.html');
+                    } else if ((role === 'مسوقين' || role === 'مسوق') && !currentPath.includes('Marketers.html')) {
+                        window.location.replace('Marketers.html');
+                    }
                 }
+            } catch (e) {
+                console.error("Auth redirect error:", e);
             }
         })();
     </script>
@@ -32,14 +36,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <style> body { font-family: 'Cairo', sans-serif; } </style>
+    <style> 
+        body { font-family: 'Cairo', sans-serif; background-color: #121212; color: #ffffff; } 
+    </style>
 </head>
 <body class="bg-[#121212] text-white h-screen flex flex-col justify-between selection:bg-[#FFB800] selection:text-[#121212]">
 
     <!-- شاشة التحميل -->
     <div id="loadingOverlay" class="fixed inset-0 bg-[#121212] z-50 flex flex-col items-center justify-center space-y-4 transition-opacity duration-300">
         <div class="w-16 h-16 border-4 border-[#FFB800]/20 border-t-[#FFB800] rounded-full animate-spin"></div>
-        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري تسجيل الدخول</p>
+        <p class="text-[#FFB800] font-bold text-sm tracking-wide animate-pulse">جاري التحميل...</p>
     </div>
 
     <!-- الهيدر العلوي -->
@@ -88,7 +94,7 @@
                     </button>
                 </div>
 
-                <!-- الخدمات المتاحة للعملاء العاديين (تم تفعيل صلاحيات العميل العادي) -->
+                <!-- الخدمات المتاحة للعملاء العاديين -->
                 <div id="loggedServicesContainer" class="hidden flex flex-col space-y-3 w-full">
                     <button onclick="window.location.href='customer.html'" class="w-full bg-[#FFB800] text-[#121212] font-bold py-3.5 px-6 rounded-2xl hover:bg-yellow-400 transition shadow-lg flex items-center justify-center text-sm">
                         <i class="fa-solid fa-cart-shopping ml-2"></i> اطلب توصيل
@@ -170,6 +176,81 @@
         </div>
     </div>
 
+    <!-- دوال عامة لواجهة المستخدم لضمان عمل الأزرار حتى قبل اكتمال جافاسكريبت الفايربيس -->
+    <script>
+        let currentMode = 'login';
+
+        function removeLoader() {
+            const loader = document.getElementById('loadingOverlay');
+            if (loader) {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.remove(), 300);
+            }
+        }
+
+        // مؤقت أمان لإزالة شاشة التحميل البيضاء تلقائياً خلال ثانيتين إن لم تكتمل الاستجابة
+        setTimeout(removeLoader, 2000);
+
+        window.showCustomAlert = function(title, message, isError = false) {
+            const titleEl = document.getElementById('alertTitle');
+            const msgEl = document.getElementById('alertMessage');
+            if(titleEl) titleEl.innerText = title;
+            if(msgEl) msgEl.innerText = message;
+            const alertModal = document.getElementById('customAlertModal');
+            if(alertModal) {
+                alertModal.classList.remove('hidden');
+                alertModal.classList.add('flex');
+            }
+        };
+
+        window.closeCustomAlert = function() {
+            const alertModal = document.getElementById('customAlertModal');
+            if(alertModal) {
+                alertModal.classList.remove('flex');
+                alertModal.classList.add('hidden');
+            }
+        };
+
+        window.openAuthModal = function(mode) {
+            currentMode = mode;
+            updateModalUI();
+            const modal = document.getElementById('authModal');
+            if(modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        };
+
+        window.toggleAuthMode = function() {
+            currentMode = currentMode === 'login' ? 'register' : 'login';
+            updateModalUI();
+        };
+
+        function updateModalUI() {
+            const title = document.getElementById('modalTitle');
+            const nameField = document.getElementById('nameFieldContainer');
+            const submitBtn = document.getElementById('submitBtnText');
+            const switchPrompt = document.getElementById('switchPrompt');
+            const switchBtn = document.getElementById('switchBtnText');
+
+            if (!title) return;
+
+            if (currentMode === 'register') {
+                title.innerText = 'إنشاء حساب جديد';
+                if(nameField) nameField.classList.remove('hidden');
+                if(submitBtn) submitBtn.innerText = 'تسجيل الحساب';
+                if(switchPrompt) switchPrompt.innerText = 'لديك حساب بالفعل؟';
+                if(switchBtn) switchBtn.innerText = 'تسجيل الدخول';
+            } else {
+                title.innerText = 'تسجيل الدخول';
+                if(nameField) nameField.classList.add('hidden');
+                if(submitBtn) submitBtn.innerText = 'دخول بالنظام';
+                if(switchPrompt) switchPrompt.innerText = 'ليس لديك حساب؟';
+                if(switchBtn) switchBtn.innerText = 'إنشاء حساب جديد';
+            }
+        }
+    </script>
+
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -202,8 +283,6 @@
 
         setPersistence(auth, browserLocalPersistence).catch(console.error);
 
-        let currentMode = 'login';
-
         function redirectBasedOnRole(role) {
             const cleanRole = role ? role.trim() : 'عميل';
             
@@ -214,11 +293,7 @@
             } else if (cleanRole === 'مسوقين' || cleanRole === 'مسوق') {
                 window.location.replace('Marketers.html');
             } else {
-                const loader = document.getElementById('loadingOverlay');
-                if(loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.remove(), 300);
-                }
+                removeLoader();
             }
         }
 
@@ -251,69 +326,32 @@
 
                 redirectBasedOnRole(role);
 
-                document.getElementById('userNameSpan').innerText = userName;
-                document.getElementById('userProfileDisplay').classList.remove('hidden');
-                document.getElementById('userProfileDisplay').classList.add('flex');
-                document.getElementById('loginHeaderBtn').style.display = 'none';
+                const nameSpan = document.getElementById('userNameSpan');
+                const profileDisplay = document.getElementById('userProfileDisplay');
+                const loginHeaderBtn = document.getElementById('loginHeaderBtn');
+                const mainActionBtn = document.getElementById('mainAuthActionBtn');
+                const loggedServices = document.getElementById('loggedServicesContainer');
+                const authModal = document.getElementById('authModal');
 
-                document.getElementById('mainAuthActionBtn').style.display = 'none';
-                document.getElementById('loggedServicesContainer').classList.remove('hidden');
-                document.getElementById('loggedServicesContainer').classList.add('flex');
-
-                document.getElementById('authModal').classList.remove('flex');
-                document.getElementById('authModal').classList.add('hidden');
+                if(nameSpan) nameSpan.innerText = userName;
+                if(profileDisplay) {
+                    profileDisplay.classList.remove('hidden');
+                    profileDisplay.classList.add('flex');
+                }
+                if(loginHeaderBtn) loginHeaderBtn.style.display = 'none';
+                if(mainActionBtn) mainActionBtn.style.display = 'none';
+                if(loggedServices) {
+                    loggedServices.classList.remove('hidden');
+                    loggedServices.classList.add('flex');
+                }
+                if(authModal) {
+                    authModal.classList.remove('flex');
+                    authModal.classList.add('hidden');
+                }
 
             } catch (error) {
                 console.error("خطأ في جلب بيانات المستخدم:", error);
-                const loader = document.getElementById('loadingOverlay');
-                if(loader) loader.remove();
-            }
-        }
-
-        window.showCustomAlert = function(title, message, isError = false) {
-            document.getElementById('alertTitle').innerText = title;
-            document.getElementById('alertMessage').innerText = message;
-            const alertModal = document.getElementById('customAlertModal');
-            alertModal.classList.remove('hidden');
-            alertModal.classList.add('flex');
-        };
-
-        window.closeCustomAlert = function() {
-            document.getElementById('customAlertModal').classList.remove('flex');
-            document.getElementById('customAlertModal').classList.add('hidden');
-        };
-
-        window.openAuthModal = function(mode) {
-            currentMode = mode;
-            updateModalUI();
-            document.getElementById('authModal').classList.remove('hidden');
-            document.getElementById('authModal').classList.add('flex');
-        };
-
-        window.toggleAuthMode = function() {
-            currentMode = currentMode === 'login' ? 'register' : 'login';
-            updateModalUI();
-        };
-
-        function updateModalUI() {
-            const title = document.getElementById('modalTitle');
-            const nameField = document.getElementById('nameFieldContainer');
-            const submitBtn = document.getElementById('submitBtnText');
-            const switchPrompt = document.getElementById('switchPrompt');
-            const switchBtn = document.getElementById('switchBtnText');
-
-            if (currentMode === 'register') {
-                title.innerText = 'إنشاء حساب جديد';
-                nameField.classList.remove('hidden');
-                submitBtn.innerText = 'تسجيل الحساب';
-                switchPrompt.innerText = 'لديك حساب بالفعل؟';
-                switchBtn.innerText = 'تسجيل الدخول';
-            } else {
-                title.innerText = 'تسجيل الدخول';
-                nameField.classList.add('hidden');
-                submitBtn.innerText = 'دخول بالنظام';
-                switchPrompt.innerText = 'ليس لديك حساب؟';
-                switchBtn.innerText = 'إنشاء حساب جديد';
+                removeLoader();
             }
         }
 
@@ -347,11 +385,7 @@
             if (user) {
                 await handleUserSessionUI(user);
             } else {
-                const loader = document.getElementById('loadingOverlay');
-                if(loader) {
-                    loader.style.opacity = '0';
-                    setTimeout(() => loader.remove(), 300);
-                }
+                removeLoader();
             }
         });
 
